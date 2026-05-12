@@ -1,10 +1,25 @@
+import { BrowserRouter, Routes, Route } from "react-router"
+import ProtectedRoutes from "./ProtectedRoutes"
 
 function App() {
 
   return (
-    <main className="bg-[#443737] h-screen">
-      <h1 className="text-3xl text-center w-full p-10 font-bold text-orange-500">Karga</h1>
-    </main>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path={'/welcome'} element/> 
+          <Route path={'/login'} element/>  
+          <Route path={'/register'} element/> 
+          <Route path={'/onboarding'} element/>
+          <Route element={<ProtectedRoutes/>}>
+            <Route path={'/sets'} element/>
+            <Route path={'/sessions'} element/>
+            <Route path={'/body'} element/>
+            <Route path={'/today'} element/>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
   )
 }
 
