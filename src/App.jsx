@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router"
 import ProtectedRoutes from "./ProtectedRoutes"
+import MainLayout from "./layouts/MainLayout"
 
 function App() {
 
@@ -12,10 +13,12 @@ function App() {
           <Route path={'/register'} element/> 
           <Route path={'/onboarding'} element/>
           <Route element={<ProtectedRoutes/>}>
-            <Route path={'/sets'} element/>
-            <Route path={'/sessions'} element/>
-            <Route path={'/body'} element/>
-            <Route path={'/today'} element/>
+            <Route element={<MainLayout />}>
+              <Route path={'/sets'} element={<div>Sets</div>} />
+              <Route path={'/sessions'} element={<div>Sessions</div>} />
+              <Route path={'/body'} element={<div>Body</div>} />
+              <Route path={'/today'} element={<div>Today</div>} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
@@ -23,4 +26,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
