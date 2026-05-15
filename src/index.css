@@ -14,4 +14,11 @@ body,
 
 body {
   font-family: 'Inter', sans-serif;
+@import "tailwindcss";
+
+@theme {
+  --color-karga-orange: #FF4D00;
+  --color-karga-gray: #332A2A;
+  --color-input-bg: #443737;
+  --color-dark-bg: #272121;
 }
