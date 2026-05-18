@@ -2,6 +2,18 @@
 
 @import "tailwindcss";
 
+@theme {
+    --color-karga-orange: #FF4D00;
+    --color-karga-gray: #332A2A;
+    --color-input-bg: #443737;
+    --color-dark-bg: #272121;
+}
+/* 
+  Nota: El editor marcaba falso error en '@theme' porque el linter nativo de vscode aún no reconoce sintaxis de tailwind v4. 
+  Temporalmente se solucionó el error (solo visual, por cierto) creando la carpeta de config .vscode
+  Alternativamente se podría descartar este fix e instalar Stylelint en el proyecto, que sí cubre estas cuestiones.
+*/
+
 * {
   box-sizing: border-box;
 }
@@ -14,11 +26,4 @@ body,
 
 body {
   font-family: 'Inter', sans-serif;
-@import "tailwindcss";
-
-@theme {
-  --color-karga-orange: #FF4D00;
-  --color-karga-gray: #332A2A;
-  --color-input-bg: #443737;
-  --color-dark-bg: #272121;
 }
