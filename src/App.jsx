@@ -8,7 +8,6 @@ import Register from './pages/Register';
 import Onboarding from "./pages/Onboarding";
 
 function App() {
-
   return (
     <>
       <BrowserRouter>
@@ -22,16 +21,16 @@ function App() {
           </Route>
           <Route element={<ProtectedRoutes/>}>
             <Route element={<MainLayout />}>
-              <Route path={'/sets'} element={<div>Sets</div>} />
-              <Route path={'/sessions'} element={<div>Sessions</div>} />
-              <Route path={'/body'} element={<div>Body</div>} />
-              <Route path={'/today'} element={<div>Today</div>} />
+              <Route path={"/sets"} element={<div>Sets</div>} />
+              <Route path={"/sessions"} element={<div>Sessions</div>} />
+              <Route path={"/body"} element={<div>Body</div>} />
+              <Route path={"/today"} element={<div>Today</div>} />
             </Route>
           </Route>
         </Routes>
       </BrowserRouter>
     </>
-  )
+  );
 }
 
 export default App;
