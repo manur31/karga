@@ -1,9 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
 @import "tailwindcss";
 
 @theme {
     --color-karga-orange: #FF4D00;
+    --color-karga-lightorange: #ffb0a1;
     --color-karga-gray: #332A2A;
     --color-input-bg: #443737;
     --color-dark-bg: #272121;
@@ -25,5 +29,5 @@ body,
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
 }
