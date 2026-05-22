@@ -1,11 +1,14 @@
 import { Navigate, Outlet } from "react-router";
+import { useAuth } from "./hooks/queries/useAuth";
 
 function ProtectedRoutes() {
-  const USER_SECCION = false;
+  // const { data: profile } = useAuth()
 
-  if (USER_SECCION) return <Navigate to={"/login"} />;
+  // if (!profile) return <Navigate to={"/login"} />;
 
-  return <Outlet />;
+  // return <Outlet />;
+  
+  return <div>Protected Routes</div>;
 }
 
 export default ProtectedRoutes;

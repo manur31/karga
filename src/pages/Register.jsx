@@ -3,22 +3,48 @@ import { useNavigate } from 'react-router';
 import Button from '../components/Button/Button'; 
 import Input from '../components/Input/Input'; 
 import { EyeIcon, EyeOffIcon, GoogleIcon, Mancuerna } from '../components/icons';
+import { useForm } from 'react-hook-form';
+import { useRegister } from '../hooks/mutations/useAuthMutations';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+
+  const {
+    mutate,
+    isPending,
+    isError,
+    error,
+    isSuccess
+  } = useRegister()
+
+  const onSubmit = (data) => {
+    
+    // setIsLoading(true);
     
     //  registro (reemplazar el setTimeout llamada a la API)
-    setTimeout(() => {
-      setIsLoading(false);
+    // setTimeout(() => {
+    //   setIsLoading(false);
+    // }, 500);
+    const formData = {
+      name: 'Manuel Rosario',
+      email: data.email,
+      password: data.password
+    }
+    mutate(formData);
+    reset();
+    if (isSuccess) {
       navigate('/onboarding');
-    }, 2000);
+    }
   };
 
   const handleGoogleRegister = () => {
@@ -45,27 +71,29 @@ export default function Register() {
       </div>
 
       {/* FORM DE REGISTRO */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 
         <Input 
           type="email" 
           placeholder="Email" 
-          disabled={isLoading}
+          disabled={isPending}
           required 
+          {...register('email')}
         />
 
         <div className="relative flex items-center">
           <Input 
             type={showPassword ? "text" : "password"} 
             placeholder="Contraseña" 
-            disabled={isLoading}
+            disabled={isPending}
             required
             className="pr-12"
+            {...register('password')}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            disabled={isLoading}
+            disabled={isPending}
             className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
           >
             {showPassword ? <EyeIcon/> : <EyeOffIcon/>}
@@ -76,14 +104,15 @@ export default function Register() {
           <Input 
             type={showConfirmPassword ? "text" : "password"} 
             placeholder="Confirmar contraseña" 
-            disabled={isLoading}
+            disabled={isPending}
             required
             className="pr-12"
+            {...register('confirmPassword')}
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            disabled={isLoading}
+            disabled={isPending}
             className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
           >
             {showConfirmPassword ? <EyeIcon/> : <EyeOffIcon/>}
@@ -95,10 +124,10 @@ export default function Register() {
           type="submit" 
           variant="primary" 
           size="lg" 
-          disabled={isLoading}
-          className={`mt-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          disabled={isPending}
+          className={`mt-2 ${isPending ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          {isLoading ? "Creando cuenta..." : "Registrarse"}
+          {isPending ? "Creando cuenta..." : "Registrarse"}
         </Button>
       </form>
 
@@ -113,7 +142,7 @@ export default function Register() {
         type="button" 
         variant="secondary" 
         size="lg" 
-        disabled={isLoading}
+        disabled={isPending}
         onClick={handleGoogleRegister}
         className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10"
       >
@@ -126,7 +155,7 @@ export default function Register() {
         <button 
           type="button"
           onClick={() => navigate('/login')}
-          disabled={isLoading}
+          disabled={isPending}
           className="text-karga-orange hover:text-karga-lightorange transition-colors font-bold"
         >
           Inicia sesión

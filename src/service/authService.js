@@ -1,30 +1,35 @@
 import { supabase } from "../lib/supabaseClient";
 //register
-export const register = async ({ email, passsword, name }) => {
+export const register = async ({ email, password, name }) => {
   const { data: UserData, error: UserError } = await supabase.auth.signUp({
     email: email,
-    password: passsword,
+    password: password,
   });
   if (UserError) {
     console.log("ocurrio un error al Registrar: ", UserError);
+    
+    console.log(UserData)
     return UserData;
   }
-  if (UserData.user) {
-    const { error } = await supabase
-      .from("profile")
-      .insert([
-        {
-          id: UserData.user.id,
-          name,
-          email,
-        },
-      ])
-      .select();
-    if (error) {
-      await supabase.auth.admin.deleteUser(UserData.user.id);
-      throw error;
+
+    console.log(UserData)
+
+    if (UserData.user) {
+      const { error } = await supabase
+        .from('profile')
+        .insert([
+          {
+            profile_id: UserData.user.id,
+            name,
+            email,
+          },
+        ])
+        .select();
+      // if (error) {
+      //   await supabase.auth.admin.deleteUser(UserData.user.id);
+      //   throw error;
+      // }
     }
-  }
   return UserData;
 };
 
@@ -39,6 +44,8 @@ export const login = async ({ email, password }) => {
       console.log("Ocurrio un error al Inciar Sesion: ", error);
       return error.message;
     }
+
+    console.log('login data', data)
     if (data) {
       const profile = getProfile(email);
       return profile;
@@ -84,7 +91,17 @@ export const setProfile = async ({
   return data;
 };
 //getProfile
-export const getProfile = async (email) => {
+export const getProfile = async () => {
+  const { data: { user }, error: userError} = await supabase.auth.getUser()
+
+  if (userError) {
+    throw userError
+  }
+
+  console.log("User: ", user)
+  const email = user.email
+  console.log("Email: ", email)
+  
   const { data, error } = await supabase
     .from("profile")
     .select("*")
@@ -92,5 +109,6 @@ export const getProfile = async (email) => {
   if (error) {
     return error.message;
   }
-  return data;
+  // return data;
+  return user;
 };

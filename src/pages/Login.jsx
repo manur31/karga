@@ -3,29 +3,44 @@ import { useNavigate } from 'react-router';
 import Button from '../components/Button/Button'; 
 import Input from '../components/Input/Input'; 
 import { EyeIcon, EyeOffIcon, GoogleIcon, Mancuerna } from '../components/icons';
+import { useLogin } from '../hooks/mutations/useAuthMutations';
+import { useForm } from 'react-hook-form';
+import { loginSchema } from '../lib/schemas/authSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema), 
+    mode: 'all',
+  });
+
+  const { 
+    mutate: login,
+    isPending,
+    isSuccess,
+    error,
+   } = useLogin()
+
+  const onSubmit = (data) => {
+    console.log(data);
+
+    login(data);
     
-    // acá iría logica del login y navegacion al onboarding (reemplazar el settimeout)
-    setTimeout(() => {
-      setIsLoading(false);
+    if (isSuccess) {
       navigate('/onboarding');
-    }, 2000);
+    }
   };
 
   const handleGoogleLogin = () => {
-    setIsLoading(true);
-    
     // reemplazar al auth con google
     setTimeout(() => {
-        setIsLoading(false);
         navigate('/onboarding');
       }, 2000);
   };
@@ -46,31 +61,37 @@ export default function Login() {
       </div>
 
       {/* FORMULARIO */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         
         {/* input de email */}
         <Input 
           type="email" 
           placeholder="Email" 
-          disabled={isLoading}
+          disabled={isPending}
           required 
+          {...register('email')}
         />
+        {error?.email && <p className="text-red-500 text-sm">{error.email.message}</p>}
+        {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
 
         {/* input de contraseña */}
         <div className="relative flex items-center">
           <Input 
             type={showPassword ? "text" : "password"} 
             placeholder="Contraseña" 
-            disabled={isLoading}
+            disabled={isPending}
             required
             className="pr-12"
+            {...register('password')}
           />
+          {error?.password && <p className="text-red-500 text-sm">{error.password.message}</p>}
+          {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
           
           {/* el toggle */}
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            disabled={isLoading}
+            disabled={isPending}
             className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
           >
             {showPassword ? (
@@ -87,10 +108,10 @@ export default function Login() {
           type="submit" 
           variant="primary" 
           size="lg" 
-          disabled={isLoading}
-          className={`mt-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          disabled={isPending}
+          className={`mt-2 ${isPending ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          {isLoading ? "Iniciando..." : "Iniciar sesión"}
+          {isPending ? "Iniciando..." : "Iniciar sesión"}
         </Button>
       </form>
 
@@ -106,7 +127,7 @@ export default function Login() {
         type="button" 
         variant="secondary" 
         size="lg" 
-        disabled={isLoading}
+        disabled={isPending}
         onClick={handleGoogleLogin}
         className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10"
       >
@@ -120,7 +141,7 @@ export default function Login() {
         <button 
           type="button"
           onClick={() => navigate('/register')}
-          disabled={isLoading}
+          disabled={isPending}
           className="text-karga-orange hover:text-karga-lightorange transition-colors font-bold"
         >
           Regístrate
