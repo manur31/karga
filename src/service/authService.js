@@ -1,36 +1,30 @@
 import { supabase } from "../lib/supabaseClient";
 //register
 export const register = async ({ email, password, name }) => {
-  const { data: UserData, error: UserError } = await supabase.auth.signUp({
-    email: email,
-    password: password,
+  console.log(email, password, name);
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
   });
-  if (UserError) {
-    console.log("ocurrio un error al Registrar: ", UserError);
-    
-    console.log(UserData)
-    return UserData;
+  if (error) {
+    console.log(error);
+    throw error;
+  }
+  const { error: profileError } = await supabase.from("profile").insert([
+    {
+      profile_id: data.user.id,
+      name,
+      email,
+    },
+  ]);
+
+  if (profileError) {
+    console.log(profileError);
+    throw profileError;
   }
 
-    console.log(UserData)
-
-    if (UserData.user) {
-      const { error } = await supabase
-        .from('profile')
-        .insert([
-          {
-            profile_id: UserData.user.id,
-            name,
-            email,
-          },
-        ])
-        .select();
-      // if (error) {
-      //   await supabase.auth.admin.deleteUser(UserData.user.id);
-      //   throw error;
-      // }
-    }
-  return UserData;
+  return data;
 };
 
 //login
@@ -45,7 +39,7 @@ export const login = async ({ email, password }) => {
       return error.message;
     }
 
-    console.log('login data', data)
+    console.log("login data", data);
     if (data) {
       const profile = getProfile(email);
       return profile;
@@ -92,17 +86,20 @@ export const setProfile = async ({
 };
 //getProfile
 export const getProfile = async () => {
-  const { data: { user }, error: userError} = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError) {
-    throw userError
+    throw userError;
   }
 
-  console.log("User: ", user)
-  const email = user.email
-  console.log("Email: ", email)
-  
-  const { data, error } = await supabase
+  console.log("User: ", user);
+  const email = user.email;
+  console.log("Email: ", email);
+
+  const { error } = await supabase
     .from("profile")
     .select("*")
     .eq("email", email);
