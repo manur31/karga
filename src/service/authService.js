@@ -23,8 +23,7 @@ export const register = async ({ email, password, name }) => {
     console.log(profileError);
     throw profileError;
   }
-
-  return data;
+  return getProfile();
 };
 
 //login
@@ -94,18 +93,13 @@ export const getProfile = async () => {
   if (userError) {
     throw userError;
   }
-
-  console.log("User: ", user);
-  const email = user.email;
-  console.log("Email: ", email);
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("profile")
     .select("*")
-    .eq("email", email);
+    .eq("profile_id", user.id)
+    .single();
   if (error) {
-    return error.message;
+    throw error;
   }
-  // return data;
-  return user;
+  return data;
 };
