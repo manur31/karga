@@ -1,11 +1,37 @@
+import { BrowserRouter, Routes, Route } from "react-router"
+import ProtectedRoutes from "./ProtectedRoutes"
+import MainLayout from "./layouts/MainLayout"
+import PublicLayout from "./layouts/PublicLayout";
+import Welcome from './pages/Welcome';
+import Login from "./pages/Login";    
+import Register from './pages/Register';
+import Onboarding from "./pages/Onboarding";
+import SetsPage from "./pages/SetsPage";
 
 function App() {
-
   return (
-    <main className="bg-[#443737] h-screen">
-      <h1 className="text-3xl text-center w-full p-10 font-bold text-orange-500">Karga</h1>
-    </main>
-  )
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<PublicLayout/>}>
+            <Route path={'/'} element={<Welcome/>}/> 
+            <Route path={'/welcome'} element={<Welcome/>}/> 
+            <Route path={'/login'} element={<Login/>}/>  
+            <Route path={'/register'} element={<Register/>}/> 
+            <Route path={'/onboarding'} element={<Onboarding/>}/>
+          </Route>
+          <Route element={<ProtectedRoutes/>}>
+            <Route element={<MainLayout />}>
+              <Route path={"/sets"} element={<SetsPage/>} />
+              <Route path={"/sessions"} element={<div>Sessions</div>} />
+              <Route path={"/body"} element={<div>Body</div>} />
+              <Route path={"/today"} element={<div>Today</div>} />
+            </Route>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
 }
 
-export default App
+export default App;
