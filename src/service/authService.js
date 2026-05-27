@@ -1,31 +1,29 @@
 import { supabase } from "../lib/supabaseClient";
 //register
-export const register = async ({ email, passsword, name }) => {
-  const { data: UserData, error: UserError } = await supabase.auth.signUp({
-    email: email,
-    password: passsword,
+export const register = async ({ email, password, name }) => {
+  console.log(email, password, name);
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
   });
-  if (UserError) {
-    console.log("ocurrio un error al Registrar: ", UserError);
-    return UserData;
+  if (error) {
+    console.log(error);
+    throw error;
   }
-  if (UserData.user) {
-    const { error } = await supabase
-      .from("profile")
-      .insert([
-        {
-          id: UserData.user.id,
-          name,
-          email,
-        },
-      ])
-      .select();
-    if (error) {
-      await supabase.auth.admin.deleteUser(UserData.user.id);
-      throw error;
-    }
+  const { error: profileError } = await supabase.from("profile").insert([
+    {
+      profile_id: data.user.id,
+      name,
+      email,
+    },
+  ]);
+
+  if (profileError) {
+    console.log(profileError);
+    throw profileError;
   }
-  return UserData;
+  return getProfile();
 };
 
 //login
@@ -39,6 +37,8 @@ export const login = async ({ email, password }) => {
       console.log("Ocurrio un error al Inciar Sesion: ", error);
       return error.message;
     }
+
+    console.log("login data", data);
     if (data) {
       const profile = getProfile(email);
       return profile;
@@ -84,13 +84,22 @@ export const setProfile = async ({
   return data;
 };
 //getProfile
-export const getProfile = async (email) => {
+export const getProfile = async () => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
   const { data, error } = await supabase
     .from("profile")
     .select("*")
-    .eq("email", email);
+    .eq("profile_id", user.id)
+    .single();
   if (error) {
-    return error.message;
+    throw error;
   }
   return data;
 };

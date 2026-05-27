@@ -6,6 +6,7 @@ import Welcome from './pages/Welcome';
 import Login from "./pages/Login";    
 import Register from './pages/Register';
 import Onboarding from "./pages/Onboarding";
+import SetsPage from "./pages/SetsPage";
 
 function App() {
   return (
@@ -21,7 +22,7 @@ function App() {
           </Route>
           <Route element={<ProtectedRoutes/>}>
             <Route element={<MainLayout />}>
-              <Route path={"/sets"} element={<div>Sets</div>} />
+              <Route path={"/sets"} element={<SetsPage/>} />
               <Route path={"/sessions"} element={<div>Sessions</div>} />
               <Route path={"/body"} element={<div>Body</div>} />
               <Route path={"/today"} element={<div>Today</div>} />
