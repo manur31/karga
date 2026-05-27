@@ -34,7 +34,7 @@ export default function Login() {
     login(data);
 
     if (isSuccess) {
-      navigate("/sets");
+      navigate("/onboarding");
     }
   };
 

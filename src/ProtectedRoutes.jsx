@@ -2,12 +2,13 @@ import { Navigate, Outlet } from "react-router";
 import { useAuth } from "./hooks/queries/useAuth";
 
 function ProtectedRoutes() {
-  const { data: profile, isLoading } = useAuth()
+  // const { data: profile } = useAuth()
 
-  if (isLoading) return <div>Loading...</div>
-  if (!profile) return <Navigate to={"/login"} />;
+  // if (!profile) return <Navigate to={"/login"} />;
 
-  return <Outlet />;
+  // return <Outlet />;
+  
+  return <div>Protected Routes</div>;
 }
 
 export default ProtectedRoutes;

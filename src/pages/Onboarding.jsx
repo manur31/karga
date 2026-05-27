@@ -1,10 +1,14 @@
 import { useState } from "react";
 import Button from "../components/Button/Button";
 import { ArrowLeft, ArrowRight } from "../components/icons";
+import { getProfile } from "../service/authService";
 
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [weeklyFrequency, setWeeklyFrequency] = useState(3);
+  getProfile().then((resultado) => {
+    console.log("Éxito:", resultado);
+  });
   // para avanzar y retroceder
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => Math.max(1, prev - 1));
