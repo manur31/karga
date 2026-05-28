@@ -48,6 +48,13 @@ export default function Register() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
         <Input 
+          type="text" 
+          placeholder="Nombre" 
+          disabled={isLoading}
+          required 
+        />
+
+        <Input 
           type="email" 
           placeholder="Email" 
           disabled={isLoading}
