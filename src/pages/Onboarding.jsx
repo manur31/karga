@@ -35,7 +35,6 @@ export default function Onboarding() {
 
   return (
     <div className="relative flex flex-col h-full min-h-[85vh] text-white overflow-hidden ">
-      
       {/* CONTENIDO DINÁMICO DEL ONBOARDING */}
       <main className="relative z-20 flex-1 flex flex-col w-full max-w-md mx-auto px-6 py-8 min-h-0">
         
@@ -77,7 +76,6 @@ export default function Onboarding() {
           </>
         )}
       </main>
-
     </div>
   );
 }
