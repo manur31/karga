@@ -77,12 +77,18 @@ export default function Register() {
           {...register("name")}
         />
 
-        <Input
-          type="email"
-          placeholder="Email"
-          disabled={isPending}
-          required
-          {...register("email")}
+        <Input 
+          type="text" 
+          placeholder="Nombre" 
+          disabled={isLoading}
+          required 
+        />
+
+        <Input 
+          type="email" 
+          placeholder="Email" 
+          disabled={isLoading}
+          required 
         />
 
         <div className="relative flex items-center">
