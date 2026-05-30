@@ -16,7 +16,7 @@ export default function Welcome() {
           alt="Background" 
           className="w-full h-full object-cover opacity-[0.15] filter grayscale"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-dark-bg/50 to-dark-bg" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-dark-bg/50 to-dark-bg" />
 
       </div>
 
@@ -38,7 +38,7 @@ export default function Welcome() {
         <p className="text-lg font-medium text-zinc-200">
           Define tus límites. Supéralos todos.
         </p>
-        <div className="w-12 h-[3px] bg-[#FF5C00] rounded-full" />
+        <div className="w-12 h-0.75 bg-[#FF5C00] rounded-full" />
       </div>
 
       {/* botones y footer */}
