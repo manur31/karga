@@ -18,6 +18,8 @@ function SetsPage() {
 
   if (isLoading) return <div>Loading...</div>;
 
+  console.log(profile)
+
   return (
     <div>
       <h1>Hola {profile?.name}</h1>

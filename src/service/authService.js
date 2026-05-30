@@ -67,20 +67,30 @@ export const setProfile = async ({
   rest_time,
   id,
 }) => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
   const { data, error } = await supabase
     .from("profile")
-    .update([
+    .update(
       {
-        size: size,
-        time_for_week: time_for_week,
-        weight: weight,
-        rest_time: rest_time,
+        size,
+        time_for_week,
+        weight,
+        rest_time
       },
-    ])
-    .eq("id", id);
+    ).eq("profile_id", user.id).select();
   if (error) {
+    console.log(error)
     return error.message;
   }
+
+  console.log(data)
   return data;
 };
 //getProfile

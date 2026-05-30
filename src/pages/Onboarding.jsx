@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../components/Button/Button';
 import { ArrowLeft, ArrowRight } from '../components/icons';
+import { useOnboarding } from '../hooks/mutations/useAuthMutations';
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -15,22 +16,30 @@ export default function Onboarding() {
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => Math.max(1, prev - 1));
 
+  const { mutate: onboardingMutate, isPending: isOnboardingPending } = useOnboarding();
+
   const handleFinishOnboarding = () => {
     setIsSubmitting(true);
 
     const onboardingData = {
-      weeklyFrequency,
-      restTime,
+      size: 181,
+      time_for_week: weeklyFrequency,
+      weight: 168,
+      rest_time: restTime,
+      id: "02e22669-2c7c-452f-b459-0741cdaf8d3e",
     };
   
     console.log("Enviando datos a Supabase...", onboardingData);
+
+    // TODO: Implementar llamada a Supabase
+    onboardingMutate(onboardingData);
   
     //delay falso
-    setTimeout(() => {
-      setIsSubmitting(false); 
+    // setTimeout(() => {
+    //   setIsSubmitting(false); 
       
       navigate('/sets'); 
-    }, 3000); 
+    // }, 3000); 
   };
 
   return (
@@ -39,7 +48,7 @@ export default function Onboarding() {
       <main className="relative z-20 flex-1 flex flex-col w-full max-w-md mx-auto px-6 py-8 min-h-0">
         
         {/* si está enviando los datos, mostramos la pantalla de transición */}
-        {isSubmitting ? (
+        {isOnboardingPending ? (
           <div className="flex flex-col flex-1 items-center justify-center text-center animate-fade-in gap-4">
             {/* Spinner animado nativo con Tailwind */}
             <div className="w-12 h-12 border-4 border-t-karga-orange border-white/10 rounded-full animate-spin mb-2" />
@@ -106,38 +115,6 @@ function Step1({
             Ajusta el valor inicial para personalizar tu experiencia.
           </p>
         </div>
-  
-        {/*CONTADOR*/}
-        <div className="flex flex-col items-center my-10">
-          <div className="flex flex-col items-center gap-4">
-              
-              <div className="flex items-center gap-8 bg-white/5 p-6 rounded-[2rem] border border-white/5 shadow-inner">
-              
-                <button 
-                    type="button"
-                    onClick={handleDecrement}
-                    className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
-                >
-                    <div className="-translate-y-[2px]">-</div>
-                </button>
-                
-                <div className="w-24 text-center text-6xl font-black text-white tracking-tighter">
-                    {weeklyFrequency}
-                </div>
-
-                <button 
-                    type="button"
-                    onClick={handleIncrement}
-                    className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
-                >
-                    <div className="-translate-y-[3px] -translate-x-[-1px]">+</div>
-                </button>
-              
-              </div>
-
-              <span className="text-zinc-500 text-base font-semibold tracking-wide lowercase mt-1">
-                {weeklyFrequency === 1 ? 'día por semana' : 'días por semana'}
-              </span>
 
       {/*  CONTADOR */}
       <div className="flex flex-col items-center my-10">
@@ -161,7 +138,12 @@ function Step1({
           >
             <div className="-translate-y-0.75 -translate-x-px">+</div>
           </button>
+
+          
           </div>
+          <span className="text-zinc-500 text-base font-semibold tracking-wide lowercase mt-2">
+                {weeklyFrequency === 1 ? 'día por semana' : 'días por semana'}
+          </span>
         </div>
   
         {/* BOTONES Y FOOTER */}
