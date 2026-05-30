@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { addToFavorite, createExercise, deleteExercise, updateFavorite } from "../../service/exersiseService"
 
 export const useCreateExercise = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
         mutationFn: (data) => {
-            // TODO: Implement exercise creation
+            createExercise(data)
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -15,16 +16,31 @@ export const useCreateExercise = () => {
     })
 }
 
-export const useUpdateExercise = () => {
+export const useAddToFavorite = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data) => {
-            // TODO: Implement exercise update
+        mutationFn: (id) => {
+            addToFavorite(id)
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['exercises']
+                queryKey: ['exercises', 'favoriteExercises']
+            })
+        }
+    })
+}
+
+export const useUpdateFavorite = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({id, is_favorite}) => {
+            updateFavorite({id, is_favorite})
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['exercises', 'favoriteExercises']
             })
         }
     })
@@ -35,11 +51,11 @@ export const useDeleteExercise = () => {
 
     return useMutation({
         mutationFn: (id) => {
-            // TODO: Implement exercise deletion
+            deleteExercise(id)
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['exercises']
+                queryKey: ['exercises', 'favoriteExercises']
             })
         }
     })
