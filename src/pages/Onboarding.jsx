@@ -139,6 +139,28 @@ function Step1({
                 {weeklyFrequency === 1 ? 'día por semana' : 'días por semana'}
               </span>
 
+      {/*  CONTADOR */}
+      <div className="flex flex-col items-center my-10">
+        <div className="flex items-center gap-8 bg-white/5 p-6 rounded-4xl border border-white/5 shadow-inner">
+          <button
+            type="button"
+            onClick={handleDecrement}
+            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
+          >
+            <div className="-translate-y-0.5">-</div>
+          </button>
+
+          <div className="w-24 text-center text-6xl font-black text-white tracking-tighter">
+            {weeklyFrequency}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleIncrement}
+            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
+          >
+            <div className="-translate-y-0.75 -translate-x-px">+</div>
+          </button>
           </div>
         </div>
   
