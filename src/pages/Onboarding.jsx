@@ -178,7 +178,7 @@ function Step1({
     );
 }
 
-// PASO 2: tiempo de descanso 
+{/* // PASO 2: tiempo de descanso  */}
 function Step2({ 
     onNext, 
     onBack,
