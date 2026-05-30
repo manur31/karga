@@ -138,6 +138,8 @@ function Step1({
               <span className="text-zinc-500 text-base font-semibold tracking-wide lowercase mt-1">
                 {weeklyFrequency === 1 ? 'día por semana' : 'días por semana'}
               </span>
+            </div>
+          </div>
 
       {/*  CONTADOR */}
       <div className="flex flex-col items-center my-10">
@@ -196,7 +198,7 @@ function Step1({
     );
 }
 
-// PASO 2: tiempo de descanso 
+{/* // PASO 2: tiempo de descanso  */}
 function Step2({ 
     onNext, 
     onBack,
