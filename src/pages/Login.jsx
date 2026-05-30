@@ -53,7 +53,7 @@ export default function Login() {
         <h1 className="text-7xl font-black tracking-tight text-karga-lightorange drop-shadow-[0_0_16px_rgba(255,168,130,0.1)]">
           Karga
         </h1>
-        <p className="text-sm text-zinc-400 mt-3 font-medium">
+        <p className="text-sm text-zinc-400 mt-5 font-medium">
           Tu entrenamiento, tu fuerza
         </p>
       </div>
@@ -61,55 +61,86 @@ export default function Login() {
       {/* FORMULARIO */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {/* input de email */}
-        <Input
-          type="email"
-          placeholder="Email"
-          disabled={isPending}
-          required
-          {...register("email")}
-        />
-        {error?.email && (
-          <p className="text-red-500 text-sm">{error.email.message}</p>
-        )}
-        {errors.email && (
-          <p className="text-red-500 text-sm">{errors.email.message}</p>
-        )}
-
-        {/* input de contraseña */}
-        <div className="relative flex items-center">
-          <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="Contraseña"
-            disabled={isPending}
+        <Input 
+            type="email" 
+            placeholder="Email" 
+            disabled={isLoading}
             required
-            className="pr-12"
-            {...register("password")}
-          />
-          {error?.password && (
-            <p className="text-red-500 text-sm">{error.password.message}</p>
-          )}
-          {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password.message}</p>
-          )}
-
-          {/* el toggle */}
-          <button
+            className="
+            hover:placeholder:text-karga-lightorange
+            focus:placeholder:text-karga-lightorange
+            hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
+            focus:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
+            transition-all
+            duration-300
+            glowy-placeholder
+            "
+        />
+        
+        <div className="flex flex-col gap-2 w-full">
+        
+        <div className="relative flex items-center w-full">
+            <Input 
+            type={showPassword ? "text" : "password"} 
+            placeholder="Contraseña" 
+            disabled={isLoading}
+            required
+            className="pr-12 w-full 
+            hover:placeholder:text-karga-lightorange
+            focus:placeholder:text-karga-lightorange
+            hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
+            focus:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
+            transition-all
+            duration-300
+            glowy-placeholder
+            "
+            />
+            
+            <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            disabled={isPending}
-            className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
-          >
-            {showPassword ? <EyeIcon /> : <EyeOffIcon />}
-          </button>
+            disabled={isLoading}
+            className="absolute right-4 text-zinc-500 hover:text-karga-lightorange transition-colors focus:outline-none"
+            >
+            {showPassword ? <EyeIcon/> : <EyeOffIcon/>}
+            </button>
+        </div>
+
+        <button
+            type="button"
+            disabled={isLoading}
+            onClick={() => navigate('/forgot-password')} // hay q crear la ruta y manejarlo
+            className="self-end mr-3 pt-0.75 pb-1 text-xs text-karga-lightorange/80 hover:text-karga-lightorange font-medium tracking-wide transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]"
+        >
+            ¿Olvidaste tu contraseña?
+        </button>
+
         </div>
 
         {/* botón login*/}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          disabled={isPending}
-          className={`mt-2 ${isPending ? "opacity-70 cursor-not-allowed" : ""}`}
+        <Button 
+          type="submit" 
+          variant="primary" 
+          size="lg" 
+          disabled={isLoading}
+          className={`
+            mt-2
+            relative
+            overflow-hidden
+            transition-all
+            duration-300
+
+            before:absolute
+            before:inset-0
+            before:bg-karga-lightorange/0
+            before:transition-all
+            before:duration-300
+            hover:before:bg-karga-lightorange/35
+            hover:drop-shadow-[0_0_1px_var(--color-karga-lightorange)]
+            hover:shadow-karga-lightorange/10
+          
+            ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+          `}
         >
           {isPending ? "Iniciando..." : "Iniciar sesión"}
         </Button>
