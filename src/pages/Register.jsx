@@ -46,11 +46,11 @@ export default function Register() {
   };
 
   const handleGoogleRegister = () => {
-    setIsLoading(true);
+    // setIsLoading(true);
 
     // registro con Google (reempklazar)
     setTimeout(() => {
-      setIsLoading(false);
+      // setIsLoading(false);
       navigate("/onboarding");
     }, 2000);
   };
@@ -71,24 +71,18 @@ export default function Register() {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Input
           type="text"
-          placeholder="Nombre de Usuario"
+          placeholder="Nombre"
           disabled={isPending}
           required
           {...register("name")}
         />
 
         <Input 
-          type="text" 
-          placeholder="Nombre" 
-          disabled={isLoading}
-          required 
-        />
-
-        <Input 
           type="email" 
           placeholder="Email" 
-          disabled={isLoading}
+          disabled={isPending}
           required 
+          {...register("email")}
         />
 
         <div className="relative flex items-center">

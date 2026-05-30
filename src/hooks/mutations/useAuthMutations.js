@@ -39,7 +39,7 @@ export const useLogout = () => {
         }
     })
 }
-
+ 
 export const useOnboarding = () => {
     const queryClient = useQueryClient()
 
