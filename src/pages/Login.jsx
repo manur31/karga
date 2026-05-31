@@ -36,6 +36,9 @@ export default function Login() {
     if (isSuccess) {
       navigate("/sets");
     }
+    if (error) {
+      console.log(error);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -61,12 +64,12 @@ export default function Login() {
       {/* FORMULARIO */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {/* input de email */}
-        <Input 
-            type="email" 
-            placeholder="Email" 
-            disabled={isLoading}
-            required
-            className="
+        <Input
+          type="email"
+          placeholder="Email"
+          disabled={isPending}
+          required
+          className="
             hover:placeholder:text-karga-lightorange
             focus:placeholder:text-karga-lightorange
             hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
@@ -76,16 +79,15 @@ export default function Login() {
             glowy-placeholder
             "
         />
-        
+
         <div className="flex flex-col gap-2 w-full">
-        
-        <div className="relative flex items-center w-full">
-            <Input 
-            type={showPassword ? "text" : "password"} 
-            placeholder="Contraseña" 
-            disabled={isLoading}
-            required
-            className="pr-12 w-full 
+          <div className="relative flex items-center w-full">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              disabled={isPending}
+              required
+              className="pr-12 w-full 
             hover:placeholder:text-karga-lightorange
             focus:placeholder:text-karga-lightorange
             hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
@@ -95,34 +97,33 @@ export default function Login() {
             glowy-placeholder
             "
             />
-            
+
             <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            disabled={isLoading}
-            className="absolute right-4 text-zinc-500 hover:text-karga-lightorange transition-colors focus:outline-none"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isPending}
+              className="absolute right-4 text-zinc-500 hover:text-karga-lightorange transition-colors focus:outline-none"
             >
-            {showPassword ? <EyeIcon/> : <EyeOffIcon/>}
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
             </button>
-        </div>
+          </div>
 
-        <button
+          <button
             type="button"
-            disabled={isLoading}
-            onClick={() => navigate('/forgot-password')} // hay q crear la ruta y manejarlo
+            disabled={isPending}
+            onClick={() => navigate("/forgot-password")} // hay q crear la ruta y manejarlo
             className="self-end mr-3 pt-0.75 pb-1 text-xs text-karga-lightorange/80 hover:text-karga-lightorange font-medium tracking-wide transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]"
-        >
+          >
             ¿Olvidaste tu contraseña?
-        </button>
-
+          </button>
         </div>
 
         {/* botón login*/}
-        <Button 
-          type="submit" 
-          variant="primary" 
-          size="lg" 
-          disabled={isLoading}
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          disabled={isPending}
           className={`
             mt-2
             relative
@@ -139,7 +140,7 @@ export default function Login() {
             hover:drop-shadow-[0_0_1px_var(--color-karga-lightorange)]
             hover:shadow-karga-lightorange/10
           
-            ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+            ${isPending ? "opacity-70 cursor-not-allowed" : ""}
           `}
         >
           {isPending ? "Iniciando..." : "Iniciar sesión"}

@@ -45,15 +45,15 @@ export default function Register() {
     }
   };
 
-  const handleGoogleRegister = () => {
-    setIsLoading(true);
+  // const handleGoogleRegister = () => {
+  //   setIsLoading(true);
 
-    // registro con Google (reempklazar)
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/onboarding");
-    }, 2000);
-  };
+  //   // registro con Google (reempklazar)
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //     navigate("/onboarding");
+  //   }, 2000);
+  // };
 
   return (
     <div className="flex flex-col h-full w-full max-w-sm mx-auto px-4 py-2">
@@ -77,19 +77,9 @@ export default function Register() {
           {...register("name")}
         />
 
-        <Input 
-          type="text" 
-          placeholder="Nombre" 
-          disabled={isLoading}
-          required 
-        />
+        <Input type="text" placeholder="Nombre" disabled={isPending} required />
 
-        <Input 
-          type="email" 
-          placeholder="Email" 
-          disabled={isLoading}
-          required 
-        />
+        <Input type="email" placeholder="Email" disabled={isPending} required />
 
         <div className="relative flex items-center">
           <Input
@@ -155,7 +145,7 @@ export default function Register() {
         variant="secondary"
         size="lg"
         disabled={isPending}
-        onClick={handleGoogleRegister}
+        onClick={""}
         className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10"
       >
         <GoogleIcon />
