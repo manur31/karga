@@ -1,6 +1,6 @@
 import { useAuth } from "../hooks/queries/useAuth";
 import { useEffect } from "react";
-import { getExersises } from "../service/exersiseService";
+import { getExercises } from "../service/exersiseService";
 
 function SetsPage() {
   const { data: profile, isLoading } = useAuth();
