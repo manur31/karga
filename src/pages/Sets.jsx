@@ -22,6 +22,10 @@ export default function Sets() {
     isError: isExerciseError,
   } = useCreateExercise();
 
+<<<<<<< Updated upstream
+=======
+  const [routinesLocal, setRoutinesLocal] = useState([]);
+>>>>>>> Stashed changes
   const { data: exercises, isLoading } = useExercises();
   if (isLoading) {
     return <div>Cargando...</div>;
@@ -56,10 +60,10 @@ export default function Sets() {
   //       setIsLoading(false);
   //     }
   //   };
-
   //   fetchDashboardData();
   // }, []);
 
+<<<<<<< Updated upstream
   const routines = [
     {
       id: 1,
@@ -96,6 +100,8 @@ export default function Sets() {
     },
   ];
 
+=======
+>>>>>>> Stashed changes
   const handleCreateWorkout = () => {
     console.log("Creando nuevo entrenamiento");
     createExercise({
@@ -113,9 +119,10 @@ export default function Sets() {
     }
   };
 
-  const handleOpenRoutine = (id) => {
+  const handleAddRoutine = (id) => {
     //redirigir al detalle o inicio de la rutina seleccionada
-    console.log(`Abriendo rutina ID: ${id}`);
+    setRoutinesLocal(id);
+    console.log(id);
     // navigate(`/sets/${id}`);
   };
 
@@ -168,7 +175,6 @@ export default function Sets() {
             </span>
           </div>
         </Card>
-
         {/* card de racha */}
         <Card
           variant="default"
@@ -189,10 +195,53 @@ export default function Sets() {
           </div>
         </Card>
       </div>
-
       {/* MIS RUTINAS */}
+      <div className="h-px bg-white/5 mb-8">
+        <div className="w-full h-full  via-white/5 to-transparent" />
+        <div className="flex flex-col mb-8">
+          <h2 className="text-lg font-bold text-white mb-4">Mis Rutinas</h2>
+          <input
+            type="text"
+            placeholder="nombre de la rutina"
+            className="bg-white/10 text-white placeholder:text-zinc-500 border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-karga-orange"
+          />
+          <button
+            onClick={handleCreateWorkout}
+            className="text-karga-orange hover:text-karga-orange/80 transition-colors"
+          >
+            Crear nueva rutina
+          </button>
+        </div>
+        <div className="flex flex-col gap-3">
+          {routines.map(({ name, id, exercises }) => (
+            <Card
+              key={id}
+              variant="default"
+              onClick={() => handleAddRoutine(id)}
+              className="p-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all"
+            >
+              <Avatar initial={name.charAt(0)} size="md" />
+              <div className="flex flex-col flex-1">
+                <span className="text-[15px] font-bold text-zinc-100 mb-0.5">
+                  {name}
+                </span>
+                <span>{category}</span>
+              </div>
+              <ChevronIcon
+                className="w-5 h-5 text-zinc-600"
+                direction="right"
+              />
+            </Card>
+          ))}
+        </div>
+      </div>
+      {/* MIS EJERCICIOS */}
       <div className="flex flex-col">
+<<<<<<< Updated upstream
         <h2 className="text-lg font-bold text-white mb-4">Mis Rutinas</h2>
+=======
+        <h2 className="text-lg font-bold text-white mb-4">Mis Ejercicios</h2>
+>>>>>>> Stashed changes
 
         {isLoading ? (
           // si esta cargando pone spinner
@@ -201,11 +250,15 @@ export default function Sets() {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
+<<<<<<< Updated upstream
             {exercises.map(({ name, id, muscle }) => (
+=======
+            {exercises.map(({ name, id, category }) => (
+>>>>>>> Stashed changes
               <Card
                 key={id}
                 variant="default"
-                onClick={() => handleOpenRoutine(id)}
+                onClick={() => handleAddRoutine(id)}
                 className="p-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all"
               >
                 {/*usa la letra inicial del nombre en la bdd*/}
@@ -214,14 +267,22 @@ export default function Sets() {
                   //este color en realidad podria ser random tbh, pero esta puesto asi considerando la posibilidad de que luego agreguemos tipo un "selector" de color para la rutina.
                   size="md"
                 />
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
                 <div className="flex flex-col flex-1">
                   <span className="text-[15px] font-bold text-zinc-100 mb-0.5">
                     {name}
                   </span>
+<<<<<<< Updated upstream
                   <span>{muscle + " "}</span>
                 </div>
 
+=======
+                  <span>{category}</span>
+                </div>
+>>>>>>> Stashed changes
                 <ChevronIcon
                   className="w-5 h-5 text-zinc-600"
                   direction="right"

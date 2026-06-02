@@ -18,8 +18,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const {
-    handleSubmit,
     register,
+    handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -29,6 +29,7 @@ export default function Login() {
   const { mutate: login, isPending, isSuccess, error } = useLogin();
 
   const onSubmit = (data) => {
+<<<<<<< Updated upstream
     console.log(data);
 
     login(data);
@@ -39,8 +40,15 @@ export default function Login() {
     if (error) {
       console.log(error);
     }
+=======
+    login(data, {
+      onSuccess: () => {
+        navigate("/sets");
+        console.log("Login exitoso, redirigiendo a sets...");
+      },
+    });
+>>>>>>> Stashed changes
   };
-
   const handleGoogleLogin = () => {
     // reemplazar al auth con google
     setTimeout(() => {
@@ -69,6 +77,10 @@ export default function Login() {
           placeholder="Email"
           disabled={isPending}
           required
+<<<<<<< Updated upstream
+=======
+          {...register("email")}
+>>>>>>> Stashed changes
           className="
             hover:placeholder:text-karga-lightorange
             focus:placeholder:text-karga-lightorange
@@ -86,6 +98,10 @@ export default function Login() {
               type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
               disabled={isPending}
+<<<<<<< Updated upstream
+=======
+              {...register("password")}
+>>>>>>> Stashed changes
               required
               className="pr-12 w-full 
             hover:placeholder:text-karga-lightorange

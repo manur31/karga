@@ -30,8 +30,8 @@ export const register = async ({ email, password, name }) => {
 export const login = async ({ email, password }) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
+      email,
+      password,
     });
     if (error) {
       console.log("Ocurrio un error al Inciar Sesion: ", error);
@@ -40,7 +40,7 @@ export const login = async ({ email, password }) => {
 
     console.log("login data", data);
     if (data) {
-      const profile = getProfile(email);
+      const profile = await getProfile(email);
       return profile;
     }
   } catch (error) {
@@ -65,10 +65,10 @@ export const setProfile = async ({
   weight,
   time_for_week,
   rest_time,
-  id,
 }) => {
   const { data, error } = await supabase
     .from("profile")
+<<<<<<< Updated upstream
     .update([
       {
         size: size,
@@ -81,6 +81,22 @@ export const setProfile = async ({
   if (error) {
     return error.message;
   }
+=======
+    .update({
+      size,
+      time_for_week,
+      weight,
+      rest_time,
+    })
+    .eq("profile_id", user.id)
+    .select();
+  if (error) {
+    console.log(error);
+    return error.message;
+  }
+
+  console.log(data);
+>>>>>>> Stashed changes
   return data;
 };
 //getProfile

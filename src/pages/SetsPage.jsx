@@ -1,13 +1,13 @@
 import { useAuth } from "../hooks/queries/useAuth";
 import { useEffect } from "react";
-import { getExersises } from "../service/exersiseService";
+import { getExercises } from "../service/exersiseService";
 
 function SetsPage() {
   const { data: profile, isLoading } = useAuth();
   const { logout } = useAuth();
   //testing unicamente de los exersises
   useEffect(() => {
-    getExersises()
+    getExercises()
       .then((data) => {
         console.log(data);
       })
@@ -18,6 +18,11 @@ function SetsPage() {
 
   if (isLoading) return <div>Loading...</div>;
 
+<<<<<<< Updated upstream
+=======
+  console.log(profile);
+
+>>>>>>> Stashed changes
   return (
     <div>
       <h1>Hola {profile?.name}</h1>
