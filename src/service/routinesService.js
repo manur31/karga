@@ -3,13 +3,17 @@ export const createRoutines = async ({ name, description }) => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data, error } = await supabase.from("routines").update([
-    {
-      name,
-      description,
-      profile_id: user.id,
-    },
-  ]);
+  const { data, error } = await supabase
+    .from("routines")
+    .insert([
+      {
+        name,
+        description,
+        profile_id: user.id,
+      },
+    ])
+    .select()
+    .single();
 
   if (error) throw error;
   return data;
@@ -31,15 +35,12 @@ export const insertExercisesRoutine = async ({
   rest_time = rest_time ?? profile.rest_time;
   const { error } = await supabase
     .from("routines_exercises")
-    .update([
-      {
-        routine_id,
-        id_exercises,
-        rest_time,
-        orden,
-      },
-    ])
-    .eq("routine_id", routine_id)
+    .insert({
+      routine_id,
+      id_exercises,
+      rest_time,
+      orden,
+    })
     .eq("profile_id", user.id);
   if (error) throw error;
 };

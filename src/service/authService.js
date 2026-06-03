@@ -66,22 +66,16 @@ export const setProfile = async ({
   time_for_week,
   rest_time,
 }) => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError) {
+    console.log(userError);
+    return userError.message;
+  }
   const { data, error } = await supabase
     .from("profile")
-<<<<<<< Updated upstream
-    .update([
-      {
-        size: size,
-        time_for_week: time_for_week,
-        weight: weight,
-        rest_time: rest_time,
-      },
-    ])
-    .eq("id", id);
-  if (error) {
-    return error.message;
-  }
-=======
     .update({
       size,
       time_for_week,
@@ -96,7 +90,6 @@ export const setProfile = async ({
   }
 
   console.log(data);
->>>>>>> Stashed changes
   return data;
 };
 //getProfile
