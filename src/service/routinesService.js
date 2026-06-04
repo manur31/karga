@@ -18,6 +18,17 @@ export const createRoutines = async ({ name, description }) => {
   if (error) throw error;
   return data;
 };
+export const deleteRoutines = async (routine_id) => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("routines")
+    .delete()
+    .eq("routine_id", routine_id)
+    .eq("profile_id", user.id);
+  if (error) throw error;
+};
 export const insertExercisesRoutine = async ({
   routine_id,
   id_exercises,
@@ -84,7 +95,18 @@ export const getRoutineforID = async (routine_id) => {
     )
     .eq("profile_id", user.id)
     .eq("routine_id", routine_id);
-
+  if (error) throw error;
+  return data;
+};
+export const updateRoutines = async ({ routine_id, name }) => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("routines")
+    .update({ name })
+    .eq("routine_id", routine_id)
+    .eq("profile_id", user.id);
   if (error) throw error;
   return data;
 };

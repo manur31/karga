@@ -19,11 +19,15 @@ import {
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
+  useDeleteRoutines,
+  useEditRoutines,
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
+import { getRoutineforID } from "../service/routinesService";
 
 export default function Sets() {
   const inputRef = useRef(null);
+  const iputRef2 = useRef(null);
   const navigate = useNavigate();
 
   // estados para almacenar los datos que vendrán de la base de datos
@@ -39,7 +43,8 @@ export default function Sets() {
   const { mutateAsync: AddFavorite } = useAddToFavorite();
   const { mutateAsync: createRoutines } = useCreateRoutines();
   const { mutateAsync: insertExercisesRoutine } = useInsertExercisesRoutine();
-
+  const { mutateAsync: usedeleteRoutines } = useDeleteRoutines();
+  const { mutateAsync: editRoutines } = useEditRoutines();
   const { data: exercises, isLoading } = useExercises();
   const { data: routines, isLoading: isRoutinesLoading } = useRoutines();
   const { data: exerciseFavorites, isLoading: isExerciseFavoritesLoading } =
@@ -70,37 +75,48 @@ export default function Sets() {
     }
   };
   const createroutine = async (name) => {
-    const routine = await createRoutines({
+    createRoutines({
       name,
       description: "descripcion de prueba",
     });
-
-    setRoutinesID(routine);
+  };
+  const handleshowRoutineDetails = (id) => {
+    getRoutineforID(id).then((data) => {
+      console.log("data rutina por id:", data);
+    });
+  };
+  const selectid = (data) => {
+    setRoutinesID(data);
+    console.log("id seleccionado:", data);
   };
   const handleAddtoFavorite = (id) => {
-    AddFavorite(id);
-  };
-  const handleDeleteExercise = (id) => {
-    deleteExercise(id);
-    window.location.reload();
-  };
-  const handleAddRoutine = (id) => {
     if (!routinesID) {
       console.log("No hay rutina creada");
       return;
     }
-    routinesID.then((data) => {
-      console.log("routine_id:", data.routine_id);
-
-      insertExercisesRoutine({
-        routine_id: data.routine_id,
-        id_exercises: id,
-        rest_time: 60,
-        orden: 1,
-      });
+    handleAddRoutine(id);
+    AddFavorite(id);
+  };
+  const handleDeleteRoutine = (id) => {
+    usedeleteRoutines(id);
+  };
+  const handleDeleteExercise = (id) => {
+    deleteExercise(id);
+  };
+  const handleEditRoutine = (data) => {
+    editRoutines(data);
+  };
+  const handleAddRoutine = (id) => {
+    console.log("routine_id:", routinesID.routine_id);
+    insertExercisesRoutine({
+      routine_id: routinesID.routine_id,
+      id_exercises: id,
+      rest_time: 60,
+      orden: 1,
     });
     console.log("Ejercicio agregado a la rutina");
   };
+
   const exercisesF = exerciseFavorites?.map((item) => item.exercises);
   return (
     <div className="flex flex-col w-full animate-fade-in">
@@ -192,29 +208,63 @@ export default function Sets() {
         <div className="flex flex-col">
           {" "}
           <div className="flex flex-col gap-3">
-            {routines.map(({ name, routine_id }) => (
-              <Card
-                key={routine_id}
-                variant="default"
-                className="p-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all"
+            {routines.map((data) => (
+              <div
+                key={data.routine_id}
+                className="flex flex-col  gap-2 cursor-pointer transition-all "
               >
-                {/*usa la letra inicial del nombre en la bdd*/}
-                <Avatar
-                  initial={name.charAt(0)}
-                  //este color en realidad podria ser random tbh, pero esta puesto asi considerando la posibilidad de que luego agreguemos tipo un "selector" de color para la rutina.
-                  size="md"
-                />
-                <div className="flex flex-col flex-1">
-                  <span className="text-[15px] font-bold text-zinc-100 mb-0.5">
-                    {name}
-                  </span>
-                </div>
+                <Card
+                  variant="default"
+                  onClick={() => handleshowRoutineDetails(data.routine_id)}
+                  className="p-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all min-w-0 flex-1 "
+                >
+                  {/*usa la letra inicial del nombre en la bdd*/}
+                  <Avatar
+                    initial={data.name.charAt(0)}
+                    //este color en realidad podria ser random tbh, pero esta puesto asi considerando la posibilidad de que luego agreguemos tipo un "selector" de color para la rutina.
+                    size="md"
+                  />
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[15px] font-bold text-zinc-100 mb-0.5">
+                      {data.name}
+                    </span>
+                  </div>
 
-                <ChevronIcon
-                  className="w-5 h-5 text-zinc-600"
-                  direction="right"
-                />
-              </Card>
+                  <ChevronIcon
+                    className="w-5 h-5 text-zinc-600"
+                    direction="right"
+                  />
+                </Card>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => selectid(data)}
+                >
+                  select
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteRoutine(data.routine_id)}
+                >
+                  eliminar
+                </Button>
+                <input
+                  type="text"
+                  placeholder="nombre de la rutina"
+                  ref={iputRef2}
+                ></input>
+                <button
+                  onClick={() =>
+                    handleEditRoutine({
+                      routine_id: data.routine_id,
+                      name: iputRef2.current.value,
+                    })
+                  }
+                >
+                  modificar nombre rutina
+                </button>
+              </div>
             ))}
           </div>
         </div>
