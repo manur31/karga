@@ -30,8 +30,8 @@ export const register = async ({ email, password, name }) => {
 export const login = async ({ email, password }) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
+      email,
+      password,
     });
     if (error) {
       console.log("Ocurrio un error al Inciar Sesion: ", error);
@@ -40,7 +40,7 @@ export const login = async ({ email, password }) => {
 
     console.log("login data", data);
     if (data) {
-      const profile = getProfile(email);
+      const profile = await getProfile(email);
       return profile;
     }
   } catch (error) {
@@ -65,32 +65,31 @@ export const setProfile = async ({
   weight,
   time_for_week,
   rest_time,
-  id,
 }) => {
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
-
   if (userError) {
-    throw userError;
+    console.log(userError);
+    return userError.message;
   }
   const { data, error } = await supabase
     .from("profile")
-    .update(
-      {
-        size,
-        time_for_week,
-        weight,
-        rest_time
-      },
-    ).eq("profile_id", user.id).select();
+    .update({
+      size,
+      time_for_week,
+      weight,
+      rest_time,
+    })
+    .eq("profile_id", user.id)
+    .select();
   if (error) {
-    console.log(error)
+    console.log(error);
     return error.message;
   }
 
-  console.log(data)
+  console.log(data);
   return data;
 };
 //getProfile

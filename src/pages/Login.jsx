@@ -18,8 +18,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const {
-    handleSubmit,
     register,
+    handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -31,11 +31,11 @@ export default function Login() {
   const onSubmit = (data) => {
     login(data, {
       onSuccess: () => {
-        navigate("/sets"); // Solo pasa si la contraseña y mail son correctos en la BD
-      }
+        navigate("/sets");
+        console.log("Login exitoso, redirigiendo a sets...");
+      },
     });
   };
-
   const handleGoogleLogin = () => {
     // reemplazar al auth con google
     setTimeout(() => {
@@ -59,12 +59,13 @@ export default function Login() {
       {/* FORMULARIO */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {/* input de email */}
-        <Input 
-            type="email" 
-            placeholder="Email" 
-            disabled={isPending}
-            {...register("email")}
-            className="
+        <Input
+          type="email"
+          placeholder="Email"
+          disabled={isPending}
+          required
+          {...register("email")}
+          className="
             hover:placeholder:text-karga-lightorange
             focus:placeholder:text-karga-lightorange
             hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
@@ -99,16 +100,16 @@ export default function Login() {
             glowy-placeholder
             "
             />
-            
+
             <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             disabled={isPending}
             className="absolute right-4 text-zinc-500 hover:text-karga-lightorange transition-colors focus:outline-none"
             >
-            {showPassword ? <EyeIcon/> : <EyeOffIcon/>}
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
             </button>
-        </div>
+          </div>
 
         {errors.password && (
             <span className="text-red-500 text-xs pl-3 font-semibold">
@@ -121,10 +122,9 @@ export default function Login() {
             disabled={isPending}
             onClick={() => navigate('/forgot-password')} // hay q crear la ruta y manejarlo
             className="self-end mr-3 pt-0.75 pb-1 text-xs text-karga-lightorange/80 hover:text-karga-lightorange font-medium tracking-wide transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]"
-        >
+          >
             ¿Olvidaste tu contraseña?
-        </button>
-
+          </button>
         </div>
 
         {/* botón login*/}
