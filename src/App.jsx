@@ -11,6 +11,7 @@ import Sessions from "./pages/Sessions";
 import Body from "./pages/Body";
 import Today from "./pages/Today";
 import SetsPage from "./pages/SetsPage";
+import TestPage from "./pages/TestPage";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path={"/body"} element={<Body/>} />
               <Route path={"/today"} element={<Today/>} />
               <Route path={"/profile"} element={<SetsPage/>} />
+              <Route path={"/test"} element={<TestPage/>} />
             </Route>
           </Route>
         </Routes>

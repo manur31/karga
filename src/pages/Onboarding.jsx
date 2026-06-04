@@ -217,14 +217,14 @@ function Step2({
         <div className="flex flex-col items-center my-10">
           <div className="flex flex-col items-center gap-4">
               
-              <div className="flex items-center gap-8 bg-white/5 p-6 rounded-[2rem] border border-white/5 shadow-inner">
+              <div className="flex items-center gap-8 bg-white/5 p-6 rounded-4xl border border-white/5 shadow-inner">
               
                 <button 
                     type="button"
                     onClick={handleDecrement}
                     className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
                 >
-                    <div className="-translate-y-[2px]">-</div>
+                    <div className="-translate-y-0.5">-</div>
                 </button>
                 
                 {/*  formato reloj */}
@@ -237,7 +237,7 @@ function Step2({
                     onClick={handleIncrement}
                     className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
                 >
-                    <div className="-translate-y-[3px] -translate-x-[-1px]">+</div>
+                    <div className="-translate-y-0.75 -translate-x-px">+</div>
                 </button>
               
               </div>

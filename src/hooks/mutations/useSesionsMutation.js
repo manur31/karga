@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-export const useCreateSesion = () => {
+export const useCreateSession = () => {
     const queryClient = useQueryClient()
 
     return useMutation({

@@ -92,7 +92,7 @@ export default function Sessions() {
       <div className="grid grid-cols-2 gap-4 mb-8">
         
         {/* card de este mes */}
-        <Card variant="default" className="!p-4 flex flex-col justify-between h-[104px]">
+        <Card variant="default" className="p-4 flex flex-col justify-between h-26">
           <div className="flex items-center gap-2 text-zinc-400 text-xs font-semibold tracking-wide">
             <CalendarIcon/>
             Este mes
@@ -106,7 +106,7 @@ export default function Sessions() {
         </Card>
 
         {/* card de tiempo total */}
-        <Card variant="default" className="!p-4 flex flex-col justify-between h-[104px]">
+        <Card variant="default" className="p-4 flex flex-col justify-between h-26">
           <div className="flex items-center gap-2 text-zinc-400 text-xs font-semibold tracking-wide">
             <ClockIcon/>
             Tiempo total
@@ -136,7 +136,7 @@ export default function Sessions() {
                 key={session.id} 
                 variant="default"
                 onClick={() => handleOpenSessionDetail(session.id)}
-                className="!p-4 flex flex-col gap-3 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all"
+                className="p-4 flex flex-col gap-3 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all"
               >
                 {/* fila de título, fecha y flecha */}
                 <div className="flex items-start justify-between">

@@ -7,7 +7,7 @@ export const useCreateExercise = () => {
     return useMutation({
         mutationFn: (data) => {
             createExercise(data)
-        },
+        }, 
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['exercises']

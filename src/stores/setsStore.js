@@ -1,0 +1,41 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+export const useSetsStore = create(
+    persist(
+        (set, get) => ({
+            sets: [],
+
+            addSet: (newSet) => set((state) => ({
+                sets: [...state.sets, {
+                    ...newSet,
+                    id: crypto.randomUUID(),
+                    synced: false,
+                    createdAt: new Date(),
+                }]
+            })),
+
+            markAsSynced: (setId) => set((state) => ({
+                sets: state.sets.map((set) => 
+                    set.id === setId ? { ...set, synced: true } : set
+                )
+            })),
+
+            editSet: (setId, updatedSet) => set((state) => ({
+                sets: state.sets.map((set) => 
+                    set.id === setId ? { ...set, ...updatedSet } : set
+                )
+            })),
+
+            removeSet: (setId) => set((state) => ({
+                sets: state.sets.filter((set) => set.id !== setId)
+            })),
+
+            getPendingSets: () => get().sets.filter((set) => !set.synced),
+
+        }),
+        {
+            name: 'sets-storage',
+        }
+    )
+)
