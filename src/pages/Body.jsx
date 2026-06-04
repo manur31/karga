@@ -90,7 +90,7 @@ export default function Body() {
             <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-2 pl-2">
               Peso Corporal
             </span>
-            <Card variant="default" className="!p-5 flex flex-col gap-5">
+            <Card variant="default" className="p-5 flex flex-col gap-5">
               
               <div className="flex justify-between items-start">
                 <div className="flex items-baseline gap-1.5">
@@ -130,7 +130,7 @@ export default function Body() {
             <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-2 pl-2">
               Progreso Semanal
             </span>
-            <Card variant="default" className="!p-6 h-40 flex items-end justify-between">
+            <Card variant="default" className="p-6 h-40 flex items-end justify-between">
               {/* gráfico de barras generado con Tailwind */}
               {weeklyProgress.map((day, index) => (
                 <div key={index} className="flex flex-col items-center gap-2 w-8 h-full">
@@ -160,7 +160,7 @@ export default function Body() {
                 <Card 
                   key={muscle.id} 
                   variant="default" 
-                  className="!p-4 flex flex-col gap-2"
+                  className="p-4 flex flex-col gap-2"
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-bold text-white tracking-wide">

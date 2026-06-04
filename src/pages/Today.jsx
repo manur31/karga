@@ -92,7 +92,7 @@ export default function Today() {
       </div>
 
       {/* deslizador de fechas*/}
-      <div className="flex gap-2 overflow-x-auto pb-4 mb-4 px-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex gap-2 overflow-x-auto pb-4 mb-4 px-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
         {calendarDays.map((day) => {
           const isActive = day.dateStr === selectedDate;
           
@@ -100,7 +100,7 @@ export default function Today() {
             <button
               key={day.dateStr}
               onClick={() => setSelectedDate(day.dateStr)}
-              className={`flex flex-col items-center justify-center min-w-[4rem] h-20 rounded-2xl transition-all snap-center shrink-0 ${
+              className={`flex flex-col items-center justify-center min-w-16 h-20 rounded-2xl transition-all snap-center shrink-0 ${
                 isActive 
                   ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/20' 
                   : 'bg-karga-gray text-zinc-400 hover:bg-white/10'
@@ -135,7 +135,7 @@ export default function Today() {
           <div className="grid grid-cols-3 gap-3">
             
             {/* ejercicios */}
-            <Card variant="default" className="!p-4 flex flex-col items-center justify-center text-center">
+            <Card variant="default" className="p-4 flex flex-col items-center justify-center text-center">
               <div className="w-10 h-10 rounded-full bg-karga-orange/15 text-karga-orange flex items-center justify-center mb-3">
                 <Mancuerna/>
               </div>
@@ -144,7 +144,7 @@ export default function Today() {
             </Card>
 
             {/* Series */}
-            <Card variant="default" className="!p-4 flex flex-col items-center justify-center text-center">
+            <Card variant="default" className="p-4 flex flex-col items-center justify-center text-center">
               <div className="w-10 h-10 rounded-full bg-red-500/15 text-red-500 flex items-center justify-center mb-3">
                 <RepeatIcon/>
               </div>
@@ -153,7 +153,7 @@ export default function Today() {
             </Card>
 
             {/* Reps */}
-            <Card variant="default" className="!p-4 flex flex-col items-center justify-center text-center">
+            <Card variant="default" className="p-4 flex flex-col items-center justify-center text-center">
               <div className="w-10 h-10 rounded-full bg-green-500/15 text-green-500 flex items-center justify-center mb-3">
                 <TargetIcon/>
               </div>
@@ -168,7 +168,7 @@ export default function Today() {
             
             {activities.length > 0 ? (
               activities.map((activity) => (
-                <Card key={activity.id} variant="default" className="!p-4 flex items-center gap-4">
+                <Card key={activity.id} variant="default" className="p-4 flex items-center gap-4">
                   <Avatar icon={Mancuerna} variant="orange" size="md" />
                   
                   <div className="flex flex-col flex-1">

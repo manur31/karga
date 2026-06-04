@@ -6,7 +6,6 @@ export const useExercises = () => {
         queryKey: ['exercises'],
         queryFn: getExercises
     })
-    
 }
 
 export const useFavoriteExercises = () => {
