@@ -18,11 +18,8 @@ function SetsPage() {
 
   if (isLoading) return <div>Loading...</div>;
 
-<<<<<<< Updated upstream
-=======
-  console.log(profile);
-
->>>>>>> Stashed changes
+  console.log(profile)
+  
   return (
     <div>
       <h1>Hola {profile?.name}</h1>

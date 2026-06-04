@@ -59,6 +59,13 @@ export const getRoutines = async () => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const { data, error } = await supabase.from("routines").update([
+    {
+      name,
+      description,
+      profile_id: user.id,
+    },
+  ]);
 
   const { data, error } = await supabase
     .from("routines")
@@ -96,6 +103,7 @@ export const getRoutineforID = async (routine_id) => {
     .eq("profile_id", user.id)
     .eq("routine_id", routine_id);
   if (error) throw error;
+
   return data;
 };
 export const updateRoutines = async ({ routine_id, name }) => {

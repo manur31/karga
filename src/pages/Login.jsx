@@ -23,10 +23,10 @@ export default function Login() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: "all",
+    mode: "onTouched",
   });
 
-  const { mutate: login, isPending, isSuccess, error } = useLogin();
+  const { mutate: login, isPending } = useLogin();
 
   const onSubmit = (data) => {
     login(data, {
@@ -75,16 +75,22 @@ export default function Login() {
             glowy-placeholder
             "
         />
+        {errors.email && (
+            <span className="text-red-500 text-xs pl-3 font-semibold mt-0.5">
+              {errors.email.message}
+            </span>
+          )}
 
         <div className="flex flex-col gap-2 w-full">
-          <div className="relative flex items-center w-full">
-            <Input
-              type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              disabled={isPending}
-              {...register("password")}
-              required
-              className="pr-12 w-full 
+        
+        <div className="relative flex items-center w-full">
+            <Input 
+            type={showPassword ? "text" : "password"} 
+            placeholder="Contraseña" 
+            disabled={isPending}
+            {...register("password")}
+            required
+            className="pr-12 w-full 
             hover:placeholder:text-karga-lightorange
             focus:placeholder:text-karga-lightorange
             hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
@@ -96,19 +102,25 @@ export default function Login() {
             />
 
             <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              disabled={isPending}
-              className="absolute right-4 text-zinc-500 hover:text-karga-lightorange transition-colors focus:outline-none"
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={isPending}
+            className="absolute right-4 text-zinc-500 hover:text-karga-lightorange transition-colors focus:outline-none"
             >
               {showPassword ? <EyeIcon /> : <EyeOffIcon />}
             </button>
           </div>
 
-          <button
+        {errors.password && (
+            <span className="text-red-500 text-xs pl-3 font-semibold">
+              {errors.password.message}
+            </span>
+          )}
+
+        <button
             type="button"
             disabled={isPending}
-            onClick={() => navigate("/forgot-password")} // hay q crear la ruta y manejarlo
+            onClick={() => navigate('/forgot-password')} // hay q crear la ruta y manejarlo
             className="self-end mr-3 pt-0.75 pb-1 text-xs text-karga-lightorange/80 hover:text-karga-lightorange font-medium tracking-wide transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]"
           >
             ¿Olvidaste tu contraseña?
@@ -116,10 +128,10 @@ export default function Login() {
         </div>
 
         {/* botón login*/}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
+        <Button 
+          type="submit" 
+          variant="primary" 
+          size="lg" 
           disabled={isPending}
           className={`
             mt-2
@@ -137,7 +149,7 @@ export default function Login() {
             hover:drop-shadow-[0_0_1px_var(--color-karga-lightorange)]
             hover:shadow-karga-lightorange/10
           
-            ${isPending ? "opacity-70 cursor-not-allowed" : ""}
+            ${isPending ? 'opacity-70 cursor-not-allowed' : ''}
           `}
         >
           {isPending ? "Iniciando..." : "Iniciar sesión"}
