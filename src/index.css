@@ -37,3 +37,33 @@ body {
   color: var(--color-karga-lightorange);
   text-shadow: 0 0 4px var(--color-karga-lightorange);
 }
+
+/* Animación de entrada */
+@keyframes slideInRight {
+    from {
+      transform: translate(100%, 0);
+      opacity: 0.7;
+    }
+    to {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+  }
+  
+  /* Animación de salida  */
+  @keyframes slideOutLeft {
+    from {
+      transform: translate(0, 0);
+    }
+    to {
+      transform: translate(150%, 0);
+    }
+  }
+   
+  .animate-slide-in-custom {
+    animation: slideInRight 300ms ease-out forwards;
+  }
+  
+  .animate-slide-out-custom {
+    animation: slideOutLeft 550ms ease-in-out forwards;
+  }
