@@ -18,26 +18,24 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const {
-    handleSubmit,
     register,
+    handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: "all",
+    mode: "onTouched",
   });
 
-  const { mutate: login, isPending, isSuccess, error } = useLogin();
+  const { mutate: login, isPending } = useLogin();
 
   const onSubmit = (data) => {
-    console.log(data);
-
-    login(data);
-
-    if (isSuccess) {
-      navigate("/sets");
-    }
+    login(data, {
+      onSuccess: () => {
+        navigate("/sets");
+        console.log("Login exitoso, redirigiendo a sets...");
+      },
+    });
   };
-
   const handleGoogleLogin = () => {
     // reemplazar al auth con google
     setTimeout(() => {
@@ -61,12 +59,13 @@ export default function Login() {
       {/* FORMULARIO */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {/* input de email */}
-        <Input 
-            type="email" 
-            placeholder="Email" 
-            disabled={isLoading}
-            required
-            className="
+        <Input
+          type="email"
+          placeholder="Email"
+          disabled={isPending}
+          required
+          {...register("email")}
+          className="
             hover:placeholder:text-karga-lightorange
             focus:placeholder:text-karga-lightorange
             hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]
@@ -76,14 +75,20 @@ export default function Login() {
             glowy-placeholder
             "
         />
-        
+        {errors.email && (
+            <span className="text-red-500 text-xs pl-3 font-semibold mt-0.5">
+              {errors.email.message}
+            </span>
+          )}
+
         <div className="flex flex-col gap-2 w-full">
         
         <div className="relative flex items-center w-full">
             <Input 
             type={showPassword ? "text" : "password"} 
             placeholder="Contraseña" 
-            disabled={isLoading}
+            disabled={isPending}
+            {...register("password")}
             required
             className="pr-12 w-full 
             hover:placeholder:text-karga-lightorange
@@ -95,26 +100,31 @@ export default function Login() {
             glowy-placeholder
             "
             />
-            
+
             <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            disabled={isLoading}
+            disabled={isPending}
             className="absolute right-4 text-zinc-500 hover:text-karga-lightorange transition-colors focus:outline-none"
             >
-            {showPassword ? <EyeIcon/> : <EyeOffIcon/>}
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
             </button>
-        </div>
+          </div>
+
+        {errors.password && (
+            <span className="text-red-500 text-xs pl-3 font-semibold">
+              {errors.password.message}
+            </span>
+          )}
 
         <button
             type="button"
-            disabled={isLoading}
+            disabled={isPending}
             onClick={() => navigate('/forgot-password')} // hay q crear la ruta y manejarlo
             className="self-end mr-3 pt-0.75 pb-1 text-xs text-karga-lightorange/80 hover:text-karga-lightorange font-medium tracking-wide transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]"
-        >
+          >
             ¿Olvidaste tu contraseña?
-        </button>
-
+          </button>
         </div>
 
         {/* botón login*/}
@@ -122,7 +132,7 @@ export default function Login() {
           type="submit" 
           variant="primary" 
           size="lg" 
-          disabled={isLoading}
+          disabled={isPending}
           className={`
             mt-2
             relative
@@ -139,7 +149,7 @@ export default function Login() {
             hover:drop-shadow-[0_0_1px_var(--color-karga-lightorange)]
             hover:shadow-karga-lightorange/10
           
-            ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+            ${isPending ? 'opacity-70 cursor-not-allowed' : ''}
           `}
         >
           {isPending ? "Iniciando..." : "Iniciar sesión"}

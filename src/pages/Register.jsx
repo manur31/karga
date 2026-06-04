@@ -10,10 +10,11 @@ import {
 } from "../components/icons";
 import { useForm } from "react-hook-form";
 import { useRegister } from "../hooks/mutations/useAuthMutations";
+import { registerSchema } from "../lib/schemas/authSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function Register() {
   const navigate = useNavigate();
-  // const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -22,41 +23,41 @@ export default function Register() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    mode: "onTouched",
+  }); 
 
-  const { mutate, isPending, isError, error, isSuccess } = useRegister();
+  const { mutate: registerUser, isPending } = useRegister();
 
   const onSubmit = (data) => {
-    // setIsLoading(true);
-
-    //  registro (reemplazar el setTimeout llamada a la API)
-    // setTimeout(() => {
-    //   setIsLoading(false);
-    // }, 500);
     const formData = {
       name: data.name,
       email: data.email,
       password: data.password,
     };
-    mutate(formData);
-    reset();
-    if (isSuccess) {
-      navigate("/onboarding");
-    }
+
+    registerUser(formData, {
+      onSuccess: () => {
+        reset(); 
+        navigate("/onboarding"); 
+      },
+    });
   };
 
-  const handleGoogleRegister = () => {
-    // setIsLoading(true);
+  // const handleGoogleRegister = () => {
+  //   setIsLoading(true);
 
-    // registro con Google (reempklazar)
-    setTimeout(() => {
-      // setIsLoading(false);
-      navigate("/onboarding");
-    }, 2000);
-  };
+  //   // registro con Google (reempklazar)
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //     navigate("/onboarding");
+  //   }, 2000);
+  // };
 
   return (
     <div className="flex flex-col h-full w-full max-w-sm mx-auto px-4 py-2">
+      {/* LOGO */}
       <div className="flex flex-col items-center mb-10 text-center">
         <Mancuerna className="w-12 h-12 text-karga-orange mb-2" />
         <h1 className="text-7xl font-black tracking-tight text-karga-lightorange drop-shadow-[0_0_16px_rgba(255,168,130,0.1)]">
@@ -69,61 +70,90 @@ export default function Register() {
 
       {/* FORM DE REGISTRO */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <Input
-          type="text"
-          placeholder="Nombre"
-          disabled={isPending}
-          required
-          {...register("name")}
-        />
-
-        <Input 
-          type="email" 
-          placeholder="Email" 
-          disabled={isPending}
-          required 
-          {...register("email")}
-        />
-
-        <div className="relative flex items-center">
+        
+        {/* INPUT  NOMBRE */}
+        <div className="flex flex-col gap-1 w-full">
           <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="Contraseña"
+            type="text"
+            placeholder="Nombre"
             disabled={isPending}
-            required
-            className="pr-12"
-            {...register("password")}
+            {...register("name")}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            disabled={isPending}
-            className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
-          >
-            {showPassword ? <EyeIcon /> : <EyeOffIcon />}
-          </button>
+          {errors.name && (
+            <span className="text-red-500 text-xs pl-3 font-semibold mt-0.5">
+              {errors.name.message}
+            </span>
+          )}
         </div>
 
-        <div className="relative flex items-center">
-          <Input
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirmar contraseña"
+        {/* INPUT  EMAIL */}
+        <div className="flex flex-col gap-1 w-full">
+          <Input 
+            type="email" 
+            placeholder="Email" 
             disabled={isPending}
-            required
-            className="pr-12"
-            {...register("confirmPassword")}
+            {...register("email")}
           />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            disabled={isPending}
-            className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
-          >
-            {showConfirmPassword ? <EyeIcon /> : <EyeOffIcon />}
-          </button>
+          {errors.email && (
+            <span className="text-red-500 text-xs pl-3 font-semibold mt-0.5">
+              {errors.email.message}
+            </span>
+          )}
         </div>
 
-        {/* enviar formulario */}
+        {/* INPUT  CONTRASEÑA */}
+        <div className="flex flex-col gap-1 w-full">
+          <div className="relative flex items-center">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              disabled={isPending}
+              className="pr-12"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isPending}
+              className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
+            >
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+            </button>
+          </div>
+          {errors.password && (
+            <span className="text-red-500 text-xs pl-3 font-semibold mt-0.5">
+              {errors.password.message}
+            </span>
+          )}
+        </div>
+
+        {/* INPUT  CONFIRMAR CONTRASEÑA */}
+        <div className="flex flex-col gap-1 w-full">
+          <div className="relative flex items-center">
+            <Input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirmar contraseña"
+              disabled={isPending}
+              className="pr-12"
+              {...register("confirmPassword")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={isPending}
+              className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
+            >
+              {showConfirmPassword ? <EyeIcon /> : <EyeOffIcon />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <span className="text-red-500 text-xs pl-3 font-semibold mt-0.5">
+              {errors.confirmPassword.message}
+            </span>
+          )}
+        </div>
+
+        {/* BOTÓN ENVIAR */}
         <Button
           type="submit"
           variant="primary"
@@ -134,22 +164,19 @@ export default function Register() {
           {isPending ? "Creando cuenta..." : "Registrarse"}
         </Button>
       </form>
-
+ 
       <div className="flex items-center gap-4 my-8">
         <div className="h-px bg-white/5 flex-1" />
-        <span className="text-zinc-500 text-sm font-medium">
-          o registrarse con
-        </span>
+        <span className="text-zinc-500 text-sm font-medium">o registrarse con</span>
         <div className="h-px bg-white/5 flex-1" />
       </div>
 
-      {/* google */}
       <Button
         type="button"
         variant="secondary"
         size="lg"
         disabled={isPending}
-        onClick={handleGoogleRegister}
+        onClick={""}
         className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10"
       >
         <GoogleIcon />

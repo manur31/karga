@@ -1,14 +1,19 @@
-import { useForm } from "react-hook-form";
-import { useSetsStore } from "../stores/setsStore";
-import { useEffect, useState } from "react";
+import { useAuth } from "../hooks/queries/useAuth";
+import { useEffect } from "react";
+import { getExercises } from "../service/exersiseService";
 
-export default function SetsTracker() {
-
-
+function SetsPage() {
+  const { data: profile, isLoading } = useAuth();
+  const { logout } = useAuth();
+  //testing unicamente de los exersises
   useEffect(() => {
-    window.addEventListener('online', () => console.log('online'))
-    window.addEventListener('offline', () => console.log('offline'))
-    console.log('first')
+    getExercises()
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, []);
   
   const [editingId, setEditingId] = useState(null);

@@ -1,61 +1,53 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import {
-  addToFavorite,
-  createExercise,
-  deleteExercise,
-  updateFavorite,
-} from "../../service/exersiseService";
+  createRoutines,
+  insertExercisesRoutine,
+  deleteRoutines,
+  updateRoutines,
+} from "../../service/routinesService";
 
-export const useCreateExercise = () => {
+export const useCreateRoutines = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data) => {
-      createExercise(data);
-    },
+    mutationFn: (data) => createRoutines(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["exercises"],
+        queryKey: ["routines"],
+      });
+    },
+  });
+};
+export const useInsertExercisesRoutine = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => insertExercisesRoutine(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["routines_exercises"],
       });
     },
   });
 };
 
-export const useAddToFavorite = () => {
+export const useDeleteRoutines = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: addToFavorite,
+    mutationFn: (id) => deleteRoutines(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["favoriteExercises"],
+        queryKey: ["routines"],
       });
     },
   });
 };
-
-export const useUpdateFavorite = () => {
+export const useEditRoutines = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: ({ id, is_favorite }) => {
-      updateFavorite({ id, is_favorite });
-    },
+    mutationFn: (data) => updateRoutines(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["exercises", "favoriteExercises"],
-      });
-    },
-  });
-};
-
-export const useDeleteExercise = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteExercise,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["exercises", "favoriteExercises"],
+        queryKey: ["routines"],
       });
     },
   });

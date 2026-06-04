@@ -1,281 +1,265 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Button from '../components/Button/Button';
+import Input from '../components/Input/Input';
 import { ArrowLeft, ArrowRight } from '../components/icons';
 import { useOnboarding } from '../hooks/mutations/useAuthMutations';
+import { useForm } from "react-hook-form";
+import { onboardingSchema } from "../lib/schemas/authSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function Onboarding() {
   const navigate = useNavigate();
-    
   const [step, setStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [weeklyFrequency, setWeeklyFrequency] = useState(3);
-  const [restTime, setRestTime] = useState(60);
-  
-  const handleNext = () => setStep((prev) => prev + 1);
+
+  const {
+    register,
+    handleSubmit,
+    setValue, //inyectar valores a mano sin usar <input>
+    watch,    //mirar en tiempo real cuánto vale una variable
+    trigger,  //forzar la validación de un paso antes de avanzar
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(onboardingSchema),
+    mode: "onSubmit",
+    defaultValues: {
+      weeklyFrequency: 3,
+      restTime: 60,
+      weight: "", 
+    }
+  });
+
+  const weeklyFrequency = watch("weeklyFrequency");
+  const restTime = watch("restTime");
+
+  const { mutate: onboardingMutate, isPending } = useOnboarding();
+
+  const handleNext = async () => {
+    if (step === 3) { 
+      const isWeightValid = await trigger("weight");
+      if (!isWeightValid) return;
+    }
+    setStep((prev) => prev + 1);
+  };
+
   const handleBack = () => setStep((prev) => Math.max(1, prev - 1));
 
-  const { mutate: onboardingMutate, isPending: isOnboardingPending } = useOnboarding();
-
-  const handleFinishOnboarding = () => {
-    setIsSubmitting(true);
-
+  const onSubmit = (data) => {
     const onboardingData = {
       size: 181,
-      time_for_week: weeklyFrequency,
-      weight: 168,
-      rest_time: restTime,
+      time_for_week: data.weeklyFrequency,
+      weight: data.weight,
+      rest_time: data.restTime,
       id: "02e22669-2c7c-452f-b459-0741cdaf8d3e",
     };
   
-    console.log("Enviando datos a Supabase...", onboardingData);
-
-    // TODO: Implementar llamada a Supabase
-    onboardingMutate(onboardingData);
-  
-    //delay falso
-    // setTimeout(() => {
-    //   setIsSubmitting(false); 
-      
-      navigate('/sets'); 
-    // }, 3000); 
+    onboardingMutate(onboardingData, {
+      onSuccess: () => navigate('/sets')
+    });
   };
 
   return (
     <div className="relative flex flex-col h-full min-h-[85vh] text-white overflow-hidden ">
-      {/* CONTENIDO DINÁMICO DEL ONBOARDING */}
       <main className="relative z-20 flex-1 flex flex-col w-full max-w-md mx-auto px-6 py-8 min-h-0">
         
-        {/* si está enviando los datos, mostramos la pantalla de transición */}
-        {isOnboardingPending ? (
+        {isPending ? (
           <div className="flex flex-col flex-1 items-center justify-center text-center animate-fade-in gap-4">
-            {/* Spinner animado nativo con Tailwind */}
             <div className="w-12 h-12 border-4 border-t-karga-orange border-white/10 rounded-full animate-spin mb-2" />
-            
-            <h2 className="text-2xl font-black text-white tracking-tight">
-              Creando tu cuenta...
-            </h2>
+            <h2 className="text-2xl font-black text-white tracking-tight">Creando tu cuenta...</h2>
             <p className="text-zinc-400 text-sm font-medium max-w-xs">
+
               Estamos configurando tu motor de rendimiento personalizado.
+
             </p>
           </div>
         ) : (
-          /* si no está cargando, renderizamos los pasos normales */
-          <>
-            {step === 1 && (
-                <Step1
-                    weeklyFrequency={weeklyFrequency}
-                    setWeeklyFrequency={setWeeklyFrequency}
-                    onNext={handleNext}
-                    onBack={handleBack}
-                    step={step}
-                />
-            )}
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
             
-            {step === 2 && (
-                <Step2
-                    restTime={restTime}
-                    setRestTime={setRestTime}
-                    onNext={handleFinishOnboarding}
-                    onBack={handleBack}
-                    step={step}
+            <div className="flex-1">
+              {step === 1 && (
+                <Step1
+                  weeklyFrequency={weeklyFrequency}
+                  setValue={setValue}
                 />
-            )}
-          </>
+              )}
+              
+              {step === 2 && (
+                <Step2
+                  restTime={restTime}
+                  setValue={setValue}
+                />
+              )}
+
+              {step === 3 && (
+                <Step3
+                  register={register}
+                  errors={errors}
+                />
+              )}
+            </div>
+
+            {/* FOOTER */}
+            <div className="mt-auto translate-y-4 pt-4 w-full flex flex-col gap-6">
+              <div className="flex items-center gap-3 w-full">
+                {step > 1 && (
+                  <div className="w-1/4">
+                    <Button type="button" variant="secondary" size="lg" onClick={handleBack} className="w-full flex justify-center">
+                        <ArrowLeft className="text-zinc-500 w-6 h-6"/>
+                    </Button>
+                  </div>
+                )}
+
+                <div className={step > 1 ? "w-3/4" : "w-full"}>
+                  {step < 3 ? (
+                    <Button type="button" variant="primary" size="lg" onClick={handleNext} className="w-full group">
+                      <span>Siguiente</span>
+                      <ArrowRight className="w-6 h-5 inline-block transition-all duration-300 group-hover:translate-x-1" />
+                    </Button>
+                  ) : (
+                    <Button type="submit" variant="primary" size="lg" className="w-full group">
+                      <span>Finalizar</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="w-full flex flex-col items-center pb-6">
+                <p className="mt-4 text-xs text-zinc-400 font-medium tracking-wide">
+                    Podrás cambiar estos ajustes luego.
+                </p>
+              </div>
+            </div>
+
+          </form>
         )}
       </main>
     </div>
   );
 }
 
-//PASO 1: frecuencia semanal
-function Step1({ 
-    onNext, 
-    onBack,
-    step,
-    weeklyFrequency, 
-    setWeeklyFrequency 
-  }) {
-  
-    const handleDecrement = () => setWeeklyFrequency((prev) => Math.max(1, prev - 1));
-    const handleIncrement = () => setWeeklyFrequency((prev) => Math.min(7, prev + 1));
-  
-    return (
-      <div className="flex flex-col flex-1 w-full animate-fade-in">
-        
-        <div className="flex flex-col mb-10">
-          <span className="text-karga-orange font-bold text-xs tracking-widest uppercase mb-3">
-            Paso 1 de 2
-          </span>
-          <h2 className="text-4xl font-black text-white tracking-tight mb-3">
-            Establece tu frecuencia semanal
-          </h2>
-          <p className="text-zinc-400 text-sm font-medium">
-            Ajusta el valor inicial para personalizar tu experiencia.
-          </p>
-        </div>
+// STEPS
 
-      {/*  CONTADOR */}
+function Step1({ weeklyFrequency, setValue }) {
+  
+  const handleDecrement = () => setValue("weeklyFrequency", Math.max(1, weeklyFrequency - 1));
+  const handleIncrement = () => setValue("weeklyFrequency", Math.min(7, weeklyFrequency + 1));
+
+  return (
+    <div className="flex flex-col w-full animate-fade-in">
+      <div className="flex flex-col mb-10">
+        <span className="text-karga-orange font-bold text-xs tracking-widest uppercase mb-3">Paso 1 de 3</span>
+        <h2 className="text-4xl font-black text-white tracking-tight mb-3">Establece tu frecuencia semanal</h2>
+        <p className="text-zinc-400 text-sm font-medium">
+            Ajusta el valor inicial para personalizar tu experiencia.
+        </p>
+      </div>
+
       <div className="flex flex-col items-center my-10">
         <div className="flex items-center gap-8 bg-white/5 p-6 rounded-4xl border border-white/5 shadow-inner">
-          <button
-            type="button"
-            onClick={handleDecrement}
-            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
-          >
-            <div className="-translate-y-0.5">-</div>
+          <button type="button" onClick={handleDecrement} className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold">
+            -
           </button>
-
           <div className="w-24 text-center text-6xl font-black text-white tracking-tighter">
             {weeklyFrequency}
           </div>
-
-          <button
-            type="button"
-            onClick={handleIncrement}
-            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
-          >
-            <div className="-translate-y-0.75 -translate-x-px">+</div>
+          <button type="button" onClick={handleIncrement} className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold">
+            +
           </button>
-
-          
-          </div>
-          <span className="text-zinc-500 text-base font-semibold tracking-wide lowercase mt-2">
-                {weeklyFrequency === 1 ? 'día por semana' : 'días por semana'}
-          </span>
         </div>
-  
-        {/* BOTONES Y FOOTER */}
-        <div className="mt-auto translate-y-4 pt-4 w-full flex flex-col gap-6">
-
-          <div className="flex items-center gap-3 w-full">
-            {step > 1 && (
-                <div className="w-1/4">
-                  <Button variant="secondary" size="lg" onClick={onBack} className="w-full">
-                      <ArrowLeft className="text-zinc-500"/>
-                  </Button>
-                </div>
-            )}
-
-            <div className={step > 1 ? "w-3/4" : "w-full"}>
-                <Button variant="primary" size="lg" onClick={onNext} className="w-full group">
-                  <span>Siguiente</span>
-                  <ArrowRight className="w-6 h-5 inline-block transition-all duration-300 group-hover:translate-x-1" />
-                </Button>
-            </div>
-          </div>
-
-          <div className="w-full flex flex-col items-center pb-6">
-            <p className="mt-4 text-xs text-zinc-400 font-medium tracking-wide">
-                Podrás cambiar estos ajustes luego.
-            </p>
-          </div>
-
-        </div>
-        
+        <span className="text-zinc-500 text-base font-semibold tracking-wide lowercase mt-2">
+            {weeklyFrequency === 1 ? 'día por semana' : 'días por semana'}
+        </span>
       </div>
-    );
+    </div>
+  );
 }
 
-{/* // PASO 2: tiempo de descanso  */}
-function Step2({ 
-    onNext, 
-    onBack,
-    step,
-    restTime, 
-    setRestTime 
-  }) {
-  
-    //minimo es 30 y no hay maximo
-    const handleDecrement = () => setRestTime((prev) => Math.max(30, prev - 30));
-    const handleIncrement = () => setRestTime((prev) => prev + 30);
-  
-    // formateador visual para que 60s = 1m y asi
-    const formatTime = (totalSeconds) => {
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${seconds === 0 ? '00' : seconds}`;
-    };
+function Step2({ restTime, setValue }) {
+  const handleDecrement = () => setValue("restTime", Math.max(30, restTime - 30));
+  const handleIncrement = () => setValue("restTime", restTime + 30);
 
-    return (
-      <div className="flex flex-col flex-1 w-full animate-fade-in">
-        
-        <div className="flex flex-col mb-10">
-          <span className="text-karga-orange font-bold text-xs tracking-widest uppercase mb-3">
-            Paso 2 de 2
-          </span>
-          <h2 className="text-4xl font-black text-white tracking-tight mb-3">
-            Tiempo de descanso
-          </h2>
-          <p className="text-zinc-400 text-sm font-medium">
+  const formatTime = (totalSeconds) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds === 0 ? '00' : seconds}`;
+  };
+
+  return (
+    <div className="flex flex-col w-full animate-fade-in">
+      <div className="flex flex-col mb-10">
+        <span className="text-karga-orange font-bold text-xs tracking-widest uppercase mb-3">Paso 2 de 3</span>
+        <h2 className="text-4xl font-black text-white tracking-tight mb-3">Tiempo de descanso</h2>
+        <p className="text-zinc-400 text-sm font-medium">
             Define tu pausa predeterminada entre cada set.
-          </p>
+        </p>
+      </div>
+
+      <div className="flex flex-col items-center my-10">
+        <div className="flex items-center gap-8 bg-white/5 p-6 rounded-[2rem] border border-white/5 shadow-inner">
+          <button type="button" onClick={handleDecrement} className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold">
+            -
+          </button>
+          <div className="w-32 text-center text-6xl font-black text-white tracking-tighter">
+            {formatTime(restTime)}
+          </div>
+          <button type="button" onClick={handleIncrement} className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold">
+            +
+          </button>
         </div>
-  
-        {/*CONTADOR DE TIEMPO*/}
-        <div className="flex flex-col items-center my-10">
-          <div className="flex flex-col items-center gap-4">
-              
-              <div className="flex items-center gap-8 bg-white/5 p-6 rounded-4xl border border-white/5 shadow-inner">
-              
-                <button 
-                    type="button"
-                    onClick={handleDecrement}
-                    className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
-                >
-                    <div className="-translate-y-0.5">-</div>
-                </button>
-                
-                {/*  formato reloj */}
-                <div className="w-32 text-center text-6xl font-black text-white tracking-tighter">
-                    {formatTime(restTime)}
-                </div>
+        <span className="text-zinc-500 text-base font-semibold tracking-wide lowercase mt-1">minuto(s)</span>
+      </div>
+    </div>
+  );
+}
 
-                <button 
-                    type="button"
-                    onClick={handleIncrement}
-                    className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/5 text-karga-orange hover:bg-white/10 active:scale-95 transition-all text-3xl font-bold"
-                >
-                    <div className="-translate-y-0.75 -translate-x-px">+</div>
-                </button>
-              
-              </div>
+function Step3({ register, errors }) {
+  return (
+    <div className="flex flex-col w-full animate-fade-in">
+      <div className="flex flex-col mb-10">
+        <span className="text-karga-orange font-bold text-xs tracking-widest uppercase mb-3">
+          Paso 3 de 3
+        </span>
+        <h2 className="text-4xl font-black text-white tracking-tight mb-3">
+          ¿Cuál es tu peso?
+        </h2>
+        <p className="text-zinc-400 text-sm font-medium">
+          Podrás registrar tu avance corporal.
+        </p>
+      </div>
 
-              <span className="text-zinc-500 text-base font-semibold tracking-wide lowercase mt-1">
-                minuto(s)
-              </span>
+      <div className="flex flex-col items-center my-10 gap-2 w-full">
+        <div className="flex items-center justify-center relative w-full max-w-[200px]">
+          <Input 
+            type="number" 
+            step="0.1" 
+            placeholder="0.0"
+            className="text-center text-4xl font-black pr-12 h-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            //para q no se pueda ingresar negativo ni boludeces
+            onKeyDown={(e) => {
+              if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                e.preventDefault();
+              }
+            }}
 
-          </div>
-        </div>
-  
-        {/* BOTONES Y FOOTER */}
-        <div className="mt-auto translate-y-4 pt-4 w-full flex flex-col gap-6">
-
-          <div className="flex items-center gap-3 w-full">
-            {step > 1 && (
-                <div className="w-1/4">
-                  <Button variant="secondary" size="lg" onClick={onBack} className="w-full flex justify-center">
-                      <ArrowLeft className="text-zinc-500 w-6 h-6"/>
-                  </Button>
-                </div>
-            )}
-
-            <div className={step > 1 ? "w-3/4" : "w-full"}>
-                <Button variant="primary" size="lg" onClick={onNext} className="w-full group">
-                  <span>Finalizar</span>
-                </Button>
-            </div>
-          </div>
-
-          <div className="w-full flex flex-col items-center pb-6">
-            <p className="mt-4 text-xs text-zinc-400 font-medium tracking-wide">
-                Podrás cambiar estos ajustes luego.
-            </p>
-          </div>
-
+            /* 3. REGISTRO LIMPIO:
+              Sacamos el trigger automático del onChange para que NO se ponga rojo de entrada.
+              Ahora solo validará cuando el usuario salga del input o intente darle a Finalizar.
+            */
+            {...register("weight")} 
+          />
+          <span className="absolute right-6 text-zinc-500 font-bold text-xl pointer-events-none">
+            kg
+          </span>
         </div>
         
+        {/* El cartel de error solo aparecerá si realmente hay un error confirmado */}
+        {errors.weight && (
+          <span className="text-red-500 text-sm font-semibold mt-2">
+            {errors.weight.message}
+          </span>
+        )}
       </div>
-    );
+    </div>
+  );
 }
