@@ -116,13 +116,32 @@ export const deleteExercise = async (exerciseId) => {
 
   if (userError) throw userError;
 
-  const { error } = await supabase
-    .from("user_exercises")
-    .delete()
-    .eq("exercise_id", exerciseId)
-    .eq("profile_id", user.id);
+  const { data: userExercise, error } = await supabase
+    .from("exercises")
+    .select()
+    .eq("id", exerciseId)
+    .single();
 
   if (error) throw error;
+  if (userExercise.is_populary == false) {
+    await supabase
+      .from("user_exercises")
+      .delete()
+      .eq("exercise_id", exerciseId)
+      .eq("profile_id", user.id);
+    const { error: exerciseError } = await supabase
+      .from("exercises")
+      .delete()
+      .eq("id", exerciseId);
+    if (exerciseError) throw exerciseError;
+  } else {
+    const { error: exerciseError } = await supabase
+      .from("user_exercises")
+      .delete()
+      .eq("exercise_id", exerciseId)
+      .eq("profile_id", user.id);
+    if (exerciseError) throw exerciseError;
+  }
 };
 // un ejercicio popular se quita de ser popular
 export const updateFavorite = async ({ exercise_id, is_favorite }) => {

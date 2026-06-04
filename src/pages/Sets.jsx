@@ -56,9 +56,9 @@ export default function Sets() {
   const handleCreateWorkout = () => {
     console.log("Creando nuevo entrenamiento");
     createExercise({
-      name: "Platano",
+      name: "Ejercicio de prueba ",
       category: 123,
-      muscle: ["legs"],
+      muscle: ["back"],
     });
 
     if (isExerciseCreated) {
@@ -82,6 +82,7 @@ export default function Sets() {
   };
   const handleDeleteExercise = (id) => {
     deleteExercise(id);
+    window.location.reload();
   };
   const handleAddRoutine = (id) => {
     if (!routinesID) {
