@@ -1,7 +1,7 @@
-export default function PlusIcon() {
+export default function PlusIcon({className}) {
     return (
       <svg
-        className="w-6 h-6 text-white"
+        className={className}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"

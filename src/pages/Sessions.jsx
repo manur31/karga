@@ -6,6 +6,7 @@ import ClockIcon from '../components/icons/ClockIcon';
 import ChevronIcon from '../components/icons/ChevronIcon';
 import { Mancuerna } from '../components/icons';
 import FlameIcon from '../components/icons/FlameIcon';
+import SessionTimer from '../components/sessionTimer';
 
 export default function Sessions() {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ export default function Sessions() {
   };
 
   return (
-    <div className="flex flex-col w-full animate-fade-in">
+    <div className="flex flex-col w-full animate-fade-in relative">
       
       {/* HEADER */}
       <div className="mb-6 pl-2">
@@ -177,6 +178,10 @@ export default function Sessions() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className='fixed bottom-22 h-fit left-0 right-0 bg-karga-gray py-4'>
+        <SessionTimer />
       </div>
 
     </div>

@@ -13,7 +13,7 @@ const fmtDate = (d) =>
 
 export default function SessionTester() {
   const { seconds, sessions, start, pause, continue: cont, finish, discard } = useSesionStore()
-  const [uiState, setUiState] = useState(seconds === 0 ? "idle" : "paused")
+  const [uiState, setUiState] = useState(seconds === 0 ? "idle" : "pa")
 
   const handleMain = () => {
     if (uiState === "idle") { start(); setUiState("running") }

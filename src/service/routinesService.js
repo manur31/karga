@@ -3,7 +3,7 @@ export const createRoutines = async ({ name, description }) => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data, error } = await supabase
+  const { data: routineData, error } = await supabase
     .from("routines")
     .insert([
       {
@@ -16,7 +16,7 @@ export const createRoutines = async ({ name, description }) => {
     .single();
 
   if (error) throw error;
-  return data;
+  return routineData;
 };
 export const deleteRoutines = async (routine_id) => {
   const {
@@ -59,13 +59,13 @@ export const getRoutines = async () => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data, error } = await supabase.from("routines").update([
-    {
-      name,
-      description,
-      profile_id: user.id,
-    },
-  ]);
+  // const { data: routinesData, error: routinesError } = await supabase.from("routines").update([
+  //   {
+  //     name,
+  //     description,
+  //     profile_id: user.id,
+  //   },
+  // ]);
 
   const { data, error } = await supabase
     .from("routines")

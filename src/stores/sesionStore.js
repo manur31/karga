@@ -10,6 +10,7 @@ export const useSesionStore = create(
             startedAt: null,
             finishedAt: null,
             currentFunction: null,
+            isStarted: false,
 
             addSession: (newSession) => {(
                 set((state) => ({
@@ -44,7 +45,8 @@ export const useSesionStore = create(
                     timer: interval, 
                     startedAt: new Date(),
                     finishedAt: null,
-                    currentFunction: 'start'
+                    currentFunction: 'start',
+                    isStarted: true
                 })
             },
 
@@ -57,7 +59,7 @@ export const useSesionStore = create(
 
                 set({ 
                     timer: interval, 
-                    currentFunction: 'continue'
+                    currentFunction: 'continue',
                 })
             },
 
@@ -72,7 +74,8 @@ export const useSesionStore = create(
                     timer: null, 
                     seconds: 0,
                     finishedAt: new Date() ,
-                    currentFunction: 'finish'
+                    currentFunction: 'finish',
+                    isStarted: false
                 })
 
                 // Add session to store
@@ -89,7 +92,8 @@ export const useSesionStore = create(
                     seconds: 0,
                     startedAt: null,
                     finishedAt: null,
-                    currentFunction: 'discard'
+                    currentFunction: 'discard',
+                    isStarted: false
                 })
             }
         }), 

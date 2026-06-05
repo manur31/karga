@@ -1,21 +1,10 @@
 import { useAuth } from "../hooks/queries/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getExercises } from "../service/exersiseService";
+import { useSetsStore } from "../stores/setsStore";
+import { useForm } from "react-hook-form";
 
-function SetsPage() {
-  const { data: profile, isLoading } = useAuth();
-  const { logout } = useAuth();
-  //testing unicamente de los exersises
-  useEffect(() => {
-    getExercises()
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, []);
-  
+export default function SetsPage() {
   const [editingId, setEditingId] = useState(null);
 
   const { sets, addSet, removeSet, markAsSynced, editSet } = useSetsStore();
