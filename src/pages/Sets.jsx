@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRef } from "react";
 import { useNavigate } from "react-router";
 import Button from "../components/Button/Button";
@@ -25,14 +25,6 @@ import {
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
 import { getRoutineforID } from "../service/routinesService";
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import Button from '../components/Button/Button';
-import Card from '../components/Card/Card';
-import Avatar from '../components/Avatar/Avatar';
-import PlusIcon from '../components/icons/PlusIcon';
-import FlameIcon from '../components/icons/FlameIcon';
-import ChevronIcon from '../components/icons/ChevronIcon'; 
 
 
 // formatter de diferencia en segundos q dps podriamos mover a utils y reutilizarlo
@@ -69,6 +61,7 @@ export default function Sets() {
   // estados para almacenar los datos que vendrán de la base de datos
   const [stats, setStats] = useState({ weeklyWorkouts: 0, streak: 0 });
   const [routinesID, setRoutinesID] = useState();
+  const [openModal, setOpenModal] = useState(false);
   const {
     mutate: createExercise,
     isPending: isCreatingExercise,
@@ -199,20 +192,20 @@ export default function Sets() {
 //   }, []);
 
    
-//   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
 
-//   const handleCreateWorkout = () => {
-//     setIsWorkoutModalOpen(true);  
-//   };
-
-//   const handleCloseModal = () => {
-//     setIsWorkoutModalOpen(false);  
-//   }
-
-//   const handleOpenRoutine = (id) => {
-//     console.log(`Abriendo el modal global precargado con la rutina ID: ${id}`);
-//     // openWorkoutModal({ routineId: id });
+  const handleCreateWorkout = () => {
+    setOpenModal(true);  
   };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);  
+  }
+
+  const handleOpenRoutine = (id) => {
+    console.log(`Abriendo el modal global precargado con la rutina ID: ${id}`);
+    // openWorkoutModal({ routineId: id });
+  };
+
 
   const exercisesF = exerciseFavorites?.map((item) => item.exercises);
   return (
@@ -487,12 +480,10 @@ export default function Sets() {
             })}
           </div>
         )}
-      </div>
       
-        
-      {isWorkoutModalOpen && (
-        <WorkoutModal onClose={handleCloseModal} />
-      )}
-    </div>
-  );
+       <div> 
+        {openModal && (
+          <WorkoutModal onClose={handleCloseModal} />
+        )}
+      </div>
 }
