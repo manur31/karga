@@ -9,10 +9,8 @@ export const getSets = async () => {
     .from("sets")
     .select(
       `
-      *,
-      exercises{*}
-    `,
-    )
+      *
+    `)
     .eq("profile_id", user.id);
   if (error) throw error;
   return data;

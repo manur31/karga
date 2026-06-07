@@ -1,11 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
-
+import { getSets } from "../../service/setService"
 export const useSets = () => {
     return useQuery({
         queryKey: ['sets'],
-        queryFn: () => {
-            // TODO: Implement set fetching
-            return []
-        }
+        queryFn: getSets
     })
 }

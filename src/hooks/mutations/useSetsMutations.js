@@ -1,16 +1,17 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createSet } from "../../service/setService";
 
 export const useCreateSet = () => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: (data) => {
-            // TODO: Implement set creation
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['sets']
-            })
-        }
-    })
-}
+  return useMutation({
+    mutationFn: (data) => {
+      createSet(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sets"],
+      });
+    },
+  });
+};

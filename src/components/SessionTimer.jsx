@@ -47,7 +47,7 @@ function SessionTimer() {
                 {isRunning ? (
                     <FiPause onClick={handlePause}/>
                 ) : (
-                    <FiPlay onClick={handleStart}/>
+                    <FiPlay onClick={() => start()}/>
                 )}
                 <div className='relative'>
                     <FiMoreVertical onClick={() => setShowMenu(!showMenu)}/>
