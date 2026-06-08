@@ -1,6 +1,15 @@
 import { useState } from 'react';
-import { useExercises } from '../../../hooks/queries/useExercises';
+import { useExercises, useFavoriteExercises } from '../../../hooks/queries/useExercises';
+import { useUpdateFavorite, useAddToFavorite } from '../../../hooks/mutations/useExercisesMutations';
 import { ArrowLeft, PlusIcon, CheckIcon } from '../../icons';
+import CustomExerciseModal from '../CustomExerciseModal/CustomExerciseModal';
+import ExerciseInfoModal from '../ExerciseInfoModal/ExerciseInfoModal';
+
+const HeartIcon = ({ filled, className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={filled ? 0 : 2} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+  </svg>
+);
 
 const QuestionIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
@@ -9,12 +18,58 @@ const QuestionIcon = ({ className }) => (
 );
 
 export default function WorkoutModal({ onClose, onSave }) {
-  const { data: exercises, isLoading, isError } = useExercises();
+  const { data: popularExercises, isLoading: isPopularLoading, isError: isPopularError } = useExercises();
+  const { data: userExercises, isLoading: isUserLoading, isError: isUserError } = useFavoriteExercises();
+  
+  const { mutateAsync: updateFavorite } = useUpdateFavorite();
+  const { mutateAsync: addToFavorite } = useAddToFavorite();
+
+  const isLoading = isPopularLoading || isUserLoading;
+  const isError = isPopularError || isUserError;
+
+  const exercisesMap = new Map();
+  if (userExercises) {
+    userExercises.forEach(ue => {
+      if (ue.exercises) {
+        exercisesMap.set(ue.exercises.id, { ...ue.exercises, is_favorite: ue.is_favorite });
+      }
+    });
+  }
+  if (popularExercises) {
+    popularExercises.forEach(ex => {
+      if (!exercisesMap.has(ex.id)) {
+        exercisesMap.set(ex.id, { ...ex, is_favorite: false });
+      }
+    });
+  }
+
+  const exercises = Array.from(exercisesMap.values());
+  exercises.sort((a, b) => {
+    if (a.is_favorite && !b.is_favorite) return -1;
+    if (!a.is_favorite && b.is_favorite) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const handleToggleFavorite = async (exercise) => {
+    const inUserExercises = userExercises?.some(ue => ue.exercise_id === exercise.id);
+    try {
+      if (inUserExercises) {
+        await updateFavorite({ exercise_id: exercise.id, is_favorite: !exercise.is_favorite });
+      } else {
+        await addToFavorite(exercise.id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [routineName, setRoutineName] = useState("");
   const [description, setDescription] = useState("");
   
   const [isClosing, setIsClosing] = useState(false);
+  const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
+  const [selectedExerciseForInfo, setSelectedExerciseForInfo] = useState(null);
 
   const handleCloseWithAnimation = () => {
     setIsClosing(true); 
@@ -38,13 +93,13 @@ export default function WorkoutModal({ onClose, onSave }) {
     handleCloseWithAnimation();
   };
 
-  const handleOpenExerciseInfo = (e, exerciseId) => {
+  const handleOpenExerciseInfo = (e, exercise) => {
     e.stopPropagation(); 
-    console.log("Abrir modal de info para el ejercicio:", exerciseId);
+    setSelectedExerciseForInfo(exercise);
   };
 
   const handleCreateCustomExercise = () => {
-    console.log("Abrir modal para crear ejercicio personalizado");
+    setIsCustomExerciseModalOpen(true);
   };
 
   return (
@@ -61,7 +116,7 @@ export default function WorkoutModal({ onClose, onSave }) {
           <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <span className="text-lg font-black text-white tracking-tight">Nuevo Workout</span>
+          <span className="text-lg font-black text-white tracking-tight">Nueva rutina</span>
           <button 
             onClick={handleSaveRoutine}
             disabled={selectedExercises.length === 0}
@@ -91,7 +146,7 @@ export default function WorkoutModal({ onClose, onSave }) {
           {/* INPUT DESCRIPCION RUTINA */}
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1">
-              Descripción
+              Descripción (OPCIONAL)
             </label>
             <input 
               type="text" 
@@ -113,11 +168,11 @@ export default function WorkoutModal({ onClose, onSave }) {
               </span>
             </div>
 
-            {isLoading && (
+            {isLoading && exercises.length === 0 ? (
               <div className="flex justify-center py-12">
                 <div className="w-8 h-8 border-4 border-t-karga-orange border-white/10 rounded-full animate-spin" />
               </div>
-            )}
+            ) : null}
 
             {isError && (
               <div className="text-red-400 text-sm text-center p-4 bg-red-500/10 rounded-2xl border border-red-500/10 font-medium">
@@ -146,18 +201,26 @@ export default function WorkoutModal({ onClose, onSave }) {
                   <div className="flex items-center gap-3">
                     <button 
                       type="button"
-                      onClick={(e) => handleOpenExerciseInfo(e, exercise.id)}
+                      onClick={(e) => handleOpenExerciseInfo(e, exercise)}
                       className="p-2 text-zinc-500 hover:text-karga-orange hover:bg-white/5 rounded-xl transition-all"
                     >
                       <QuestionIcon className="w-5 h-5" />
                     </button>
 
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 ${
-                      isSelected 
-                        ? 'border-green-500 bg-green-500/10 scale-105' 
-                        : 'border-zinc-600 bg-transparent'
-                    }`}>
-                      {isSelected && <CheckIcon className="w-4 h-4 text-green-500" />}
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleToggleFavorite(exercise); }}
+                        className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors"
+                      >
+                        <HeartIcon filled={exercise.is_favorite} className={`w-5 h-5 ${exercise.is_favorite ? 'text-red-500' : ''}`} />
+                      </button>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 shrink-0 ${
+                        isSelected 
+                          ? 'border-green-500 bg-green-500/10 scale-105' 
+                          : 'border-zinc-600 bg-transparent'
+                      }`}>
+                        {isSelected && <CheckIcon className="w-4 h-4 text-green-500" />}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -179,6 +242,17 @@ export default function WorkoutModal({ onClose, onSave }) {
         </div>
 
       </div>
+
+      {isCustomExerciseModalOpen && (
+        <CustomExerciseModal onClose={() => setIsCustomExerciseModalOpen(false)} />
+      )}
+
+      {selectedExerciseForInfo && (
+        <ExerciseInfoModal 
+          exercise={selectedExerciseForInfo} 
+          onClose={() => setSelectedExerciseForInfo(null)} 
+        />
+      )}
     </div>
   );
 }

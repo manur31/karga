@@ -101,7 +101,7 @@ export const createExercise = async ({ name, muscle }) => {
       {
         profile_id: user.id,
         exercise_id: exercises.id,
-        is_favorite: true,
+        is_favorite: false,
       },
     ])
     .eq("profile_id", user.id);

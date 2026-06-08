@@ -26,6 +26,9 @@ export const useInsertExercisesRoutine = () => {
       queryClient.invalidateQueries({
         queryKey: ["routines_exercises"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["routines"],
+      });
     },
   });
 };
