@@ -171,6 +171,7 @@ export const getExerciseForID = async (id) => {
     .from("exercises")
     .select("*")
     .eq("id", id)
+    .eq("profile_id",user.id)
     .single();
   if (error) throw error;
   return data;

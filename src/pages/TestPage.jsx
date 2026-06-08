@@ -8,7 +8,8 @@ import {
 import { useSets } from "../hooks/queries/useSets";
 import { FiHeart } from "react-icons/fi";
 import { useAddToFavorite } from "../hooks/mutations/useExercisesMutations";
-import { useCreateSet } from "../hooks/mutations/useSetsMutations";
+import { useCreateSet,useDeleteSet,useUpdateSet } from "../hooks/mutations/useSetsMutations";
+import { getExerciseForID } from "../service/exersiseService";
 /*  const fmtTime = (s) => {
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
@@ -20,22 +21,54 @@ const fmtDate = (d) =>
   d ? new Intl.DateTimeFormat("es-DO", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(d)) : "-"
  */
 export default function SessionTester() {
+  const [setsSelect,setSetsSelect] = useState();
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [exerciseSelect, setExerciseSelect] = useState();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editWeight, setEditWeight] = useState("");
+  const [editReps, setEditReps] = useState("");
 
+  const { mutateAsync: updateSet } = useUpdateSet();
   const { data: exercises, isLoading: isExercisesLoading } = useExercises();
   const { data: favoriteExercises, isLoading: isFavoriteExercisesLoading } =
     useFavoriteExercises();
+//  const {data: getExerciseID}= useExerciseForID();
   const { mutateAsync: createSet } = useCreateSet();
   const { mutateAsync: AddFavorite } = useAddToFavorite();
+  const { mutateAsync: deleteSets} = useDeleteSet();
   const { data: sets, isLoading: isSetsLoading } = useSets();
   if (isExercisesLoading || isFavoriteExercisesLoading || isSetsLoading)
     return <div>Cargando...</div>;
-  console.log(exercises);
-  console.log(favoriteExercises);
-  console.log(sets);
+  //console.log(exercises);
+  //console.log(favoriteExercises);
+  //console.log(sets);
 
+  const handleOpenEditModal = (set) => {
+    setSetsSelect(set);
+    setEditWeight(set.weight);
+    setEditReps(set.rep);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateSet = async () => {
+    if (!setsSelect) return;
+  
+    await updateSet({
+      set_id: setsSelect.set_id,
+      weight: Number(editWeight),
+      rep: Number(editReps),
+    });
+  
+    setIsEditModalOpen(false);
+    setSetsSelect(null);
+    setEditWeight("");
+    setEditReps("");
+  };
+
+  const deleteSet = (id)=>{
+    deleteSets(id);
+  }
   const handleAddFavorite = (id) => {
     AddFavorite(id);
   };
@@ -43,14 +76,17 @@ export default function SessionTester() {
     setExerciseSelect(data);
   };
   const handleSubmit = () => {
-    /*     const sets = {
-      exercise_id: exerciseSelect,
+    if(exerciseSelect){
+       const sets = {
+      exercise_id: exerciseSelect.id,
       weight: Number(weight),
-      reps: Number(reps),
+      rep: Number(reps),
     };
-
-    createSet(sets); */
+    createSet(sets); 
+    setExerciseSelect();
+  } 
   };
+
   //ver detalles de un ejercicio
   /*   const [selectedExerciseId, setSelectedExerciseId] = useState(null);
 
@@ -76,6 +112,7 @@ export default function SessionTester() {
   const isRunning = uiState === "running"
  */
   const exercisesF = favoriteExercises?.map((item) => item.exercises);
+  
   return (
     <div className="max-w-sm mx-auto p-4 space-y-4">
       <h1 className="text-3xl font-black text-white tracking-tight mb-1">
@@ -88,10 +125,21 @@ export default function SessionTester() {
           </div>
         ) : (
           sets.map((set) => (
-            <div key={set.id}>
-              <p>{set.exercise_id}</p>
-              <p>{set.reps}</p>
-              <p>{set.weight}</p>
+            <div key={set.set_id} className="p-2 bg-red rounded-3xl flex gap-3 items-center">
+              <div  onClick={()=>{setSetsSelect(set)}}className="hover:opacity-70 active:scale-95 transition-all p-2 pointer"> 
+                <h2>{set.exercises.name}</h2>
+                <p>repeticion: {set.rep}</p>
+                <p>Peso: {set.weight}</p>
+              </div>
+              <button className="bg-black color-karga rounded-4xl p-3 hover:opacity-80 transition-all " onClick={()=>{
+                deleteSet(set.set_id);
+              }}>Delete</button>
+        <button
+  className="bg-black color-karga rounded-4xl p-3 hover:opacity-80 transition-all"
+  onClick={() => handleOpenEditModal(set)}
+>
+  Editar
+</button>
             </div>
           ))
         )}
@@ -122,7 +170,7 @@ export default function SessionTester() {
             </div>
           ) : (
             <div>
-              <p>No </p>
+              <p>Ejercicio No Seleccionado </p>
             </div>
           )}
         </div>
@@ -191,7 +239,7 @@ export default function SessionTester() {
             >
               <div
                 className="flex flex-row items-center justify-between hover:opacity-70 active:scale-95 transition-all p-2  pointer "
-                onClick={() => handleOpenExerciseDetail(exercise.id)}
+                onClick={() => handleSelectExercise(exercise)}
               >
                 <p className="text-sm font-medium user-select-none">
                   {exercise.name}
@@ -224,6 +272,49 @@ export default function SessionTester() {
             </div>
           ))
         )}
+        {isEditModalOpen && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+    <div className="bg-karga-gray text-white rounded-2xl p-5 w-full max-w-sm border border-white/10 space-y-4">
+      <h2 className="text-2xl font-black">Editar Set</h2>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-gray-300">Peso</label>
+        <input
+          type="number"
+          value={editWeight}
+          onChange={(e) => setEditWeight(e.target.value)}
+          className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-gray-300">Repeticiones</label>
+        <input
+          type="number"
+          value={editReps}
+          onChange={(e) => setEditReps(e.target.value)}
+          className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
+        />
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => setIsEditModalOpen(false)}
+          className="flex-1 bg-white/10 rounded-xl p-3"
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={handleUpdateSet}
+          className="flex-1 bg-karga-orange rounded-xl p-3 font-bold"
+        >
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
       {/*  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
         <p className="text-center text-5xl font-medium tracking-widest tabular-nums text-gray-900 mb-1">
