@@ -11,8 +11,6 @@ const HeartIcon = ({ filled, className }) => (
   </svg>
 );
 
-// Backend integration ready
-
 const ThreeDotsIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
@@ -113,7 +111,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
     if (onAddExercises && selectedExercises.length > 0) {
       onAddExercises(selectedExercises);
     }
-    // Clean up and return to details view
+    
     setSelectedExercises([]);
     setIsAddingExercises(false);
   };
