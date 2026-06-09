@@ -1,62 +1,92 @@
 import { supabase } from "../lib/supabaseClient";
-export const getSets = async () => {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError) throw userError;
+
+export const getSets = async (profile_id) => {
   const { data, error } = await supabase
     .from("sets")
     .select(
       `
       *,
-      exercises{*}
+      exercises(*)
     `,
     )
-    .eq("profile_id", user.id);
+    .eq("profile_id", profile_id);
+
   if (error) throw error;
   return data;
 };
-export const getSetforID = async (id) => {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError) throw userError;
+
+export const getSetforExercise = async ({ exercise_id, profile_id }) => {
   const { data, error } = await supabase
     .from("sets")
     .select(
       `
       *,
-      exercises{*}
+      exercises(*)
     `,
     )
-    .eq("profile_id", user.id)
-    .eq("id", id);
+    .eq("profile_id", profile_id)
+    .eq("exercise_id", exercise_id);
+
   if (error) throw error;
+
   return data;
 };
-export const createSet = async ({ exercise_id, reps, weight }) => {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError) throw userError;
+
+export const getSetforID = async (set_id, profile_id) => {
   const { data, error } = await supabase
     .from("sets")
-    .insert([{ exercise_id, reps, weight, profile_id: user.id }]);
+    .select(
+      `
+      *,
+      exercises(*)
+    `,
+    )
+    .eq("profile_id", profile_id)
+    .eq("set_id", set_id)
+    .single();
+
   if (error) throw error;
+
   return data;
 };
-export const deleteSet = async (id) => {
-  const { error } = await supabase.from("sets").delete().eq("id", id);
+
+export const createSet = async ({ profile_id, exercise_id, rep, weight }) => {
+  const { data, error } = await supabase
+    .from("sets")
+    .insert([
+      {
+        profile_id,
+        exercise_id,
+        rep,
+        weight,
+      },
+    ])
+    .select();
+
   if (error) throw error;
+
+  return data;
 };
-export const updateSet = async ({ id, exercise_id, reps, weight }) => {
+
+export const deleteSet = async ({ set_id, profile_id }) => {
   const { error } = await supabase
     .from("sets")
-    .update({ reps, weight })
-    .eq("id", id)
-    .eq("exercise_id", exercise_id);
+    .delete()
+    .eq("set_id", set_id)
+    .eq("profile_id", profile_id);
+
+  if (error) throw error;
+};
+
+export const updateSet = async ({ set_id, profile_id, rep, weight }) => {
+  const { error } = await supabase
+    .from("sets")
+    .update({
+      rep,
+      weight,
+    })
+    .eq("set_id", set_id)
+    .eq("profile_id", profile_id);
+
   if (error) throw error;
 };

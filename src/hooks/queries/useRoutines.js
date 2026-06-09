@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRoutines } from "../../service/routinesService";
-export const useRoutines = () => {
+
+export const useRoutines = (profile_id) => {
   return useQuery({
-    queryKey: ["routines"],
-    queryFn: getRoutines,
+    queryKey: ["routines", profile_id],
+    queryFn: () => getRoutines(profile_id),
+    enabled: !!profile_id,
   });
 };

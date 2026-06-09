@@ -6,109 +6,91 @@ import {
   updateFavorite,
 } from "../../service/exersiseService";
 
-export const useCreateExercise = () => {
+export const useCreateExercise = (profile_id) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data) => {
-      return createExercise(data);
+      return createExercise({
+        ...data,
+        profile_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["exercises"],
+        queryKey: ["exercises", profile_id],
       });
+
       queryClient.invalidateQueries({
-        queryKey: ["favoriteExercises"],
+        queryKey: ["favoriteExercises", profile_id],
       });
     },
   });
 };
 
-export const useAddToFavorite = () => {
+export const useAddToFavorite = (profile_id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: addToFavorite,
-    onMutate: async (exerciseId) => {
-      await queryClient.cancelQueries({ queryKey: ["favoriteExercises"] });
-      await queryClient.cancelQueries({ queryKey: ["exercises"] });
-
-      const previousFavorites = queryClient.getQueryData(["favoriteExercises"]);
-      const previousExercises = queryClient.getQueryData(["exercises"]);
-
-      if (previousExercises) {
-        const exerciseToMove = previousExercises.find(ex => ex.id === exerciseId);
-        if (exerciseToMove) {
-          queryClient.setQueryData(["exercises"], previousExercises.filter(ex => ex.id !== exerciseId));
-          queryClient.setQueryData(["favoriteExercises"], [
-            ...(previousFavorites || []),
-            { exercise_id: exerciseId, is_favorite: true, exercises: exerciseToMove }
-          ]);
-        }
-      }
-      return { previousFavorites, previousExercises };
+    mutationFn: (exercise_id) => {
+      return addToFavorite({
+        exercise_id,
+        profile_id,
+      });
     },
-    onError: (err, variables, context) => {
-      if (context?.previousFavorites) {
-        queryClient.setQueryData(["favoriteExercises"], context.previousFavorites);
-      }
-      if (context?.previousExercises) {
-        queryClient.setQueryData(["exercises"], context.previousExercises);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["exercises"] });
-      queryClient.invalidateQueries({ queryKey: ["favoriteExercises"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["exercises", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteExercises", profile_id],
+      });
     },
   });
 };
 
-export const useUpdateFavorite = () => {
+export const useUpdateFavorite = (profile_id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ exercise_id, is_favorite }) => {
-      return updateFavorite({ exercise_id, is_favorite });
+      return updateFavorite({
+        exercise_id,
+        profile_id,
+        is_favorite,
+      });
     },
-    onMutate: async ({ exercise_id, is_favorite }) => {
-      await queryClient.cancelQueries({ queryKey: ["favoriteExercises"] });
-      
-      const previousFavorites = queryClient.getQueryData(["favoriteExercises"]);
-      
-      if (previousFavorites) {
-        queryClient.setQueryData(
-          ["favoriteExercises"],
-          previousFavorites.map(ue => 
-            ue.exercise_id === exercise_id 
-              ? { ...ue, is_favorite } 
-              : ue
-          )
-        );
-      }
-      
-      return { previousFavorites };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previousFavorites) {
-        queryClient.setQueryData(["favoriteExercises"], context.previousFavorites);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["exercises"] });
-      queryClient.invalidateQueries({ queryKey: ["favoriteExercises"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["exercises", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteExercises", profile_id],
+      });
     },
   });
 };
 
-export const useDeleteExercise = () => {
+export const useDeleteExercise = (profile_id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteExercise,
+    mutationFn: (exercise_id) => {
+      return deleteExercise({
+        exercise_id,
+        profile_id,
+      });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["exercises"] });
-      queryClient.invalidateQueries({ queryKey: ["favoriteExercises"] });
-      queryClient.invalidateQueries({ queryKey: ["routines"] });
-      queryClient.invalidateQueries({ queryKey: ["routines_exercises"] });
+      queryClient.invalidateQueries({
+        queryKey: ["exercises", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteExercises", profile_id],
+      });
     },
   });
 };

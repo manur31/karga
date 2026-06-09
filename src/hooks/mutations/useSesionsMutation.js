@@ -1,17 +1,62 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  deleteSession,
+  insertSession,
+  updateSession,
+} from "../../service/sessionService";
 
-export const useCreateSession = () => {
-    const queryClient = useQueryClient()
+export const useCreateSession = (profile_id) => {
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: (data) => {
-            // TODO: Implement sesion creation
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['sesions']
-            })
-        }
-    })
-}
+  return useMutation({
+    mutationFn: (data) => {
+      return insertSession({
+        ...data,
+        profile_id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+    },
+  });
+};
 
+export const useDeleteSession = (profile_id) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (session_id) => {
+      return deleteSession({
+        session_id,
+        profile_id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+    },
+  });
+};
+export const useUpdateSession = (profile_id) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ session_id, time_end, time_init, note }) => {
+      return updateSession({
+        session_id,
+        profile_id,
+        time_end,
+        time_init,
+        note,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+    },
+  });
+};
