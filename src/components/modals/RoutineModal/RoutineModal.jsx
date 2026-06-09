@@ -63,6 +63,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
   };
 
   const [isAddingExercises, setIsAddingExercises] = useState(false);
+  const [isAddingClosing, setIsAddingClosing] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [isClosing, setIsClosing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -99,6 +100,14 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
     }, 300);
   };
 
+  const handleCloseAddingExercises = () => {
+    setIsAddingClosing(true);
+    setTimeout(() => {
+      setIsAddingExercises(false);
+      setIsAddingClosing(false);
+    }, 300);
+  };
+
   const handleToggleExercise = (exerciseId) => {
     setSelectedExercises((prev) => 
       prev.includes(exerciseId) 
@@ -113,7 +122,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
     }
     
     setSelectedExercises([]);
-    setIsAddingExercises(false);
+    handleCloseAddingExercises();
   };
 
   const handleExerciseClick = (exercise) => {
@@ -136,9 +145,9 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
       }`}>
         
         {/* HEADER */}
-        <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] shrink-0 z-20">
+        <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] shrink-0 z-30">
           <button 
-            onClick={() => isAddingExercises ? setIsAddingExercises(false) : handleCloseWithAnimation()} 
+            onClick={() => isAddingExercises ? handleCloseAddingExercises() : handleCloseWithAnimation()} 
             className="p-1.5 text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -146,20 +155,20 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
           
           <div className="flex flex-col items-center flex-1 mx-4 min-w-0">
             <span className="text-lg font-black text-white tracking-tight truncate w-full text-center">
-              {isAddingExercises ? "Seleccionar ejercicios" : (routine.name?.trim() ? routine.name : "Nueva rutina")}
+              {isAddingExercises && !isAddingClosing ? "Seleccionar ejercicios" : (routine.name?.trim() ? routine.name : "Nueva rutina")}
             </span>
-            {!isAddingExercises && routine.description && (
-              <span className="text-sm font-medium text-zinc-400 truncate w-full text-center mt-0.5">
+            {(!isAddingExercises || isAddingClosing) && routine.description && (
+              <span className="text-sm font-medium text-zinc-400 truncate w-full text-center mt-0.5 animate-fade-in">
                 {routine.description}
               </span>
             )}
           </div>
           
-          {isAddingExercises ? (
+          {isAddingExercises && !isAddingClosing ? (
             <button 
               onClick={handleSaveAddedExercises}
               disabled={selectedExercises.length === 0}
-              className="text-karga-orange font-bold text-sm px-2 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              className="text-karga-orange font-bold text-sm px-2 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity animate-fade-in"
             >
               Guardar
             </button>
@@ -186,81 +195,82 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
           )}
         </div>
 
-        {/* CONTENIDO PRINCIPAL SCROLLABLE */}
-        <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:none z-10">
+        {/* CONTENEDOR PRINCIPAL */}
+        <div className="flex-1 relative overflow-hidden flex flex-col z-10">
           
-          {!isAddingExercises ? (
-            /* VISTA DE DETALLE */
-            <>
-              <button
-                onClick={() => setIsAddingExercises(true)}
-                className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-full font-bold shadow-xl shadow-karga-orange/20 transition-all active:scale-[0.98]"
-              >
-                <PlusIcon className="w-5 h-5" />
-                Agregar ejercicios
-              </button>
+          {/* VISTA DE DETALLE (SCROLLABLE) */}
+          <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:none">
+            <button
+              onClick={() => setIsAddingExercises(true)}
+              className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-full font-bold shadow-xl shadow-karga-orange/20 transition-all active:scale-[0.98]"
+            >
+              <PlusIcon className="w-5 h-5" />
+              Agregar ejercicios
+            </button>
 
-              <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1 mb-1">
-                  Ejercicios en esta rutina
-                </h3>
-                
-                {(() => {
-                  const exercisesToRender = routine.routines_exercises?.map(re => re.exercises).filter(Boolean) || [];
+            <div className="flex flex-col gap-3">
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1 mb-1">
+                Ejercicios en esta rutina
+              </h3>
+              
+              {(() => {
+                const exercisesToRender = routine.routines_exercises?.map(re => re.exercises).filter(Boolean) || [];
 
-                  if (exercisesToRender.length === 0) {
-                    return (
-                      <div className="text-center py-8 px-4 text-zinc-500 text-sm font-medium border border-dashed border-white/10 rounded-2xl">
-                        Aún no tienes ejercicios en esta rutina.
-                      </div>
-                    );
-                  }
-
+                if (exercisesToRender.length === 0) {
                   return (
-                    <div className="flex flex-col gap-3">
-                      {exercisesToRender.map((exercise) => {
-                        const isFav = userExercises?.some(ue => ue.exercise_id === exercise.id && ue.is_favorite);
-                        return (
-                          <div 
-                            key={exercise.id}
-                            onClick={() => handleExerciseClick(exercise)}
-                            className="flex items-center justify-between p-4 bg-[var(--color-input-bg)] rounded-2xl hover:bg-white/5 transition-colors cursor-pointer"
-                          >
-                            <div className="flex flex-col pr-4">
-                              <span className="text-[15px] font-bold text-white tracking-tight">{exercise.name}</span>
-                              <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">{exercise.muscle}</span>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleToggleFavorite(exercise); }}
-                                className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
-                              >
-                                <HeartIcon filled={isFav} className={`w-5 h-5 ${isFav ? 'text-red-500' : ''}`} />
-                              </button>
-                              <div className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] flex items-center justify-center shrink-0">
-                                <PlusIcon className="w-5 h-5 text-white" />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="text-center py-8 px-4 text-zinc-500 text-sm font-medium border border-dashed border-white/10 rounded-2xl">
+                      Aún no tienes ejercicios en esta rutina.
                     </div>
                   );
-                })()}
-              </div>
-            </>
-          ) : (
-            /* VISTA DE SELECCIÓN DE EJERCICIOS */
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between items-end mb-1 pl-1">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                  Ejercicios disponibles
-                </label>
-                <span className="text-xs text-karga-orange font-bold">
-                  {selectedExercises.length} seleccionados
-                </span>
-              </div>
+                }
+
+                return (
+                  <div className="flex flex-col gap-3">
+                    {exercisesToRender.map((exercise) => {
+                      const isFav = userExercises?.some(ue => ue.exercise_id === exercise.id && ue.is_favorite);
+                      return (
+                        <div 
+                          key={exercise.id}
+                          onClick={() => handleExerciseClick(exercise)}
+                          className="flex items-center justify-between p-4 bg-[var(--color-input-bg)] rounded-2xl hover:bg-white/5 transition-colors cursor-pointer"
+                        >
+                          <div className="flex flex-col pr-4">
+                            <span className="text-[15px] font-bold text-white tracking-tight">{exercise.name}</span>
+                            <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">{exercise.muscle}</span>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleToggleFavorite(exercise); }}
+                              className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
+                            >
+                              <HeartIcon filled={isFav} className={`w-5 h-5 ${isFav ? 'text-red-500' : ''}`} />
+                            </button>
+                            <div className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] flex items-center justify-center shrink-0">
+                              <PlusIcon className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* VISTA DE SELECCIÓN DE EJERCICIOS (OVERLAY SCROLLABLE) */}
+          {isAddingExercises && (
+            <div className={`absolute inset-0 bg-[var(--color-dark-bg)] z-20 flex flex-col ${isAddingClosing ? 'animate-slide-out-custom' : 'animate-slide-in-custom'}`}>
+              <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:none">
+                <div className="flex justify-between items-end mb-1 pl-1">
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                    Ejercicios disponibles
+                  </label>
+                  <span className="text-xs text-karga-orange font-bold">
+                    {selectedExercises.length} seleccionados
+                  </span>
+                </div>
 
               {isLoading && allExercises.length === 0 ? (
                 <div className="p-8 flex justify-center">
@@ -323,6 +333,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                 );
               })
             )}
+              </div>
             </div>
           )}
 
