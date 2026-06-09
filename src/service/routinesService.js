@@ -1,72 +1,66 @@
 import { supabase } from "../lib/supabaseClient";
-export const createRoutines = async ({ name, description }) => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+export const createRoutines = async ({ profile_id, name, description }) => {
   const { data: routineData, error } = await supabase
     .from("routines")
     .insert([
       {
         name,
         description,
-        profile_id: user.id,
+        profile_id,
       },
     ])
     .select()
     .single();
 
   if (error) throw error;
+
   return routineData;
 };
-export const deleteRoutines = async (routine_id) => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+export const deleteRoutines = async ({ profile_id, routine_id }) => {
   const { error } = await supabase
     .from("routines")
     .delete()
     .eq("routine_id", routine_id)
-    .eq("profile_id", user.id);
+    .eq("profile_id", profile_id);
+
   if (error) throw error;
 };
+
 export const insertExercisesRoutine = async ({
+  profile_id,
   routine_id,
   id_exercises,
   rest_time,
   orden,
 }) => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profile")
-    .select("*")
-    .eq("profile_id", user.id)
+    .select("rest_time")
+    .eq("profile_id", profile_id)
     .single();
-  rest_time = rest_time ?? profile.rest_time;
-  const { error } = await supabase
+
+  if (profileError) throw profileError;
+
+  const finalRestTime = rest_time ?? profile.rest_time;
+
+  const { data, error } = await supabase
     .from("routines_exercises")
     .insert({
       routine_id,
       id_exercises,
-      rest_time,
+      rest_time: finalRestTime,
       orden,
     })
-    .eq("profile_id", user.id);
-  if (error) throw error;
-};
-export const getRoutines = async () => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  // const { data: routinesData, error: routinesError } = await supabase.from("routines").update([
-  //   {
-  //     name,
-  //     description,
-  //     profile_id: user.id,
-  //   },
-  // ]);
+    .select();
 
+  if (error) throw error;
+
+  return data;
+};
+
+export const getRoutines = async (profile_id) => {
   const { data, error } = await supabase
     .from("routines")
     .select(
@@ -78,17 +72,14 @@ export const getRoutines = async () => {
       )
     `,
     )
-    .eq("profile_id", user.id);
+    .eq("profile_id", profile_id);
 
   if (error) throw error;
 
   return data;
 };
-export const getRoutineforID = async (routine_id) => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
+export const getRoutineforID = async ({ profile_id, routine_id }) => {
   const { data, error } = await supabase
     .from("routines")
     .select(
@@ -100,21 +91,25 @@ export const getRoutineforID = async (routine_id) => {
       )
     `,
     )
-    .eq("profile_id", user.id)
-    .eq("routine_id", routine_id);
+    .eq("profile_id", profile_id)
+    .eq("routine_id", routine_id)
+    .single();
+
   if (error) throw error;
 
   return data;
 };
-export const updateRoutines = async ({ routine_id, name }) => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+export const updateRoutines = async ({ profile_id, routine_id, name }) => {
   const { data, error } = await supabase
     .from("routines")
     .update({ name })
     .eq("routine_id", routine_id)
-    .eq("profile_id", user.id);
+    .eq("profile_id", profile_id)
+    .select()
+    .single();
+
   if (error) throw error;
+
   return data;
 };

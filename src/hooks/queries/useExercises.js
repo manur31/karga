@@ -1,23 +1,19 @@
-import { useQuery } from "@tanstack/react-query"
-import { getExercises, getFavoriteExercises, getExerciseForID } from "../../service/exersiseService"
+import { useQuery } from "@tanstack/react-query";
+import {
+  getExercises,
+  getFavoriteExercises,
+} from "../../service/exersiseService";
 
-export const useExercises = () => {
-    return useQuery({
-        queryKey: ['exercises'],
-        queryFn: getExercises
-    })
-}
+export const useExercises = (profile_id) => {
+  return useQuery({
+    queryKey: ["exercises", profile_id],
+    queryFn: () => getExercises(profile_id),
+  });
+};
 
-export const useFavoriteExercises = () => {
-    return useQuery({
-        queryKey: ['favoriteExercises'],
-        queryFn: getFavoriteExercises
-    })
-}
-export const useExerciseForID = (id) => {
-    return useQuery({
-        queryKey: ['exerciseForID', id],
-        queryFn: () => getExerciseForID(id),
-        enabled: !!id,
-    })
-}
+export const useFavoriteExercises = (profile_id) => {
+  return useQuery({
+    queryKey: ["favoriteExercises", profile_id],
+    queryFn: () => getFavoriteExercises(profile_id),
+  });
+};

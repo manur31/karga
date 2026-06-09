@@ -3,25 +3,28 @@ import { useState } from "react";
 import {
   useExercises,
   useFavoriteExercises,
-  useExerciseForID,
 } from "../hooks/queries/useExercises";
 import { useSets } from "../hooks/queries/useSets";
 import { FiHeart } from "react-icons/fi";
 import { useAddToFavorite } from "../hooks/mutations/useExercisesMutations";
-import { useCreateSet,useDeleteSet,useUpdateSet } from "../hooks/mutations/useSetsMutations";
-import { getExerciseForID } from "../service/exersiseService";
-/*  const fmtTime = (s) => {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = s % 60
-  return [h, m, sec].map((n) => String(n).padStart(2, "0")).join(":")
-}
+import {
+  useCreateSet,
+  useDeleteSet,
+  useUpdateSet,
+} from "../hooks/mutations/useSetsMutations";
+import SessionTimer from "../components/sessionTimer";
+import {
+  useCreateSession,
+  useDeleteSession,
+  useUpdateSession,
+} from "../hooks/mutations/useSesionsMutation";
+import { useSesions } from "../hooks/queries/useSesions";
+import { useAuth } from "../hooks/queries/useAuth";
 
-const fmtDate = (d) =>
-  d ? new Intl.DateTimeFormat("es-DO", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(d)) : "-"
- */
 export default function SessionTester() {
-  const [setsSelect,setSetsSelect] = useState();
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+  const [setsSelect, setSetsSelect] = useState();
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [exerciseSelect, setExerciseSelect] = useState();
@@ -29,20 +32,83 @@ export default function SessionTester() {
   const [editWeight, setEditWeight] = useState("");
   const [editReps, setEditReps] = useState("");
 
-  const { mutateAsync: updateSet } = useUpdateSet();
-  const { data: exercises, isLoading: isExercisesLoading } = useExercises();
+  const { data: exercises, isLoading: isExercisesLoading } =
+    useExercises(profile_id);
   const { data: favoriteExercises, isLoading: isFavoriteExercisesLoading } =
-    useFavoriteExercises();
-//  const {data: getExerciseID}= useExerciseForID();
-  const { mutateAsync: createSet } = useCreateSet();
-  const { mutateAsync: AddFavorite } = useAddToFavorite();
-  const { mutateAsync: deleteSets} = useDeleteSet();
-  const { data: sets, isLoading: isSetsLoading } = useSets();
+    useFavoriteExercises(profile_id);
+
+  const { data: sessions } = useSesions(profile_id);
+  //  const {data: getExerciseID}= useExerciseForID();
+  const { mutateAsync: AddFavorite } = useAddToFavorite(profile_id);
+  const { mutateAsync: createSession } = useCreateSession(profile_id);
+  const { mutateAsync: deleteSession } = useDeleteSession(profile_id);
+  const { mutateAsync: updateSession } = useUpdateSession(profile_id);
+  const [sessionSelect, setSessionSelect] = useState(null);
+  const [isEditSessionModalOpen, setIsEditSessionModalOpen] = useState(false);
+  const [editTimeInit, setEditTimeInit] = useState("");
+  const [editTimeEnd, setEditTimeEnd] = useState("");
+
+  const { mutateAsync: updateSet } = useUpdateSet(profile_id);
+  const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const { mutateAsync: deleteSets } = useDeleteSet(profile_id);
+
+  const { data: sets, isLoading: isSetsLoading } = useSets(profile_id);
+
   if (isExercisesLoading || isFavoriteExercisesLoading || isSetsLoading)
     return <div>Cargando...</div>;
   //console.log(exercises);
   //console.log(favoriteExercises);
-  //console.log(sets);
+  /*   console.log("user:", user);
+  console.log("profile_id usado:", user?.profile_id);
+  console.log(sets); */
+
+  const updateOnlyTime = (dateString, timeString) => {
+    const date = new Date(dateString);
+
+    const [hours, minutes] = timeString.split(":");
+
+    date.setHours(Number(hours));
+    date.setMinutes(Number(minutes));
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+
+    return date.toISOString();
+  };
+  const handleOpenEditSessionModal = (session) => {
+    setSessionSelect(session);
+
+    const initDate = new Date(session.time_init);
+    const endDate = session.time_end ? new Date(session.time_end) : null;
+
+    setEditTimeInit(initDate.toTimeString().slice(0, 5));
+
+    setEditTimeEnd(endDate ? endDate.toTimeString().slice(0, 5) : "");
+
+    setIsEditSessionModalOpen(true);
+  };
+  const handleUpdateSession = async () => {
+    if (!sessionSelect) return;
+
+    const newTimeInit = updateOnlyTime(sessionSelect.time_init, editTimeInit);
+
+    const newTimeEnd = editTimeEnd
+      ? updateOnlyTime(
+          sessionSelect.time_end || sessionSelect.time_init,
+          editTimeEnd,
+        )
+      : null;
+
+    await updateSession({
+      session_id: sessionSelect.session_id,
+      time_init: newTimeInit,
+      time_end: newTimeEnd,
+    });
+
+    setIsEditSessionModalOpen(false);
+    setSessionSelect(null);
+    setEditTimeInit("");
+    setEditTimeEnd("");
+  };
 
   const handleOpenEditModal = (set) => {
     setSetsSelect(set);
@@ -53,22 +119,22 @@ export default function SessionTester() {
 
   const handleUpdateSet = async () => {
     if (!setsSelect) return;
-  
+
     await updateSet({
       set_id: setsSelect.set_id,
       weight: Number(editWeight),
       rep: Number(editReps),
     });
-  
+
     setIsEditModalOpen(false);
     setSetsSelect(null);
     setEditWeight("");
     setEditReps("");
   };
 
-  const deleteSet = (id)=>{
+  const deleteSet = (id) => {
     deleteSets(id);
-  }
+  };
   const handleAddFavorite = (id) => {
     AddFavorite(id);
   };
@@ -76,17 +142,29 @@ export default function SessionTester() {
     setExerciseSelect(data);
   };
   const handleSubmit = () => {
-    if(exerciseSelect){
-       const sets = {
-      exercise_id: exerciseSelect.id,
-      weight: Number(weight),
-      rep: Number(reps),
-    };
-    createSet(sets); 
-    setExerciseSelect();
-  } 
+    if (exerciseSelect) {
+      const sets = {
+        exercise_id: exerciseSelect.id,
+        weight: Number(weight),
+        rep: Number(reps),
+        profile_id: user.profile_id,
+      };
+      createSet(sets);
+      setExerciseSelect();
+    }
   };
 
+  const deleteSessions = (id) => {
+    deleteSession(id);
+  };
+
+  const handleCreateFakeSession = async () => {
+    await createSession({
+      time_init: new Date().toISOString(),
+      time_end: new Date(Date.now() + 3600 * 1000).toISOString(),
+      note: "Session de prueba",
+    });
+  };
   //ver detalles de un ejercicio
   /*   const [selectedExerciseId, setSelectedExerciseId] = useState(null);
 
@@ -112,9 +190,57 @@ export default function SessionTester() {
   const isRunning = uiState === "running"
  */
   const exercisesF = favoriteExercises?.map((item) => item.exercises);
-  
+  //console.log(sessions);
+
   return (
     <div className="max-w-sm mx-auto p-4 space-y-4">
+      <div>
+        <h2 className="text-3xl font-black text-white tracking-tight mb-1">
+          Flujo de Sessions
+        </h2>
+        <button
+          onClick={handleCreateFakeSession}
+          className="bg-karga-orange rounded-xl p-3 text-white font-bold"
+        >
+          Crear Session Test
+        </button>
+        <SessionTimer />
+        <div className="bg-karga-gray text-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          {sessions?.length === 0 ? (
+            <p>No hay sesiones aún</p>
+          ) : (
+            sessions.map((session) => (
+              <div
+                key={session.session_id}
+                className="p-3 border-b border-white/10"
+              >
+                <p>Inicio: {new Date(session.time_init).toLocaleString()}</p>
+
+                <p>
+                  Fin:{" "}
+                  {session.time_end
+                    ? new Date(session.time_end).toLocaleString()
+                    : "En curso"}
+                </p>
+
+                <p>Nota: {session.note || "Sin nota"}</p>
+                <button
+                  onClick={() => handleOpenEditSessionModal(session)}
+                  className="bg-karga-orange text-white rounded-xl p-3 font-bold"
+                >
+                  Editar
+                </button>
+                <button
+                  className="bg-karga-orange text-white rounded-xl p-3 text-white font-bold hover:opacity-70 active:scale-95 transition-all p-2 pointer"
+                  onClick={() => deleteSessions(session.session_id)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
       <h1 className="text-3xl font-black text-white tracking-tight mb-1">
         Mis Sets
       </h1>
@@ -125,21 +251,34 @@ export default function SessionTester() {
           </div>
         ) : (
           sets.map((set) => (
-            <div key={set.set_id} className="p-2 bg-red rounded-3xl flex gap-3 items-center">
-              <div  onClick={()=>{setSetsSelect(set)}}className="hover:opacity-70 active:scale-95 transition-all p-2 pointer"> 
+            <div
+              key={set.set_id}
+              className="p-2 bg-red rounded-3xl flex gap-3 items-center"
+            >
+              <div
+                onClick={() => {
+                  setSetsSelect(set);
+                }}
+                className="hover:opacity-70 active:scale-95 transition-all p-2 pointer"
+              >
                 <h2>{set.exercises.name}</h2>
                 <p>repeticion: {set.rep}</p>
                 <p>Peso: {set.weight}</p>
               </div>
-              <button className="bg-black color-karga rounded-4xl p-3 hover:opacity-80 transition-all " onClick={()=>{
-                deleteSet(set.set_id);
-              }}>Delete</button>
-        <button
-  className="bg-black color-karga rounded-4xl p-3 hover:opacity-80 transition-all"
-  onClick={() => handleOpenEditModal(set)}
->
-  Editar
-</button>
+              <button
+                className="bg-black color-karga rounded-4xl p-3 hover:opacity-80 transition-all "
+                onClick={() => {
+                  deleteSet(set.set_id);
+                }}
+              >
+                Delete
+              </button>
+              <button
+                className="bg-black color-karga rounded-4xl p-3 hover:opacity-80 transition-all"
+                onClick={() => handleOpenEditModal(set)}
+              >
+                Editar
+              </button>
             </div>
           ))
         )}
@@ -272,49 +411,92 @@ export default function SessionTester() {
             </div>
           ))
         )}
+        {isEditSessionModalOpen && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+            <div className="bg-karga-gray text-white rounded-2xl p-5 w-full max-w-sm border border-white/10 space-y-4">
+              <h2 className="text-2xl font-black">Editar Session</h2>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm text-gray-300">Hora de inicio</label>
+                <input
+                  type="time"
+                  value={editTimeInit}
+                  onChange={(e) => setEditTimeInit(e.target.value)}
+                  className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm text-gray-300">Hora de fin</label>
+                <input
+                  type="time"
+                  value={editTimeEnd}
+                  onChange={(e) => setEditTimeEnd(e.target.value)}
+                  className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsEditSessionModalOpen(false)}
+                  className="flex-1 bg-white/10 rounded-xl p-3"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  onClick={handleUpdateSession}
+                  className="flex-1 bg-karga-orange rounded-xl p-3 font-bold"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {isEditModalOpen && (
-  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-    <div className="bg-karga-gray text-white rounded-2xl p-5 w-full max-w-sm border border-white/10 space-y-4">
-      <h2 className="text-2xl font-black">Editar Set</h2>
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+            <div className="bg-karga-gray text-white rounded-2xl p-5 w-full max-w-sm border border-white/10 space-y-4">
+              <h2 className="text-2xl font-black">Editar Set</h2>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-sm text-gray-300">Peso</label>
-        <input
-          type="number"
-          value={editWeight}
-          onChange={(e) => setEditWeight(e.target.value)}
-          className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
-        />
-      </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm text-gray-300">Peso</label>
+                <input
+                  type="number"
+                  value={editWeight}
+                  onChange={(e) => setEditWeight(e.target.value)}
+                  className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
+                />
+              </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-sm text-gray-300">Repeticiones</label>
-        <input
-          type="number"
-          value={editReps}
-          onChange={(e) => setEditReps(e.target.value)}
-          className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
-        />
-      </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm text-gray-300">Repeticiones</label>
+                <input
+                  type="number"
+                  value={editReps}
+                  onChange={(e) => setEditReps(e.target.value)}
+                  className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
+                />
+              </div>
 
-      <div className="flex gap-3">
-        <button
-          onClick={() => setIsEditModalOpen(false)}
-          className="flex-1 bg-white/10 rounded-xl p-3"
-        >
-          Cancelar
-        </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1 bg-white/10 rounded-xl p-3"
+                >
+                  Cancelar
+                </button>
 
-        <button
-          onClick={handleUpdateSet}
-          className="flex-1 bg-karga-orange rounded-xl p-3 font-bold"
-        >
-          Guardar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                <button
+                  onClick={handleUpdateSet}
+                  className="flex-1 bg-karga-orange rounded-xl p-3 font-bold"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       {/*  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
         <p className="text-center text-5xl font-medium tracking-widest tabular-nums text-gray-900 mb-1">

@@ -1,39 +1,62 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteSession, insertSessionx } from "../../service/sessionService"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  deleteSession,
+  insertSession,
+  updateSession,
+} from "../../service/sessionService";
 
+export const useCreateSession = (profile_id) => {
+  const queryClient = useQueryClient();
 
-export const useCreateSession = () => {
-    const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => {
+      return insertSession({
+        ...data,
+        profile_id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+    },
+  });
+};
 
-    return useMutation({
-        mutationFn: (data) => {
-            insertSessionx(data);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['sessions']
-            })
-        }
-    })
-}
-export const useUpdateSession=()=>{
-    const queryClient = useQueryClient()
-    return useMutation({
-        mutationFn: (data)=>{
-        }
-    })
-}
-export const useDeleteSession()=>{
-    const queryClient= useQueryClient()
-    return useMutation ({
-        mutationFn: (id)=>{
-            deleteSession(id);
-        },
-        onSuccess:()=>{
-            queryClient.invalidateQueries({
-                queryKey:["sessions"]
-            })
-        }
-    })
-}
+export const useDeleteSession = (profile_id) => {
+  const queryClient = useQueryClient();
 
+  return useMutation({
+    mutationFn: (session_id) => {
+      return deleteSession({
+        session_id,
+        profile_id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+    },
+  });
+};
+export const useUpdateSession = (profile_id) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ session_id, time_end, time_init, note }) => {
+      return updateSession({
+        session_id,
+        profile_id,
+        time_end,
+        time_init,
+        note,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+    },
+  });
+};

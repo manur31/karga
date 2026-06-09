@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createSet, deleteSet, updateSet } from "../../service/setService";
 
-export const useCreateSet = () => {
+export const useCreateSet = (profile_id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -10,34 +10,38 @@ export const useCreateSet = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["sets"],
+        queryKey: ["sets", profile_id],
       });
     },
   });
 };
-export const useDeleteSet= ()=>{
+
+export const useDeleteSet = (profile_id) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (data)=>{
-      deleteSet(data);
+    mutationFn: (set_id) => {
+      deleteSet({ set_id, profile_id });
     },
-    onSuccess: ()=>{
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey:["sets"]
-      })
-    }
-  })
-}
-export const useUpdateSet = ()=>{
+        queryKey: ["sets", profile_id],
+      });
+    },
+  });
+};
+
+export const useUpdateSet = (profile_id) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (data)=>{
-      updateSet(data);
+    mutationFn: ({ set_id, rep, weight }) => {
+      updateSet({ set_id, rep, weight, profile_id });
     },
-    onSuccess: ()=>{
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey:["sets"]
-      })
-    }
-  })
-}
+        queryKey: ["sets", profile_id],
+      });
+    },
+  });
+};
