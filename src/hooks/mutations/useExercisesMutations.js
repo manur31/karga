@@ -6,56 +6,90 @@ import {
   updateFavorite,
 } from "../../service/exersiseService";
 
-export const useCreateExercise = () => {
+export const useCreateExercise = (profile_id) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data) => {
-      createExercise(data);
+      return createExercise({
+        ...data,
+        profile_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["exercises"],
+        queryKey: ["exercises", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteExercises", profile_id],
       });
     },
   });
 };
 
-export const useAddToFavorite = () => {
+export const useAddToFavorite = (profile_id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: addToFavorite,
+    mutationFn: (exercise_id) => {
+      return addToFavorite({
+        exercise_id,
+        profile_id,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["favoriteExercises"],
+        queryKey: ["exercises", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteExercises", profile_id],
       });
     },
   });
 };
 
-export const useUpdateFavorite = () => {
+export const useUpdateFavorite = (profile_id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, is_favorite }) => {
-      updateFavorite({ id, is_favorite });
+    mutationFn: ({ exercise_id, is_favorite }) => {
+      return updateFavorite({
+        exercise_id,
+        profile_id,
+        is_favorite,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["exercises", "favoriteExercises"],
+        queryKey: ["exercises", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteExercises", profile_id],
       });
     },
   });
 };
 
-export const useDeleteExercise = () => {
+export const useDeleteExercise = (profile_id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteExercise,
+    mutationFn: (exercise_id) => {
+      return deleteExercise({
+        exercise_id,
+        profile_id,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["exercises", "favoriteExercises"],
+        queryKey: ["exercises", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["favoriteExercises", profile_id],
       });
     },
   });

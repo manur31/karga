@@ -1,102 +1,114 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export const useSesionStore = create(
-    persist(
-        (set, get) => ({
-            sessions: [],
-            seconds: 0,
-            timer: null,
-            startedAt: null,
-            finishedAt: null,
-            currentFunction: null,
-            isStarted: false,
+  persist(
+    (set, get) => ({
+      sessions: [],
+      seconds: 0,
+      timer: null,
+      startedAt: null,
+      finishedAt: null,
+      currentFunction: null,
+      isStarted: false,
 
-            addSession: (newSession) => {(
-                set((state) => ({
-                    sessions: [...state.sessions, {
-                            ...newSession,
-                            id: crypto.randomUUID(),
-                            synced: false,
-                            createAt: new Date()
-                        }
-                    ]
-                }))
-            )},
-
-            markAsSynced: (sessionId) => {
-                set((state) => ({
-                    sessions: state.sessions.map((session) => 
-                        session.id === sessionId ? { ...session, synced: true } : session
-                    )
-                }))
+      addSession: (newSession) => {
+        set((state) => ({
+          sessions: [
+            ...state.sessions,
+            {
+              ...newSession,
+              id: crypto.randomUUID(),
+              synced: false,
+              createAt: new Date(),
             },
+          ],
+        }));
+      },
 
-            getPendingSessions: () => get().sessions.filter((session) => !session.synced),
+      markAsSynced: (sessionId) => {
+        set((state) => ({
+          sessions: state.sessions.map((session) =>
+            session.id === sessionId ? { ...session, synced: true } : session,
+          ),
+        }));
+      },
 
-            start: () => {
-                if(get().timer !== null || get().seconds !== 0) return
+      getPendingSessions: () =>
+        get().sessions.filter((session) => !session.synced),
 
-                const interval = setInterval(() => {
-                    set({ seconds: get().seconds + 1 })
-                }, 1000)
+      start: () => {
+        if (get().timer !== null || get().seconds !== 0) return;
 
-                set({ 
-                    timer: interval, 
-                    startedAt: new Date(),
-                    finishedAt: null,
-                    currentFunction: 'start',
-                    isStarted: true
-                })
-            },
+        const interval = setInterval(() => {
+          set({ seconds: get().seconds + 1 });
+        }, 1000);
 
-            continue: () => {
-                if(get().timer === null && get().seconds === 0) return
+        set({
+          timer: interval,
+          startedAt: new Date(),
+          finishedAt: null,
+          currentFunction: "start",
+          isStarted: true,
+        });
+      },
 
-                const interval = setInterval(() => {
-                    set({ seconds: get().seconds + 1 })
-                }, 1000)
+      continue: () => {
+        if (get().timer !== null) return;
+        if (get().seconds === 0) return;
 
-                set({ 
-                    timer: interval, 
-                    currentFunction: 'continue',
-                })
-            },
+        const interval = setInterval(() => {
+          set({ seconds: get().seconds + 1 });
+        }, 1000);
 
-            pause: () => {
-                clearInterval(get().timer)
-                set({ timer: null, currentFunction: 'pause' })
-            },
+        set({
+          timer: interval,
+          currentFunction: "continue",
+        });
+      },
 
-            finish: () => {
-                clearInterval(get().timer)
-                set({ 
-                    timer: null, 
-                    seconds: 0,
-                    finishedAt: new Date() ,
-                    currentFunction: 'finish',
-                    isStarted: false
-                })
+      pause: () => {
+        const timer = get().timer;
 
-                // Add session to store
-                get().addSession({
-                    startedAt: get().startedAt,
-                    finishedAt: get().finishedAt,
-                })
-            },
+        if (timer) {
+          clearInterval(timer);
+        }
 
-            discard: () => {
-                clearInterval(get().timer)
-                set({ 
-                    timer: null, 
-                    seconds: 0,
-                    startedAt: null,
-                    finishedAt: null,
-                    currentFunction: 'discard',
-                    isStarted: false
-                })
-            }
-        }), 
-        { name: 'sesion-store' }
-    )
-)
+        set({
+          timer: null,
+          currentFunction: "pause",
+        });
+      },
+      finish: () => {
+        clearInterval(get().timer);
+
+        const finishedAt = new Date();
+
+        get().addSession({
+          startedAt: get().startedAt,
+          finishedAt,
+        });
+
+        set({
+          timer: null,
+          seconds: 0,
+          finishedAt,
+          currentFunction: "finish",
+          isStarted: false,
+        });
+      },
+      discard: () => {
+        clearInterval(get().timer);
+        set({
+          timer: null,
+          seconds: 0,
+          startedAt: null,
+          finishedAt: null,
+          currentFunction: "discard",
+          isStarted: false,
+        });
+      },
+    }),
+    { name: "sesion-store" },
+  ),
+);

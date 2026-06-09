@@ -1,87 +1,63 @@
 import { supabase } from "../lib/supabaseClient";
 
-export const getExercises = async () => {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) throw userError;
-
-  const { data: userExercises } = await supabase
+export const getExercises = async (profile_id) => {
+  const { data: userExercises, error: userExercisesError } = await supabase
     .from("user_exercises")
     .select("exercise_id")
-    .eq("profile_id", user.id);
+    .eq("profile_id", profile_id);
 
-  const { data, error } = await supabase
-    .from("exercises")
-    .select("*")
-    .not(
-      "id",
-      "in",
-      `(${userExercises.map((exercise) => exercise.exercise_id).join(",")})`,
-    )
-    .eq("is_populary", true);
+  if (userExercisesError) throw userExercisesError;
+
+  const exerciseIds = userExercises.map((exercise) => exercise.exercise_id);
+
+  let query = supabase.from("exercises").select("*").eq("is_populary", true);
+
+  if (exerciseIds.length > 0) {
+    query = query.not("id", "in", `(${exerciseIds.join(",")})`);
+  }
+
+  const { data, error } = await query;
+
   if (error) throw error;
+
   return data;
 };
 
-export const getFavoriteExercises = async () => {
-  const {
-    data: { user, error: userError },
-  } = await supabase.auth.getUser();
-
-  if (userError) throw userError;
-
+export const getFavoriteExercises = async (profile_id) => {
   const { data, error } = await supabase
     .from("user_exercises")
     .select(
       `
-        *,
-        exercises(*)
-      `,
+      *,
+      exercises(*)
+    `,
     )
-    .eq("profile_id", user.id);
+    .eq("profile_id", profile_id);
+
   if (error) throw error;
+
   return data;
 };
 
-export const addToFavorite = async (id) => {
-  const {
-    data: { user, error: userError },
-  } = await supabase.auth.getUser();
-
-  if (userError) throw userError;
-  const { data: exercises, error } = await supabase
-    .from("exercises")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (error) throw error;
-
-  const { data, error: updateError } = await supabase
+export const addToFavorite = async ({ exercise_id, profile_id }) => {
+  const { data, error } = await supabase
     .from("user_exercises")
     .insert([
       {
-        profile_id: user.id,
-        exercise_id: exercises.id,
+        profile_id,
+        exercise_id,
         is_favorite: true,
       },
     ])
-    .eq("profile_id", user.id);
+    .select();
 
-  if (updateError) throw updateError;
+  if (error) throw error;
 
   return data;
 };
 
-export const createExercise = async ({ name, muscle }) => {
-  const {
-    data: { user, error: userError },
-  } = await supabase.auth.getUser();
-
-  if (userError) throw userError;
-  const { data: exercises, error: exerciseError } = await supabase
+export const createExercise = async ({ name, muscle, profile_id }) => {
+  const { data: exercise, error: exerciseError } = await supabase
     .from("exercises")
     .insert([
       {
@@ -99,66 +75,78 @@ export const createExercise = async ({ name, muscle }) => {
     .from("user_exercises")
     .insert([
       {
-        profile_id: user.id,
-        exercise_id: exercises.id,
+        profile_id,
+        exercise_id: exercise.id,
         is_favorite: true,
       },
     ])
-    .eq("profile_id", user.id);
+    .select();
+
   if (error) throw error;
 
   return data;
 };
-export const deleteExercise = async (exerciseId) => {
-  const {
-    data: { user, error: userError },
-  } = await supabase.auth.getUser();
 
-  if (userError) throw userError;
-
-  const { data: userExercise, error } = await supabase
+export const deleteExercise = async ({ exercise_id, profile_id }) => {
+  const { data: exercise, error } = await supabase
     .from("exercises")
-    .select()
-    .eq("id", exerciseId)
+    .select("*")
+    .eq("id", exercise_id)
     .single();
 
   if (error) throw error;
-  if (userExercise.is_populary == false) {
-    await supabase
-      .from("user_exercises")
-      .delete()
-      .eq("exercise_id", exerciseId)
-      .eq("profile_id", user.id);
+
+  const { error: userExerciseError } = await supabase
+    .from("user_exercises")
+    .delete()
+    .eq("exercise_id", exercise_id)
+    .eq("profile_id", profile_id);
+
+  if (userExerciseError) throw userExerciseError;
+
+  if (exercise.is_populary === false) {
     const { error: exerciseError } = await supabase
       .from("exercises")
       .delete()
-      .eq("id", exerciseId);
-    if (exerciseError) throw exerciseError;
-  } else {
-    const { error: exerciseError } = await supabase
-      .from("user_exercises")
-      .delete()
-      .eq("exercise_id", exerciseId)
-      .eq("profile_id", user.id);
+      .eq("id", exercise_id);
+
     if (exerciseError) throw exerciseError;
   }
 };
-// un ejercicio popular se quita de ser popular
-export const updateFavorite = async ({ exercise_id, is_favorite }) => {
-  const {
-    data: { user, error: userError },
-  } = await supabase.auth.getUser();
 
-  if (userError) throw userError;
-  const { error } = await supabase
+export const updateFavorite = async ({
+  exercise_id,
+  profile_id,
+  is_favorite,
+}) => {
+  const { data, error } = await supabase
     .from("user_exercises")
-    .update([
-      {
-        is_favorite,
-      },
-    ])
+    .update({
+      is_favorite,
+    })
     .eq("exercise_id", exercise_id)
-    .eq("profile_id", user.id)
+    .eq("profile_id", profile_id)
     .select();
+
   if (error) throw error;
+
+  return data;
+};
+
+export const getExerciseForID = async ({ id, profile_id }) => {
+  const { data, error } = await supabase
+    .from("user_exercises")
+    .select(
+      `
+      *,
+      exercises(*)
+    `,
+    )
+    .eq("exercise_id", id)
+    .eq("profile_id", profile_id)
+    .single();
+
+  if (error) throw error;
+
+  return data;
 };

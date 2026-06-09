@@ -7,47 +7,73 @@ import {
   updateRoutines,
 } from "../../service/routinesService";
 
-export const useCreateRoutines = () => {
+export const useCreateRoutines = (profile_id) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (data) => createRoutines(data),
+    mutationFn: (data) =>
+      createRoutines({
+        ...data,
+        profile_id,
+      }),
+
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["routines"],
-      });
-    },
-  });
-};
-export const useInsertExercisesRoutine = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data) => insertExercisesRoutine(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["routines_exercises"],
+        queryKey: ["routines", profile_id],
       });
     },
   });
 };
 
-export const useDeleteRoutines = () => {
+export const useInsertExercisesRoutine = (profile_id) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (id) => deleteRoutines(id),
+    mutationFn: (data) =>
+      insertExercisesRoutine({
+        ...data,
+        profile_id,
+      }),
+
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["routines"],
+        queryKey: ["routines", profile_id],
       });
     },
   });
 };
-export const useEditRoutines = () => {
+
+export const useDeleteRoutines = (profile_id) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (data) => updateRoutines(data),
+    mutationFn: (routine_id) =>
+      deleteRoutines({
+        routine_id,
+        profile_id,
+      }),
+
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["routines"],
+        queryKey: ["routines", profile_id],
+      });
+    },
+  });
+};
+
+export const useEditRoutines = (profile_id) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data) =>
+      updateRoutines({
+        ...data,
+        profile_id,
+      }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["routines", profile_id],
       });
     },
   });
