@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useRoutines } from "../hooks/queries/useRoutines";
+import { useAuth } from "../hooks/queries/useAuth";
 import NewWorkoutModal from "../components/modals/NewWorkoutModal";
 import { PlusIcon } from "../components/icons";
 
 function SetsNewPage() {
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
 
-  const { data: routines, isLoading } = useRoutines();
+  const { data: routines, isLoading } = useRoutines(profile_id);
   const [openModal, setOpenModal] = useState(false);
 
   const handleClose = () => {

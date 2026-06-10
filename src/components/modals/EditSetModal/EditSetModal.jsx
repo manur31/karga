@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../hooks/queries/useAuth';
-import { useCreateSet } from '../../../hooks/mutations/useSetsMutations';
+import { useUpdateSet } from '../../../hooks/mutations/useSetsMutations';
 import { CheckIcon, PlusIcon } from '../../icons';
 
 const MinusIcon = ({ className }) => (
@@ -15,7 +15,7 @@ const XIcon = ({ className }) => (
   </svg>
 );
 
-export default function SetModal({ exercise, onClose }) {
+export default function EditSetModal({ setToEdit, exerciseName, onClose }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [unit, setUnit] = useState('kg');
@@ -23,17 +23,22 @@ export default function SetModal({ exercise, onClose }) {
   const [etiqueta, setEtiqueta] = useState('none');
   const [isEtiquetaModalOpen, setIsEtiquetaModalOpen] = useState(false);
   
-  const [date, setDate] = useState('Ahora');
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const { mutateAsync: updateSet } = useUpdateSet(profile_id);
 
-  if (!exercise) return null;
+  // Inicializar estado con los datos del set a editar
+  useEffect(() => {
+    if (setToEdit) {
+      setReps(setToEdit.rep || 0);
+      setWeight(setToEdit.weight || 0);
+    }
+  }, [setToEdit]);
+
+  if (!setToEdit) return null;
 
   const handleCloseWithAnimation = (e) => {
     if (e) {
@@ -61,15 +66,14 @@ export default function SetModal({ exercise, onClose }) {
     }
 
     try {
-      await createSet({
-        profile_id,
-        exercise_id: exercise.id,
+      await updateSet({
+        set_id: setToEdit.set_id || setToEdit.id,
         rep: Number(reps || 0),
         weight: Number(weightInKg.toFixed(2))
       });
       handleCloseWithAnimation(null);
     } catch (error) {
-      console.error("Error al guardar el set:", error);
+      console.error("Error al actualizar el set:", error);
       setIsSaving(false);
     }
   };
@@ -102,7 +106,7 @@ export default function SetModal({ exercise, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col justify-end pointer-events-auto">
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
@@ -131,7 +135,7 @@ export default function SetModal({ exercise, onClose }) {
         {/* Contenido */}
         <div className="px-6 flex flex-col">
           <h2 className="text-2xl font-black text-white tracking-tight mb-8 truncate pr-10">
-            {exercise.name}
+            Editar set
           </h2>
           
           {/* ZONA DE INPUTS */}
@@ -200,10 +204,7 @@ export default function SetModal({ exercise, onClose }) {
               {/* Dropdown Etiqueta */}
               <div className="relative">
                 <button 
-                  onClick={() => {
-                    setIsEtiquetaModalOpen(!isEtiquetaModalOpen);
-                    setIsCalendarOpen(false);
-                  }}
+                  onClick={() => setIsEtiquetaModalOpen(!isEtiquetaModalOpen)}
                   className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors capitalize ${
                     etiqueta !== 'none' ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/20' : 'bg-white/10 hover:bg-white/20 text-zinc-300'
                   }`}
@@ -236,53 +237,13 @@ export default function SetModal({ exercise, onClose }) {
                 {unit === 'kg' ? 'LB' : 'KG'}
               </button>
 
-              {/* Dropdown Ahora (Calendario) */}
-              <div className="relative">
-                <button 
-                  onClick={() => {
-                    setIsCalendarOpen(!isCalendarOpen);
-                    setIsEtiquetaModalOpen(false);
-                  }}
-                  className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                    date !== 'Ahora' ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/20' : 'bg-white/10 hover:bg-white/20 text-zinc-300'
-                  }`}
-                >
-                  {date === 'Ahora' ? 'Ahora' : new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </button>
-                
-                {isCalendarOpen && (
-                  <div className="absolute bottom-full mb-2 left-0 p-4 bg-[#2A2424] border border-white/10 rounded-2xl shadow-xl z-50 animate-fade-in flex flex-col gap-3 min-w-[200px]">
-                    <span className="text-sm font-bold text-white">Seleccionar fecha</span>
-                    <input 
-                      type="datetime-local" 
-                      value={date === 'Ahora' ? '' : date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="bg-white/5 border border-white/10 text-white text-sm rounded-xl p-2 outline-none focus:border-karga-orange transition-colors [color-scheme:dark]"
-                    />
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button 
-                        onClick={() => { setDate('Ahora'); setIsCalendarOpen(false); }}
-                        className="px-3 py-1.5 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
-                      >
-                        Reset
-                      </button>
-                      <button 
-                        onClick={() => setIsCalendarOpen(false)}
-                        className="px-3 py-1.5 text-xs font-bold bg-karga-orange text-white rounded-lg active:scale-95 transition-transform"
-                      >
-                        Listo
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
             
             {/* Botón Guardar */}
             <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-green-500 hover:bg-green-400 disabled:bg-green-500/50 p-4 rounded-2xl flex-shrink-0 transition-all active:scale-[0.95] shadow-lg shadow-green-500/20 flex items-center justify-center z-10"
+              className="bg-karga-orange hover:bg-orange-500 disabled:bg-karga-orange/50 p-4 rounded-2xl flex-shrink-0 transition-all active:scale-[0.95] shadow-lg shadow-karga-orange/20 flex items-center justify-center z-10"
             >
               {isSaving ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

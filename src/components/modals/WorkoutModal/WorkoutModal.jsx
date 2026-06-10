@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../../../hooks/queries/useAuth';
 import { useExercises, useFavoriteExercises } from '../../../hooks/queries/useExercises';
 import { useUpdateFavorite, useAddToFavorite } from '../../../hooks/mutations/useExercisesMutations';
 import { ArrowLeft, PlusIcon, CheckIcon } from '../../icons';
@@ -18,11 +19,14 @@ const QuestionIcon = ({ className }) => (
 );
 
 export default function WorkoutModal({ onClose, onSave }) {
-  const { data: popularExercises, isLoading: isPopularLoading, isError: isPopularError } = useExercises();
-  const { data: userExercises, isLoading: isUserLoading, isError: isUserError } = useFavoriteExercises();
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+
+  const { data: popularExercises, isLoading: isPopularLoading, isError: isPopularError } = useExercises(profile_id);
+  const { data: userExercises, isLoading: isUserLoading, isError: isUserError } = useFavoriteExercises(profile_id);
   
-  const { mutateAsync: updateFavorite } = useUpdateFavorite();
-  const { mutateAsync: addToFavorite } = useAddToFavorite();
+  const { mutateAsync: updateFavorite } = useUpdateFavorite(profile_id);
+  const { mutateAsync: addToFavorite } = useAddToFavorite(profile_id);
 
   const isLoading = isPopularLoading || isUserLoading;
   const isError = isPopularError || isUserError;

@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../../../hooks/queries/useAuth';
 import { useExercises, useFavoriteExercises } from '../../../hooks/queries/useExercises';
 import { useUpdateFavorite, useAddToFavorite } from '../../../hooks/mutations/useExercisesMutations';
 import { formatRelativeTime } from '../../../utils/timeFormatter';
 import { ArrowLeft, CheckIcon, PlusIcon } from '../../icons';
 import SetModal from '../SetModal/SetModal';
+import ExerciseHistoryModal from '../ExerciseHistoryModal/ExerciseHistoryModal';
 
 const HeartIcon = ({ filled, className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={filled ? 0 : 2} stroke="currentColor" className={className}>
@@ -18,11 +20,14 @@ const ThreeDotsIcon = ({ className }) => (
 );
 
 export default function RoutineModal({ routine, onClose, onAddExercises, onDeleteRoutine }) {
-  const { data: popularExercises, isLoading: isPopularLoading, isError: isPopularError } = useExercises();
-  const { data: userExercises, isLoading: isUserLoading, isError: isUserError } = useFavoriteExercises();
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+
+  const { data: popularExercises, isLoading: isPopularLoading, isError: isPopularError } = useExercises(profile_id);
+  const { data: userExercises, isLoading: isUserLoading, isError: isUserError } = useFavoriteExercises(profile_id);
   
-  const { mutateAsync: updateFavorite } = useUpdateFavorite();
-  const { mutateAsync: addToFavorite } = useAddToFavorite();
+  const { mutateAsync: updateFavorite } = useUpdateFavorite(profile_id);
+  const { mutateAsync: addToFavorite } = useAddToFavorite(profile_id);
 
   const isLoading = isPopularLoading || isUserLoading;
   const isError = isPopularError || isUserError;
@@ -70,6 +75,10 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
 
   const [selectedExerciseToLog, setSelectedExerciseToLog] = useState(null);
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
+  
+  const [selectedExerciseForHistory, setSelectedExerciseForHistory] = useState(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -129,8 +138,8 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
     if (isAddingExercises) {
       handleToggleExercise(exercise.id);
     } else {
-      setSelectedExerciseToLog(exercise);
-      setIsSetModalOpen(true);
+      setSelectedExerciseForHistory(exercise);
+      setIsHistoryModalOpen(true);
     }
   };
 
@@ -240,15 +249,22 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                           </div>
 
                           <div className="flex items-center gap-3">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleToggleFavorite(exercise); }}
-                              className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
-                            >
-                              <HeartIcon filled={isFav} className={`w-5 h-5 ${isFav ? 'text-red-500' : ''}`} />
-                            </button>
-                            <div className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] flex items-center justify-center shrink-0">
-                              <PlusIcon className="w-5 h-5 text-white" />
-                            </div>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleToggleFavorite(exercise); }}
+                                className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
+                              >
+                                <HeartIcon filled={isFav} className={`w-5 h-5 ${isFav ? 'text-red-500' : ''}`} />
+                              </button>
+                              <div 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedExerciseToLog(exercise);
+                                  setIsSetModalOpen(true);
+                                }}
+                                className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                              >
+                                <PlusIcon className="w-5 h-5 text-white" />
+                              </div>
                           </div>
                         </div>
                       );
@@ -340,6 +356,14 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
         </div>
       </div>
       </div>
+
+      {/* EXERCISE HISTORY MODAL */}
+      {isHistoryModalOpen && selectedExerciseForHistory && (
+        <ExerciseHistoryModal 
+          exercise={selectedExerciseForHistory} 
+          onClose={() => setIsHistoryModalOpen(false)} 
+        />
+      )}
 
       {/* SET MODAL (BOTTOM SHEET) */}
       {isSetModalOpen && selectedExerciseToLog && (

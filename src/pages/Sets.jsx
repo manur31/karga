@@ -21,6 +21,7 @@ import {
   useEditRoutines,
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
+import { useAuth } from "../hooks/queries/useAuth";
 import { getRoutineforID } from "../service/routinesService";
 
 import StatsCards from "../components/sets/StatsCards";
@@ -37,23 +38,26 @@ export default function Sets() {
   const [openModal, setOpenModal] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
 
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+
   const {
     mutate: createExercise,
     isPending: isCreatingExercise,
     isSuccess: isExerciseCreated,
     isError: isExerciseError,
-  } = useCreateExercise();
-  const { mutateAsync: deleteExercise } = useDeleteExercise();
-  const { mutateAsync: AddFavorite } = useAddToFavorite();
-  const { mutateAsync: createRoutines } = useCreateRoutines();
-  const { mutateAsync: insertExercisesRoutine } = useInsertExercisesRoutine();
-  const { mutateAsync: usedeleteRoutines } = useDeleteRoutines();
-  const { mutateAsync: editRoutines } = useEditRoutines();
+  } = useCreateExercise(profile_id);
+  const { mutateAsync: deleteExercise } = useDeleteExercise(profile_id);
+  const { mutateAsync: AddFavorite } = useAddToFavorite(profile_id);
+  const { mutateAsync: createRoutines } = useCreateRoutines(profile_id);
+  const { mutateAsync: insertExercisesRoutine } = useInsertExercisesRoutine(profile_id);
+  const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
+  const { mutateAsync: editRoutines } = useEditRoutines(profile_id);
   
-  const { data: exercises, isLoading } = useExercises();
-  const { data: routines, isLoading: isRoutinesLoading } = useRoutines();
+  const { data: exercises, isLoading } = useExercises(profile_id);
+  const { data: routines, isLoading: isRoutinesLoading } = useRoutines(profile_id);
   const { data: exerciseFavorites, isLoading: isExerciseFavoritesLoading } =
-    useFavoriteExercises();
+    useFavoriteExercises(profile_id);
 
   if (isLoading || isRoutinesLoading || isExerciseFavoritesLoading) {
     return <div>Cargando...</div>;

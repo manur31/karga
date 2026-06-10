@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCreateExercise } from '../../../hooks/mutations/useExercisesMutations';
+import { useAuth } from '../../../hooks/queries/useAuth';
 import { useExercises } from '../../../hooks/queries/useExercises';
 import { ArrowLeft } from '../../icons';
 
@@ -14,8 +15,11 @@ export default function CustomExerciseModal({ onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const { data: allExercises } = useExercises();
-  const { mutateAsync: createExercise, isPending } = useCreateExercise();
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+
+  const { data: allExercises } = useExercises(profile_id);
+  const { mutateAsync: createExercise, isPending } = useCreateExercise(profile_id);
 
   const handleCloseWithAnimation = () => {
     setIsClosing(true);

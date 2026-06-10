@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../../../hooks/queries/useAuth';
 import { useFavoriteExercises } from '../../../hooks/queries/useExercises';
 import { useDeleteExercise, useUpdateFavorite } from '../../../hooks/mutations/useExercisesMutations';
 import { ArrowLeft } from '../../icons';
@@ -15,9 +16,12 @@ export default function MyExercisesModal({ onClose }) {
   const [filterFavs, setFilterFavs] = useState(false);
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
 
-  const { data: userExercises, isLoading } = useFavoriteExercises();
-  const { mutateAsync: deleteExercise, isPending: isDeleting } = useDeleteExercise();
-  const { mutateAsync: updateFavorite } = useUpdateFavorite();
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+
+  const { data: userExercises, isLoading } = useFavoriteExercises(profile_id);
+  const { mutateAsync: deleteExercise, isPending: isDeleting } = useDeleteExercise(profile_id);
+  const { mutateAsync: updateFavorite } = useUpdateFavorite(profile_id);
 
   const handleCloseWithAnimation = () => {
     setIsClosing(true);
