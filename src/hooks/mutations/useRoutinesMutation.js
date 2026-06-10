@@ -21,6 +21,9 @@ export const useCreateRoutines = (profile_id) => {
       queryClient.invalidateQueries({
         queryKey: ["routines", profile_id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["routines"],
+      });
     },
   });
 };

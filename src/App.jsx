@@ -28,7 +28,7 @@ function App() {
           </Route>
           <Route element={<ProtectedRoutes/>}>
             <Route element={<MainLayout />}>
-              <Route path={"/sets"} element={<SetsNewPage/>} />
+              <Route path={"/sets"} element={<Sets/>} />
               <Route path={"/sessions"} element={<Sessions/>} />
               <Route path={"/body"} element={<Body/>} />
               <Route path={"/today"} element={<Today/>} />
