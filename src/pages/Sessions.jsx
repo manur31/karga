@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { useWeightUnit } from '../hooks/useWeightUnit';
 import Card from '../components/Card/Card';
 import CalendarIcon from '../components/icons/CalendarIcon';
 import ClockIcon from '../components/icons/ClockIcon';
@@ -11,6 +12,7 @@ import SessionTimer from '../components/sessionTimer';
 export default function Sessions() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const { unit, displayWeight } = useWeightUnit();
   
   // estados q usarian la bdd una vez integrada
   const [stats, setStats] = useState({ thisMonth: 0, totalHours: 0 });
@@ -37,7 +39,7 @@ export default function Sessions() {
             name: 'Push Day', 
             date: 'Hoy • 09:30', 
             duration: '52 min', 
-            volume: '4,250',
+            volume: 4250,
             calories: '320' 
           },
           { 
@@ -45,7 +47,7 @@ export default function Sessions() {
             name: 'Legs', 
             date: 'Ayer • 10:00', 
             duration: '65 min', 
-            volume: '6,800', 
+            volume: 6800, 
             calories: '480' 
           },
           { 
@@ -53,7 +55,7 @@ export default function Sessions() {
             name: 'Pull Day', 
             date: 'Hace 2 días • 08:45', 
             duration: '48 min', 
-            volume: '3,900', 
+            volume: 3900, 
             calories: '290' 
           }
         ];
@@ -164,7 +166,7 @@ export default function Sessions() {
                   {/* volumen de carga */}
                   <div className="flex items-center gap-1.5">
                     <Mancuerna className="w-3.5 h-3.5 text-karga-orange" />
-                    <span className="text-xs font-bold text-white tracking-wide">{session.volume} kg</span>
+                    <span className="text-xs font-bold text-white tracking-wide">{displayWeight(session.volume)} {unit}</span>
                   </div>
 
                   {/* calorías */}

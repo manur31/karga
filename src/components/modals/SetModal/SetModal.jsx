@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../../hooks/queries/useAuth';
 import { useCreateSet } from '../../../hooks/mutations/useSetsMutations';
+import { useWeightUnit } from '../../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../../icons';
 
 const MinusIcon = ({ className }) => (
@@ -18,7 +19,8 @@ const XIcon = ({ className }) => (
 export default function SetModal({ exercise, onClose }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
-  const [unit, setUnit] = useState('kg');
+  
+  const { unit, toggleUnit, convertToKg } = useWeightUnit();
   
   const [etiqueta, setEtiqueta] = useState('none');
   const [isEtiquetaModalOpen, setIsEtiquetaModalOpen] = useState(false);
@@ -28,6 +30,15 @@ export default function SetModal({ exercise, onClose }) {
   
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleToggleUnit = () => {
+    if (unit === 'kg') {
+      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(2)));
+    } else {
+      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(2)));
+    }
+    toggleUnit();
+  };
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -55,10 +66,7 @@ export default function SetModal({ exercise, onClose }) {
     if (!profile_id || isSaving) return;
 
     setIsSaving(true);
-    let weightInKg = Number(weight || 0);
-    if (unit === 'lb') {
-      weightInKg = weightInKg * 0.453592;
-    }
+    const weightInKg = convertToKg(weight);
 
     try {
       await createSet({
@@ -230,7 +238,7 @@ export default function SetModal({ exercise, onClose }) {
 
               {/* Botón LB / KG */}
               <button 
-                onClick={() => setUnit(prev => prev === 'kg' ? 'lb' : 'kg')}
+                onClick={handleToggleUnit}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold text-zinc-300 whitespace-nowrap transition-colors uppercase"
               >
                 {unit === 'kg' ? 'LB' : 'KG'}

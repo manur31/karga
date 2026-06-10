@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../../hooks/queries/useAuth';
 import { useSetsForExercise } from '../../../hooks/queries/useSets';
 import { useDeleteSet } from '../../../hooks/mutations/useSetsMutations';
+import { useWeightUnit } from '../../../hooks/useWeightUnit';
 import { ArrowLeft, PlusIcon } from '../../icons';
 import SetModal from '../SetModal/SetModal';
 import EditSetModal from '../EditSetModal/EditSetModal';
@@ -17,6 +18,8 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   const [selectedSets, setSelectedSets] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const { unit, displayWeight } = useWeightUnit();
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -189,7 +192,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
                               </span>
                               <div className="w-1 h-1 rounded-full bg-white/20" />
                               <span className="text-base font-black text-karga-orange">
-                                {set.weight} <span className="text-xs text-karga-orange/60 font-bold ml-0.5">kg</span>
+                                {displayWeight(set.weight)} <span className="text-xs text-karga-orange/60 font-bold ml-0.5">{unit}</span>
                               </span>
                             </div>
                           </div>

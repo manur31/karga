@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../hooks/queries/useAuth';
 import { useUpdateSet } from '../../../hooks/mutations/useSetsMutations';
+import { useWeightUnit } from '../../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../../icons';
 
 const MinusIcon = ({ className }) => (
@@ -18,13 +19,23 @@ const XIcon = ({ className }) => (
 export default function EditSetModal({ setToEdit, exerciseName, onClose }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
-  const [unit, setUnit] = useState('kg');
+  
+  const { unit, toggleUnit, convertToKg, displayWeight } = useWeightUnit();
   
   const [etiqueta, setEtiqueta] = useState('none');
   const [isEtiquetaModalOpen, setIsEtiquetaModalOpen] = useState(false);
   
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleToggleUnit = () => {
+    if (unit === 'kg') {
+      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(2)));
+    } else {
+      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(2)));
+    }
+    toggleUnit();
+  };
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -34,7 +45,7 @@ export default function EditSetModal({ setToEdit, exerciseName, onClose }) {
   useEffect(() => {
     if (setToEdit) {
       setReps(setToEdit.rep || 0);
-      setWeight(setToEdit.weight || 0);
+      setWeight(displayWeight(setToEdit.weight));
     }
   }, [setToEdit]);
 
@@ -60,10 +71,7 @@ export default function EditSetModal({ setToEdit, exerciseName, onClose }) {
     if (!profile_id || isSaving) return;
 
     setIsSaving(true);
-    let weightInKg = Number(weight || 0);
-    if (unit === 'lb') {
-      weightInKg = weightInKg * 0.453592;
-    }
+    const weightInKg = convertToKg(weight);
 
     try {
       await updateSet({
@@ -231,7 +239,7 @@ export default function EditSetModal({ setToEdit, exerciseName, onClose }) {
 
               {/* Botón LB / KG */}
               <button 
-                onClick={() => setUnit(prev => prev === 'kg' ? 'lb' : 'kg')}
+                onClick={handleToggleUnit}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold text-zinc-300 whitespace-nowrap transition-colors uppercase"
               >
                 {unit === 'kg' ? 'LB' : 'KG'}

@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { getExercises } from "../service/exersiseService";
 import { useSetsStore } from "../stores/setsStore";
 import { useForm } from "react-hook-form";
+import { useWeightUnit } from "../hooks/useWeightUnit";
 
 export default function SetsPage() {
   const [editingId, setEditingId] = useState(null);
 
   const { sets, addSet, removeSet, markAsSynced, editSet } = useSetsStore();
+  const { unit, displayWeight } = useWeightUnit();
 
   const { 
     register, 
@@ -130,7 +132,7 @@ export default function SetsPage() {
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-gray-500 mb-1">Volumen total</p>
-          <p className="text-xl font-semibold text-gray-900">{volume.toFixed(1)} kg</p>
+          <p className="text-xl font-semibold text-gray-900">{displayWeight(volume)} {unit}</p>
         </div>
       </div>
 
@@ -167,7 +169,7 @@ export default function SetsPage() {
                   #{i + 1}
                 </span>
                 <span className="text-sm text-gray-900">
-                  {s.weight} <small className="text-gray-400">kg</small>
+                  {displayWeight(s.weight)} <small className="text-gray-400">{unit}</small>
                 </span>
                 <span className="text-sm text-gray-900">
                   {s.reps} <small className="text-gray-400">reps</small>
