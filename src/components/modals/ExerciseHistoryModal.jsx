@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../../hooks/queries/useAuth';
-import { useSetsForExercise } from '../../../hooks/queries/useSets';
-import { useDeleteSet } from '../../../hooks/mutations/useSetsMutations';
-import { useWeightUnit } from '../../../hooks/useWeightUnit';
-import { ArrowLeft, PlusIcon } from '../../icons';
-import SetModal from '../SetModal/SetModal';
-import EditSetModal from '../EditSetModal/EditSetModal';
-import ConfirmModal from '../ConfirmModal';
+import { useAuth } from '../../hooks/queries/useAuth';
+import { useSetsForExercise } from '../../hooks/queries/useSets';
+import { useDeleteSet } from '../../hooks/mutations/useSetsMutations';
+import { useWeightUnit } from '../../hooks/useWeightUnit';
+import { ArrowLeft, PlusIcon } from '../icons';
+import SetModal from './SetModal';
+import EditSetModal from './EditSetModal';
+import ConfirmModal from './ConfirmModal';
+import { useSetsStore } from '../../stores/setsStore';
 
 export default function ExerciseHistoryModal({ exercise, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
   const [selectedSetToEdit, setSelectedSetToEdit] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Estados para modo de selección/borrado
+ 
+  // Estados para modo de selección/borrado 
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedSets, setSelectedSets] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -24,8 +25,9 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const { data: sets, isLoading } = useSetsForExercise(profile_id, exercise?.id);
+  const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
+  const { syncedSets, sets: allSetsFromStore } = useSetsStore();
 
   if (!exercise) return null;
 
@@ -35,6 +37,10 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       onClose();
     }, 300);
   };
+
+  const filteredSetsFromStore = allSetsFromStore.filter(set => set.exercise_id === exercise.id)
+
+  const allSets = [...filteredSetsFromStore, ...sets, ...syncedSets.filter(set => set.exercise_id === exercise.id)];
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -65,7 +71,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   };
 
   // Agrupar sets por fecha
-  const groupedSets = sets?.reduce((groups, set) => {
+  const groupedSets = allSets?.reduce((groups, set) => {
     const date = new Date(set.created_at);
     
     const dateStr = date.toLocaleDateString('es-ES', { 
@@ -103,9 +109,6 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
               <span className="text-lg font-black text-white tracking-tight truncate w-full text-center">
                 {exercise.name}
               </span>
-              <span className="text-sm font-medium text-zinc-400 truncate w-full text-center mt-0.5">
-                Historial de Sets
-              </span>
             </div>
             <button 
               onClick={toggleSelectMode}
@@ -136,6 +139,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
               </div>
             ) : (
               <div className="flex flex-col gap-8">
+                <h2 className="text-lg font-bold text-zinc-400 tracking-tight -mb-3">Historial de sets</h2>
                 {sortedDates.map(dateStr => (
                   <div key={dateStr} className="flex flex-col gap-3">
                     <h3 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest pl-1">

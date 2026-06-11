@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../hooks/queries/useAuth';
-import { useUpdateSet } from '../../../hooks/mutations/useSetsMutations';
-import { useWeightUnit } from '../../../hooks/useWeightUnit';
-import { CheckIcon, PlusIcon } from '../../icons';
+import { useAuth } from '../../hooks/queries/useAuth';
+import { useUpdateSet } from '../../hooks/mutations/useSetsMutations';
+import { useWeightUnit } from '../../hooks/useWeightUnit';
+import { CheckIcon, PlusIcon } from '../icons';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>

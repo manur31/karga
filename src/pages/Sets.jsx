@@ -1,10 +1,9 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
 import Button from "../components/Button/Button";
-import PlusIcon from "../components/icons/PlusIcon";
-import WorkoutModal from "../components/modals/WorkoutModal/WorkoutModal";
-import RoutineModal from "../components/modals/RoutineModal/RoutineModal";
-import MyExercisesModal from "../components/modals/MyExercisesModal/MyExercisesModal";
+import { FiPlus } from "react-icons/fi";
+import WorkoutModal from "../components/modals/WorkoutModal";
+import RoutineModal from "../components/modals/RoutineModal";
+import MyExercisesModal from "../components/modals/MyExercisesModal";
 import {
   useExercises,
   useFavoriteExercises,
@@ -26,17 +25,22 @@ import { getRoutineforID } from "../service/routinesService";
 
 import StatsCards from "../components/sets/StatsCards";
 import RoutinesList from "../components/sets/RoutinesList";
+import { useRestStore } from "../stores/restStore";
+import { useSets } from "../hooks/queries/useSets";
+import { useSetsStore } from "../stores/setsStore";
+import { useSessions } from "../hooks/queries/useSessions";
+import { useCalendarStore } from "../stores/calendarStore";
 
 export default function Sets() {
-  const inputRef = useRef(null);
-  const iputRef2 = useRef(null);
-  const navigate = useNavigate();
-
   // estados para almacenar los datos que vendrán de la base de datos
   const [stats, setStats] = useState({ weeklyWorkouts: 0, streak: 0 });
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
+
+  const { restTime } = useRestStore();
+  const { addSyncedSets } = useSetsStore();
+  const { loadFromSupabase } = useCalendarStore()
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -54,15 +58,21 @@ export default function Sets() {
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
   const { mutateAsync: editRoutines } = useEditRoutines(profile_id);
   
-  const { data: exercises, isLoading } = useExercises(profile_id);
+  // const { data: exercises, isLoading } = useExercises(profile_id); No se esta utilizando
   const { data: routines, isLoading: isRoutinesLoading } = useRoutines(profile_id);
-  const { data: exerciseFavorites, isLoading: isExerciseFavoritesLoading } =
-    useFavoriteExercises(profile_id);
+  // const { data: exerciseFavorites, isLoading: isExerciseFavoritesLoading } = useFavoriteExercises(profile_id); No se esta utilizando.
 
-  if (isLoading || isRoutinesLoading || isExerciseFavoritesLoading) {
-    return <div>Cargando...</div>;
+  // if (isLoading || isRoutinesLoading || isExerciseFavoritesLoading) {
+  //   return <div>Cargando...</div>;
+  // }
+
+  if (isRoutinesLoading) {
+    return (
+      <div className="flex justify-center items-center h-[50vh] w-full">
+        <div className="w-10 h-10 border-4 border-karga-orange border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
-
   
   const handleTestCreateExercise = () => {
     console.log("Creando nuevo entrenamiento");
@@ -203,10 +213,10 @@ export default function Sets() {
         <Button
           variant="primary"
           onClick={handleCreateWorkout}
-          className="w-full flex-row items-center justify-start gap-4 p-5 bg-linear-to-r from-karga-orange to-red-600 border-none rounded-3xl shadow-xl shadow-karga-orange/10 transition-transform active:scale-[0.98]"
+          className="w-full flex-row items-center justify-start gap-4 p-5 bg-linear-to-r from-karga-orange to-red-600 border-none rounded-3xl shadow-lg transition-transform active:scale-[0.98]"
         >
           <div className="w-12 h-12 shrink-0 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-            <PlusIcon />
+            <FiPlus className="w-6 h-6 text-white" />
           </div>
           <div className="flex flex-col items-start text-left">
             <span className="text-xl font-black text-white">Nueva Rutina</span>
@@ -223,20 +233,20 @@ export default function Sets() {
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[10px] bg-karga-orange/10 flex items-center justify-center">
-              <svg className="w-[18px] h-[18px] text-karga-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-4 h-4 text-karga-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
             <span className="text-[16px] font-bold text-zinc-200">Mis ejercicios</span>
           </div>
-          <svg className="w-[18px] h-[18px] text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </Button>
       </div>
 
       {/* ESTADÍSTICAS */}
-      <StatsCards stats={stats} isLoading={isLoading} />
+      {/* <StatsCards stats={stats} isLoading={isLoading} /> */}
 
       {/* MIS RUTINAS */}
       <RoutinesList

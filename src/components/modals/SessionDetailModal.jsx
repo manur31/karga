@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { FiX, FiClock, FiCalendar, FiFileText } from 'react-icons/fi';
+import { createPortal } from 'react-dom';
+import { FiX, FiClock, FiCalendar, FiFileText, FiTrash2 } from 'react-icons/fi';
 import { useSets } from '../../hooks/queries/useSets';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
+import ConfirmModal from './ConfirmModal';
+import { useDeleteSession } from '../../hooks/mutations/useSesionsMutation';
 
 export default function SessionDetailModal({ session, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [localSession, setLocalSession] = useState(null);
+  
   const { data: user } = useAuth();
   const { data: sets } = useSets(user?.profile_id);
   const { displayWeight, unit } = useWeightUnit();
+  const { mutate: deleteSession } = useDeleteSession(user?.profile_id);
 
   useEffect(() => {
     if (session) {
+      setLocalSession(session);
       setIsClosing(false);
+      setShowConfirmDelete(false);
     }
   }, [session]);
 
@@ -21,18 +30,29 @@ export default function SessionDetailModal({ session, onClose }) {
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 300);
+    }, 200);
   };
 
-  if (!session && !isClosing) return null;
+  const handleDelete = () => {
+    if (activeSession?.session_id) {
+      deleteSession(activeSession.session_id);
+    }
+    handleClose();
+  };
+
+  const activeSession = session || localSession;
+  if (!session && !isClosing) {
+    if (localSession) setLocalSession(null);
+    return null;
+  }
+  if (!activeSession) return null;
 
   // Filtrar los sets
   const sessionSets = sets?.filter(set => {
-    // Si no hay created_at en Supabase, no podemos cruzar los datos
     if (!set.created_at) return false;
     const setTime = new Date(set.created_at).getTime();
-    const initTime = new Date(session.startedAt).getTime();
-    const endTime = session.finishedAt ? new Date(session.finishedAt).getTime() : new Date().getTime();
+    const initTime = new Date(activeSession.startedAt).getTime();
+    const endTime = activeSession.finishedAt ? new Date(activeSession.finishedAt).getTime() : new Date().getTime();
     return setTime >= initTime && setTime <= endTime;
   }) || [];
 
@@ -48,22 +68,22 @@ export default function SessionDetailModal({ session, onClose }) {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const rawDate = new Date(session.startedAt).toLocaleDateString('es-ES', {
+  const rawDate = new Date(activeSession.startedAt).toLocaleDateString('es-ES', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
   const formattedDate = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
   
-  const formattedInitTime = new Date(session.startedAt).toLocaleTimeString('es-ES', {
+  const formattedInitTime = new Date(activeSession.startedAt).toLocaleTimeString('es-ES', {
     hour: '2-digit', minute: '2-digit'
   });
 
-  const formattedEndTime = session.finishedAt ? new Date(session.finishedAt).toLocaleTimeString('es-ES', {
+  const formattedEndTime = activeSession.finishedAt ? new Date(activeSession.finishedAt).toLocaleTimeString('es-ES', {
     hour: '2-digit', minute: '2-digit'
   }) : 'En curso';
 
-  return (
+  return createPortal(
     <div 
-      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={handleClose}
     >
       <div 
@@ -74,12 +94,20 @@ export default function SessionDetailModal({ session, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/5 bg-black/20">
           <h2 className="text-xl font-bold text-white tracking-wide">{formattedDate}</h2>
-          <button 
-            onClick={handleClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-          >
-            <FiX className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowConfirmDelete(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+            >
+              <FiTrash2 className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={handleClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -93,7 +121,7 @@ export default function SessionDetailModal({ session, onClose }) {
                 <span className="text-sm font-medium">Duración Total</span>
               </div>
               <span className="text-2xl font-black text-[#facc15] tabular-nums tracking-wide">
-                {calculateDuration(session.startedAt, session.finishedAt)}
+                {calculateDuration(activeSession.startedAt, activeSession.finishedAt)}
               </span>
             </div>
             
@@ -110,14 +138,14 @@ export default function SessionDetailModal({ session, onClose }) {
           </div>
 
           {/* Notas */}
-          {session.note && (
+          {activeSession.note && (
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-zinc-400">
                 <FiFileText className="w-4 h-4" />
-                <span className="text-sm font-medium">Notas</span>
+                <span className="text-sm font-medium">Nota</span>
               </div>
               <p className="text-zinc-300 text-sm bg-black/20 p-3 rounded-xl border border-white/5">
-                {session.note}
+                {activeSession.note}
               </p>
             </div>
           )}
@@ -159,6 +187,18 @@ export default function SessionDetailModal({ session, onClose }) {
         </div>
 
       </div>
-    </div>
+
+      <ConfirmModal
+        isOpen={showConfirmDelete}
+        title="Eliminar sesión"
+        description="¿Estás seguro de que quieres eliminar esta sesión de forma permanente? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        danger={true}
+        onConfirm={handleDelete}
+        onClose={() => setShowConfirmDelete(false)}
+      />
+    </div>,
+    document.body
   );
 }

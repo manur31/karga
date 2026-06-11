@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../../hooks/queries/useAuth';
-import { useCreateSet } from '../../../hooks/mutations/useSetsMutations';
-import { useWeightUnit } from '../../../hooks/useWeightUnit';
-import { CheckIcon, PlusIcon } from '../../icons';
+import { useState } from 'react';
+import { useAuth } from '../../hooks/queries/useAuth';
+import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
+import { useWeightUnit } from '../../hooks/useWeightUnit';
+import { CheckIcon, PlusIcon } from '../icons';
+import { useRestStore } from '../../stores/restStore';
+import { useSetsStore } from '../../stores/setsStore';
+import { useCalendarStore } from '../../stores/calendarStore';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -16,7 +19,7 @@ const XIcon = ({ className }) => (
   </svg>
 );
 
-export default function SetModal({ exercise, onClose }) {
+export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   
@@ -24,9 +27,6 @@ export default function SetModal({ exercise, onClose }) {
   
   const [etiqueta, setEtiqueta] = useState('none');
   const [isEtiquetaModalOpen, setIsEtiquetaModalOpen] = useState(false);
-  
-  const [date, setDate] = useState('Ahora');
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -40,9 +40,14 @@ export default function SetModal({ exercise, onClose }) {
     toggleUnit();
   };
 
+  const { startRest } = useRestStore();
+
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const restTime = rest_time || 1;
+  // const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const { addSet, sets, syncLocalData } = useSetsStore();
+  const { addLocalSets } = useCalendarStore();
 
   if (!exercise) return null;
 
@@ -69,12 +74,20 @@ export default function SetModal({ exercise, onClose }) {
     const weightInKg = convertToKg(weight);
 
     try {
-      await createSet({
+      const setData = {
         profile_id,
         exercise_id: exercise.id,
         rep: Number(reps || 0),
         weight: Number(weightInKg.toFixed(2))
-      });
+      };
+
+      if (onSaveOverride) {
+        onSaveOverride(setData);
+      } else {
+        addSet(setData);
+      }
+ 
+      startRest(restTime);
       handleCloseWithAnimation(null);
     } catch (error) {
       console.error("Error al guardar el set:", error);
@@ -210,7 +223,6 @@ export default function SetModal({ exercise, onClose }) {
                 <button 
                   onClick={() => {
                     setIsEtiquetaModalOpen(!isEtiquetaModalOpen);
-                    setIsCalendarOpen(false);
                   }}
                   className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors capitalize ${
                     etiqueta !== 'none' ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/20' : 'bg-white/10 hover:bg-white/20 text-zinc-300'
@@ -243,47 +255,6 @@ export default function SetModal({ exercise, onClose }) {
               >
                 {unit === 'kg' ? 'LB' : 'KG'}
               </button>
-
-              {/* Dropdown Ahora (Calendario) */}
-              <div className="relative">
-                <button 
-                  onClick={() => {
-                    setIsCalendarOpen(!isCalendarOpen);
-                    setIsEtiquetaModalOpen(false);
-                  }}
-                  className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                    date !== 'Ahora' ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/20' : 'bg-white/10 hover:bg-white/20 text-zinc-300'
-                  }`}
-                >
-                  {date === 'Ahora' ? 'Ahora' : new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </button>
-                
-                {isCalendarOpen && (
-                  <div className="absolute bottom-full mb-2 left-0 p-4 bg-[#2A2424] border border-white/10 rounded-2xl shadow-xl z-50 animate-fade-in flex flex-col gap-3 min-w-[200px]">
-                    <span className="text-sm font-bold text-white">Seleccionar fecha</span>
-                    <input 
-                      type="datetime-local" 
-                      value={date === 'Ahora' ? '' : date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="bg-white/5 border border-white/10 text-white text-sm rounded-xl p-2 outline-none focus:border-karga-orange transition-colors [color-scheme:dark]"
-                    />
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button 
-                        onClick={() => { setDate('Ahora'); setIsCalendarOpen(false); }}
-                        className="px-3 py-1.5 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
-                      >
-                        Reset
-                      </button>
-                      <button 
-                        onClick={() => setIsCalendarOpen(false)}
-                        className="px-3 py-1.5 text-xs font-bold bg-karga-orange text-white rounded-lg active:scale-95 transition-transform"
-                      >
-                        Listo
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
             
             {/* Botón Guardar */}

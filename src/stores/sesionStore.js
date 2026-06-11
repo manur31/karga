@@ -11,6 +11,9 @@ export const useSesionStore = create(
       finishedAt: null,
       currentFunction: null,
       isStarted: false,
+      note: "",
+
+      setNote: (note) => set({ note }),
 
       addSession: (newSession) => {
         set((state) => ({
@@ -20,7 +23,7 @@ export const useSesionStore = create(
               ...newSession,
               id: crypto.randomUUID(),
               synced: false,
-              createAt: new Date(),
+              createAt: new Date().toISOString(),
             },
           ],
         }));
@@ -79,7 +82,7 @@ export const useSesionStore = create(
           currentFunction: "pause",
         });
       },
-      finish: () => {
+      finish: (profile_id) => {
         clearInterval(get().timer);
 
         const finishedAt = new Date();
@@ -87,6 +90,9 @@ export const useSesionStore = create(
         get().addSession({
           startedAt: get().startedAt,
           finishedAt,
+          created_at: finishedAt,
+          profile_id,
+          note: get().note,
         });
 
         set({
@@ -95,6 +101,7 @@ export const useSesionStore = create(
           finishedAt,
           currentFunction: "finish",
           isStarted: false,
+          note: "",
         });
       },
       discard: () => {
@@ -106,6 +113,20 @@ export const useSesionStore = create(
           finishedAt: null,
           currentFunction: "discard",
           isStarted: false,
+          note: "",
+        });
+      },
+
+      clearSession: () => {
+        set({
+          timer: null,
+          seconds: 0,
+          startedAt: null,
+          finishedAt: null,
+          currentFunction: null,
+          isStarted: false,
+          sessions: [],
+          note: "",
         });
       },
     }),

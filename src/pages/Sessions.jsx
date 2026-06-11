@@ -1,17 +1,27 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/queries/useAuth';
-import { useSesions } from '../hooks/queries/useSesions';
+import { useSessions } from '../hooks/queries/useSessions';
 import { useSets } from '../hooks/queries/useSets';
+import { useAuth } from '../hooks/queries/useAuth';
+
 import Mancuerna from '../components/icons/Mancuerna';
 import { FiChevronRight } from 'react-icons/fi';
 import SessionDetailModal from '../components/modals/SessionDetailModal';
 import Card from '../components/Card/Card';
 import { formatRelativeTime } from '../utils/timeFormatter';
+import { useNavigate } from 'react-router';
+import CalendarIcon from '../components/icons/CalendarIcon';
+import ClockIcon from '../components/icons/ClockIcon';
+import ChevronIcon from '../components/icons/ChevronIcon';
+import FlameIcon from '../components/icons/FlameIcon';
+import SessionTimer from '../components/SessionTimer';
 
 export default function Sessions() {
+  const navigate = useNavigate();
+
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const { data: sessions, isLoading } = useSesions(profile_id);
+  
+  const { data: sessions, isLoading } = useSessions(profile_id);
   const { data: sets } = useSets(profile_id);
 
   const [sortOrder, setSortOrder] = useState('recent');
@@ -59,8 +69,6 @@ export default function Sessions() {
   };
 
   const getSessionTitle = (session, allSets) => {
-    if (session.note) return session.note;
-    
     if (!allSets) return "0 ejercicios, 0 sets";
 
     const sessionSets = allSets.filter(set => {
@@ -87,7 +95,10 @@ export default function Sessions() {
     <div className="flex flex-col w-full animate-fade-in pb-10">
       {/* HEADER */}
       <div className="mb-6 pl-2">
-        <h1 className="text-3xl font-black text-white tracking-tight mb-1">Tus Sesiones</h1>
+        <h1 className="text-3xl font-black text-white tracking-tight mb-1">Mis Sesiones</h1>
+        <p className="text-sm font-medium text-zinc-400">
+          Grabar, ver y editar sesiones
+        </p>
       </div>
 
       {/* ORDENAMIENTO */}
@@ -162,6 +173,8 @@ export default function Sessions() {
         session={selectedSession} 
         onClose={() => setSelectedSession(null)} 
       />
+
+
 
     </div>
   );

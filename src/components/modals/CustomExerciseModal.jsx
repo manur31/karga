@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useCreateExercise } from '../../../hooks/mutations/useExercisesMutations';
-import { useAuth } from '../../../hooks/queries/useAuth';
-import { useExercises } from '../../../hooks/queries/useExercises';
-import { ArrowLeft } from '../../icons';
+import { useCreateExercise } from '../../hooks/mutations/useExercisesMutations';
+import { useAuth } from '../../hooks/queries/useAuth';
+import { useExercises } from '../../hooks/queries/useExercises';
+import { ArrowLeft } from '../icons';
 
 const MUSCLES = [
-  'Back', 'Biceps', 'Chest', 'Shoulders', 'Triceps', 'Abs', 
-  'Quads', 'Hamstrings', 'Glutes', 'Hip Flexors', 'Obliques', 'Calves'
+  'Espalda', 'Bíceps', 'Pecho', 'Hombros', 'Tríceps', 'Abdominales', 
+  'Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Flexores de cadera', 'Oblicuos', 'Gemelos'
 ];
 
 export default function CustomExerciseModal({ onClose }) {
@@ -78,7 +78,7 @@ export default function CustomExerciseModal({ onClose }) {
           <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <span className="text-lg font-black text-white tracking-tight">Nuevo Ejercicio</span>
+          <span className="text-lg font-black text-white tracking-tight">Ejercicio personalizado</span>
           <button 
             onClick={handleSave}
             disabled={!name.trim() || selectedMuscles.length === 0 || isPending}

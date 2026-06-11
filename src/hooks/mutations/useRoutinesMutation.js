@@ -5,6 +5,7 @@ import {
   insertExercisesRoutine,
   deleteRoutines,
   updateRoutines,
+  deleteExercisesRoutine,
 } from "../../service/routinesService";
 
 export const useCreateRoutines = (profile_id) => {
@@ -72,6 +73,23 @@ export const useEditRoutines = (profile_id) => {
       updateRoutines({
         ...data,
         profile_id,
+      }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["routines", profile_id],
+      });
+    },
+  });
+};
+
+export const useDeleteExercisesRoutine = (profile_id) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data) =>
+      deleteExercisesRoutine({
+        ...data,
       }),
 
     onSuccess: () => {

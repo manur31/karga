@@ -7,22 +7,12 @@ export const getSession = async (profile_id) => {
   if (error) throw error;
   return data;
 };
-export const insertSession = async ({
-  profile_id,
-  startedAt,
-  finishedAt,
-  note,
-}) => {
+export const insertSession = async (sessions) => {
+  const payload = Array.isArray(sessions) ? sessions : [sessions];
+
   const { data, error } = await supabase
     .from("sessions")
-    .insert([
-      {
-        startedAt,
-        finishedAt,
-        profile_id,
-        note,
-      },
-    ])
+    .insert(payload)
     .select();
 
   if (error) throw error;
@@ -40,16 +30,16 @@ export const deleteSession = async ({ profile_id, session_id }) => {
 export const updateSession = async ({
   profile_id,
   session_id,
-  finishedAt,
   startedAt,
+  finishedAt,
   note,
 }) => {
   const { error } = await supabase
     .from("sessions")
     .update({
-      startedAt,
-      finishedAt,
-      note,
+      startedAt: startedAt || null,
+      finishedAt: finishedAt || null,
+      note: note || null,
     })
     .eq("session_id", session_id)
     .eq("profile_id", profile_id);

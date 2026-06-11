@@ -5,13 +5,20 @@ export const useSetsStore = create(
     persist(
         (set, get) => ({
             sets: [],
+            syncedSets: [],
+            setsToUpdate: [],
+
+            addSyncedSets: (newSets) => set((state) => ({
+                newSets: newSets.filter((set) => !state.syncedSets.some((s) => s.id === set.set_id)),
+                syncedSets: [...state.syncedSets, ...newSets]
+            })),
 
             addSet: (newSet) => set((state) => ({
-                sets: [...state.sets, {
+                sets: [...state.sets, { 
                     ...newSet,
                     id: crypto.randomUUID(),
                     synced: false,
-                    createdAt: new Date(),
+                    created_at: new Date(),
                 }]
             })),
 
@@ -33,9 +40,11 @@ export const useSetsStore = create(
 
             getPendingSets: () => get().sets.filter((set) => !set.synced),
 
+            clearSets: () => set({ sets: [] }),
+
         }),
         {
-            name: 'sets-storage',
+            name: 'sets-storage', 
         }
     )
 )

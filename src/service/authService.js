@@ -1,14 +1,11 @@
 import { supabase } from "../lib/supabaseClient";
 //register
 export const register = async ({ email, password, name }) => {
-  console.log(email, password, name);
-
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
   });
   if (error) {
-    console.log(error);
     throw error;
   }
   const { error: profileError } = await supabase.from("profile").insert([
@@ -20,7 +17,6 @@ export const register = async ({ email, password, name }) => {
   ]);
 
   if (profileError) {
-    console.log(profileError);
     throw profileError;
   }
   return getProfile();
@@ -34,11 +30,9 @@ export const login = async ({ email, password }) => {
       password,
     });
     if (error) {
-      console.log("Ocurrio un error al Inciar Sesion: ", error);
       return error.message;
     }
 
-    console.log("login data", data);
     if (data) {
       const profile = await getProfile(email);
       return profile;
@@ -71,7 +65,6 @@ export const setProfile = async ({
     error: userError,
   } = await supabase.auth.getUser();
   if (userError) {
-    console.log(userError);
     return userError.message;
   }
   const { data, error } = await supabase
@@ -85,11 +78,9 @@ export const setProfile = async ({
     .eq("profile_id", user.id)
     .select();
   if (error) {
-    console.log(error);
     return error.message;
   }
 
-  console.log(data);
   return data;
 };
 //getProfile

@@ -2,60 +2,72 @@ import { useSetsStore } from '../stores/setsStore'
 import { useCreateSet } from '../hooks/mutations/useSetsMutations'
 import { useSesionStore } from '../stores/sesionStore'
 import { useCreateSession } from './mutations/useSesionsMutation'
+import { se } from 'date-fns/locale'
 
-function unFormatData(data) {
+function unFormatData(data, session = false) {
+    if (session) {
+        const { id, synced, createAt, ...rest } = data
+        return rest
+    }
     const { id, synced, ...rest } = data
     return rest
 }
 
-export const useSyncSets = () => {
+export const useSyncSets = (profile_id) => {
     const { getPendingSets, markAsSynced } = useSetsStore()
-    const { mutate: createSet, isError, isSuccess } = useCreateSet()
+    const { mutateAsync: createSet } = useCreateSet(profile_id)
 
-    const sync = () => {
+    const sync = async () => {
         const pendingSets = getPendingSets()
         if (pendingSets.length === 0) return 
 
-        const setsToSync = pendingSets.map(set => unFormatData(set))
+        const setsToSync = pendingSets.map(set => ({
+            ...unFormatData(set),
+            profile_id: set.profile_id || profile_id
+        }))
         
-        createSet(setsToSync)
-
-        if (isError) {
-            console.error('Error syncing sets')
-            return
-        }
-
-        if (isSuccess) {
+        try {
+            await createSet(setsToSync)
             pendingSets.forEach(set => {
                 markAsSynced(set.id)
             })
+        } catch (error) {
+            console.error('Error syncing sets', error)
         }
     }
 
     return { sync }
 }
 
-export const useSyncSessions = () => {
+export const useSyncSessions = (profile_id) => {
     const { getPendingSessions, markAsSynced } = useSesionStore()
-    const { mutate: createSession, isError, isSuccess } = useCreateSession()
+    const { mutateAsync: createSession } = useCreateSession(profile_id)
 
-    const sync = () => {
+    const sync = async () => {
         const pendingSessions = getPendingSessions()
         if (pendingSessions.length === 0) return 
 
-        const sessionsToSync = pendingSessions.map(session => unFormatData(session))
+        const sessionsToSync = pendingSessions.map(session => {
+            const created_at = session.created_at || session.createAt || session.startedAt || new Date();
+            const startedAt = session.startedAt || new Date();
+            const finishedAt = session.finishedAt || new Date();
+
+            return {
+                startedAt: new Date(startedAt).toISOString(),
+                finishedAt: new Date(finishedAt).toISOString(),
+                created_at: new Date(created_at).toISOString(),
+                profile_id: session.profile_id || profile_id,
+                note: session.note || null
+            };
+        });
         
-        createSession(sessionsToSync)
-
-        if (isError) {
-            console.error('Error syncing sessions')
-            return
-        }
-
-        if (isSuccess) {
+        try {
+            await createSession(sessionsToSync)
             pendingSessions.forEach(session => {
                 markAsSynced(session.id)
             })
+        } catch (error) {
+            console.error('Error syncing sessions', error)
         }
     }
 

@@ -18,7 +18,7 @@ import {
   useDeleteSession,
   useUpdateSession,
 } from "../hooks/mutations/useSesionsMutation";
-import { useSesions } from "../hooks/queries/useSesions";
+import { useSessions } from "../hooks/queries/useSessions";
 import { useAuth } from "../hooks/queries/useAuth";
 
 export default function SessionTester() {
@@ -37,7 +37,7 @@ export default function SessionTester() {
   const { data: favoriteExercises, isLoading: isFavoriteExercisesLoading } =
     useFavoriteExercises(profile_id);
 
-  const { data: sessions } = useSesions(profile_id);
+  const { data: sessions } = useSessions(profile_id);
   //  const {data: getExerciseID}= useExerciseForID();
   const { mutateAsync: AddFavorite } = useAddToFavorite(profile_id);
   const { mutateAsync: createSession } = useCreateSession(profile_id);
@@ -174,7 +174,7 @@ export default function SessionTester() {
     setSelectedExerciseId(id);
   }; */
 
-  /* const { seconds, sessions, start, pause, continue: cont, finish, discard } = useSesionStore()
+  /* const { seconds, sessions, start, pause, continue: cont, finish, discard } = useSessionStore()
   const [uiState, setUiState] = useState(seconds === 0 ? "idle" : "pa")
 
   const handleMain = () => {

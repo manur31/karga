@@ -1,11 +1,17 @@
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import Button from '../components/Button/Button';
 import bgGym from '../assets/istockphoto-1069260156-612x612.jpg';
 import { Mancuerna } from '../components/icons';
 import ArrowRight from '../components/icons/ArrowRight.jsx';
+import { useAuth } from '../hooks/queries/useAuth.js';
 
 export default function Welcome() {
   const navigate = useNavigate();
+
+  const { data: profile, isLoading } = useAuth()
+  
+  if (isLoading) return <div>Loading...</div>
+  if (profile) return <Navigate to={"/sets"} />;
 
   return (
     <div className="relative flex flex-col justify-between items-center min-h-[85vh] w-full text-center px-4 py-8 overflow-hidden">

@@ -105,12 +105,16 @@ export const deleteExercise = async ({ exercise_id, profile_id }) => {
   if (userExerciseError) throw userExerciseError;
 
   if (exercise.is_populary === false) {
-    const { error: exerciseError } = await supabase
-      .from("exercises")
-      .delete()
-      .eq("id", exercise_id);
+    try {
+      const { error: exerciseError } = await supabase
+        .from("exercises")
+        .delete()
+        .eq("id", exercise_id);
 
-    if (exerciseError) throw exerciseError;
+      if (exerciseError) console.warn("No se pudo eliminar el ejercicio de la tabla global (posible RLS o llave foránea):", exerciseError);
+    } catch (e) {
+      console.warn("Error intentando eliminar el ejercicio global:", e);
+    }
   }
 };
 

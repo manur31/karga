@@ -5,11 +5,10 @@ export default function Button({
   className = '',
   ...props
 }) {
-
-  const baseStyles = "flex items-center justify-center transition-all duration-200 font-bold gap-1 border border-white/5 shadow-inner outline-none focus:ring-2 focus:ring-karga-orange/50 cursor-pointer";
+  const baseStyles = "flex items-center justify-center transition-all duration-200 font-bold gap-1 border border-white/5 shadow-inner outline-none focus-visible:ring-2 focus-visible:ring-karga-orange/50 cursor-pointer";
   
   const variants = {
-    primary: "bg-karga-orange text-white shadow-lg shadow-karga-orange/20 hover:brightness-110 active:scale-[0.98]",
+    primary: "bg-karga-orange text-white shadow-lg shadow-black/20 hover:brightness-110 active:scale-[0.98]",
     secondary: "bg-karga-gray text-white hover:brightness-90 active:scale-[0.98]", 
     ghost: "bg-transparent text-zinc-400 hover:text-white active:scale-[0.95]",
   };
