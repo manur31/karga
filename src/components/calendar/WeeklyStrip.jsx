@@ -7,6 +7,7 @@ import {
   isInSameWeek,
   toDateKey,
   isSameDay,
+  isSameMonth,
 } from '../../lib/calendarUtils'
 import DayCell from './DayCell'
 
@@ -16,8 +17,10 @@ import DayCell from './DayCell'
  *   selectedDate   string  — "yyyy-MM-dd"
  *   activeDates    Set<string>  — date keys that have activity
  *   onSelectDate   fn(string)  — called with "yyyy-MM-dd"
+ *   monthRef       Date        — anchor month from CalendarHeader
+ *   onWeekChange   fn(Date)    — notifies parent when week changes
  */
-export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate }) {
+export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate, monthRef, onWeekChange }) {
   const selected = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date()
 
   // The "anchor" date used to compute which week to show
@@ -34,6 +37,13 @@ export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate })
     }
   }, [selectedDate])
 
+  // Sync week when month is changed externally (e.g. from CalendarHeader)
+  useEffect(() => {
+    if (monthRef && !isSameMonth(weekRef, monthRef)) {
+      setWeekRef(monthRef)
+    }
+  }, [monthRef])
+
   // Scroll strip to start on mount / week change
   useEffect(() => {
     if (scrollRef.current) {
@@ -42,11 +52,15 @@ export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate })
   }, [weekRef])
 
   function handlePrevWeek() {
-    setWeekRef((prev) => getPrevWeek(prev))
+    const nextWeek = getPrevWeek(weekRef)
+    setWeekRef(nextWeek)
+    if (onWeekChange) onWeekChange(nextWeek)
   }
 
   function handleNextWeek() {
-    setWeekRef((prev) => getNextWeek(prev))
+    const nextWeek = getNextWeek(weekRef)
+    setWeekRef(nextWeek)
+    if (onWeekChange) onWeekChange(nextWeek)
   }
 
   function handleSelectDay(date) {
@@ -67,7 +81,7 @@ export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate })
       {/* Days strip */}
       <div
         ref={scrollRef}
-        className="flex gap-1 overflow-x-auto flex-1 scrollbar-hide scroll-smooth"
+        className="flex gap-1 overflow-x-auto flex-1 scrollbar-hide scroll-smooth py-3 -my-3"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {days.map((day) => {

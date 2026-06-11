@@ -28,19 +28,23 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
     }
   }, [isOpen, selectedDate])
 
-  // Handle open/close animations
   useEffect(() => {
+    let t;
     if (isOpen && !prevOpen.current) {
       // Opening
       setVisible(true)
-      requestAnimationFrame(() => setAnimating(true))
+      // Small delay to ensure DOM is ready before CSS transition triggers
+      setTimeout(() => setAnimating(true), 10)
     } else if (!isOpen && prevOpen.current) {
       // Closing
       setAnimating(false)
-      const t = setTimeout(() => setVisible(false), 320)
-      return () => clearTimeout(t)
+      t = setTimeout(() => setVisible(false), 320)
     }
     prevOpen.current = isOpen
+    
+    return () => {
+      if (t) clearTimeout(t)
+    }
   }, [isOpen])
 
   if (!visible) return null
@@ -55,7 +59,7 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0 bg-black/60 z-40 transition-opacity duration-300
+          fixed inset-0 bg-black/60 z-[60] transition-opacity duration-300
           ${animating ? 'opacity-100' : 'opacity-0'}
         `}
         onClick={onClose}
@@ -64,7 +68,7 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
       {/* Sheet */}
       <div
         className={`
-          fixed bottom-0 left-0 right-0 z-50
+          fixed bottom-0 left-0 right-0 z-[70]
           bg-karga-gray rounded-t-3xl
           transition-transform duration-300 ease-out
           ${animating ? 'translate-y-0' : 'translate-y-full'}

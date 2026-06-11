@@ -14,6 +14,7 @@ import { useSetsStore } from '../stores/setsStore'
 import { useSesionStore } from '../stores/sesionStore'
 import SessionCard from '../components/calendar/SessionCard'
 import { format } from 'date-fns'
+import { FiChevronDown } from 'react-icons/fi'
 
 /**
  * HistoryScreen
@@ -44,7 +45,7 @@ export default function HistoryScreen() {
     isMonthModalOpen,
     activityByDate,
     setSelectedDate,
-    openMonthModal,
+    toggleMonthModal,
     closeMonthModal,
     getActivityForDate,
     getActiveDates,
@@ -77,6 +78,8 @@ export default function HistoryScreen() {
   const [monthRef, setMonthRef] = useState(
     selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date()
   )
+
+  const [isSessionsOpen, setIsSessionsOpen] = useState(false)
 
   // Active dates set — memoized so DayCell/MonthGrid don't recalculate each render
   const activeDates = useMemo(() => getActiveDates(), [activityByDate])
@@ -111,22 +114,29 @@ export default function HistoryScreen() {
 
   {/* Session card */}
   const selectedSessions = sessionsFromStore?.filter((session) => {
-    const rawDate = session.created_at || session.startedAt || session.createAt || session.started_at;
+    const rawDate =
+      session.created_at ||
+      session.time_init ||
+      session.startedAt ||
+      session.createAt ||
+      session.started_at;
+
     if (!rawDate) return false;
-    try {
-      const sessionDate = format(new Date(rawDate), 'yyyy-MM-dd')
-      return sessionDate === selectedDate
-    } catch(e) {
-      return false;
-    }
-  })
+
+    const date = new Date(rawDate);
+
+    if (isNaN(date.getTime())) return false;
+
+    const sessionDate = format(date, 'yyyy-MM-dd');
+    return sessionDate === selectedDate;
+  });
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     // Full-screen dark container — adjust to your router/nav setup
     <div
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col w-full animate-fade-in pb-10"
       style={{ backgroundColor: '#272121' }}
     >
       {/* Header: title + month navigator */}
@@ -134,16 +144,18 @@ export default function HistoryScreen() {
         referenceDate={monthRef}
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
-        onMonthPress={openMonthModal}
+        onMonthPress={toggleMonthModal}
       />
 
       {/* Weekly strip */}
       <div className="mt-2">
         <WeeklyStrip
-          selectedDate={selectedDate}
-          activeDates={activeDates}
-          onSelectDate={handleSelectDate}
-        />
+        selectedDate={selectedDate}
+        activeDates={activeDates}
+        onSelectDate={handleSelectDate}
+        monthRef={monthRef}
+        onWeekChange={(newWeek) => setMonthRef(newWeek)}
+      />
       </div>
 
       {/* Divider */}
@@ -155,15 +167,26 @@ export default function HistoryScreen() {
         <DailySummary metrics={metrics} />
 
         {/* Session card */}
-        <div className="mt-4">
-          <h2 className="text-white text-lg font-semibold mb-3 px-4">Sesiones</h2>
-          {selectedSessions?.length > 0 ? (
-            selectedSessions.map((session) => (
-              <SessionCard key={session.id} session={session} />
-            ))
-          ) : (
-            <p className="text-white/40 text-sm px-4">Sin sesiones este día</p>
-          )}
+        <div className="mt-8">
+          <div className="mx-4">
+            <button 
+              onClick={() => setIsSessionsOpen(!isSessionsOpen)}
+              className="w-full flex items-center justify-between text-white text-[17px] font-bold px-5 py-4 bg-white/5 hover:bg-white/10 rounded-2xl outline-none active:scale-[0.98] transition-all"
+            >
+              Sesiones del día
+              <FiChevronDown className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${isSessionsOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+          
+          <div className={`transition-all duration-300 overflow-hidden ${isSessionsOpen ? 'opacity-100 max-h-[1000px] mt-2' : 'opacity-0 max-h-0'}`}>
+            {selectedSessions?.length > 0 ? (
+              selectedSessions.map((session) => (
+                <SessionCard key={session.id} session={session} />
+              ))
+            ) : (
+              <p className="text-white/40 text-sm px-4">Sin sesiones este día</p>
+            )}
+          </div>
         </div>
 
         {/* Activity list */}

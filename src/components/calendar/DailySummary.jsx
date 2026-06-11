@@ -12,7 +12,7 @@ export default function DailySummary({ metrics }) {
   const { exercises = 0, sets = 0, reps = 0 } = metrics
 
   return (
-    <div className="grid grid-cols-3 gap-3 px-4 mt-4">
+    <div className="grid grid-cols-2 gap-3 px-4 mt-4">
       <MetricCard
         icon={<MdFitnessCenter size={22} className="text-karga-orange" />}
         iconBg="bg-karga-orange/15"
@@ -24,12 +24,6 @@ export default function DailySummary({ metrics }) {
         iconBg="bg-[#e05555]/15"
         value={sets}
         label="SERIES"
-      />
-      <MetricCard
-        icon={<GiMuscleUp size={22} className="text-emerald-400" />}
-        iconBg="bg-emerald-400/15"
-        value={reps}
-        label="REPS"
       />
     </div>
   )

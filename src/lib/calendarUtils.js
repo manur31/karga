@@ -147,7 +147,7 @@ export function groupSetsByExercise(dayActivity, exercises = []) {
     if (!grouped[key]) {
       grouped[key] = {
         exercise_id: key,
-        exerciseName: exerciseMap[key] ?? key,
+        exerciseName: exerciseMap[key] ?? s.exercises?.name ?? s.exercise?.name ?? key,
         sets: [],
         sessionTime: sessionTimeMap[s.sessionId ?? s.session_id] ?? null,
       }

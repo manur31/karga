@@ -12,9 +12,9 @@ import { toMonthYearLabel } from '../../lib/calendarUtils'
  */
 export default function CalendarHeader({ referenceDate, onPrevMonth, onNextMonth, onMonthPress }) {
   return (
-    <div className="flex items-center justify-between px-4 pt-6 pb-2">
+    <div className="flex items-center justify-between px-4 pt-1 pb-2">
       {/* Left: screen title */}
-      <h1 className="text-white text-2xl font-bold tracking-tight">Hoy</h1>
+      <h1 className="text-white text-3xl font-black tracking-tight">Hoy</h1>
 
       {/* Right: month navigator */}
       <div className="flex items-center gap-1">

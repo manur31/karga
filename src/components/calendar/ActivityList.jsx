@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { groupSetsByExercise } from '../../lib/calendarUtils'
 import SessionCard from './SetsCard'
+import { FiChevronDown } from 'react-icons/fi';
 
 /**
  * ActivityList
@@ -12,16 +13,26 @@ import SessionCard from './SetsCard'
 export default function ActivityList({ dayActivity, exercises }) {
   const groups = groupSetsByExercise(dayActivity, exercises)
   const [isLoading, setIsLoading] = useState(true)
+  const [isOpen, setIsOpen] = useState(true)
 
   setTimeout(() => {
     setIsLoading(false)
   }, 800);
 
   return (
-    <div className="mt-4">
-      <h2 className="text-white font-bold text-lg px-4 mb-3">Actividad del día</h2>
+    <div className="mt-6">
+      <div className="mx-4">
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between text-white font-bold text-[17px] px-5 py-4 bg-white/5 hover:bg-white/10 rounded-2xl outline-none active:scale-[0.98] transition-all"
+        >
+          Ejercicios Realizados
+          <FiChevronDown className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
 
-      { isLoading ? (
+      <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'opacity-100 max-h-[2000px] mt-2' : 'opacity-0 max-h-0'}`}>
+        { isLoading ? (
         <LoadingState/>
       ) : (
         groups.length === 0 ? (
@@ -39,7 +50,7 @@ export default function ActivityList({ dayActivity, exercises }) {
           </div>
         )
       )}
- 
+      </div>
     </div>
   )
 }
@@ -47,7 +58,6 @@ export default function ActivityList({ dayActivity, exercises }) {
 function EmptyState() {
   return (
     <div className="mx-4 bg-karga-gray rounded-2xl px-4 py-10 flex flex-col items-center gap-2">
-      <span className="text-3xl">🏋️</span>
       <p className="text-white/60 text-sm font-medium">Sin actividad este día</p>
       <p className="text-white/30 text-xs text-center">
         Completa una sesión para ver tu registro aquí

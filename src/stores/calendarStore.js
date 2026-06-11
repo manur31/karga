@@ -128,7 +128,7 @@ export const useCalendarStore = create(
 
       setSelectedDate: (dateStr) => set({ selectedDate: dateStr }),
 
-      openMonthModal: () => set({ isMonthModalOpen: true }),
+      toggleMonthModal: () => set((state) => ({ isMonthModalOpen: !state.isMonthModalOpen })),
 
       closeMonthModal: () => set({ isMonthModalOpen: false }),
     }),

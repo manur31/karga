@@ -3,6 +3,7 @@ import es from 'date-fns/locale/es';
 import { MdFitnessCenter } from 'react-icons/md'
 
 function getDuration(startedAt, finishedAt) {
+  if (!startedAt || !finishedAt) return '00:00:00';
   const diffMs =
     new Date(finishedAt).getTime() -
     new Date(startedAt).getTime();
@@ -21,7 +22,12 @@ function getDuration(startedAt, finishedAt) {
 }
 
 export default function SessionCard({ session }) {
-  const duration = getDuration(session.startedAt, session.finishedAt);
+  const rawStarted = session.startedAt || session.created_at || session.createAt || session.time_init;
+  if (!rawStarted) return null;
+  const startedAtDate = new Date(rawStarted);
+  if (isNaN(startedAtDate.getTime())) return null;
+
+  const duration = getDuration(rawStarted, session.finishedAt);
 
   return (
     <div className="flex items-center gap-3 bg-karga-gray rounded-2xl px-4 py-3.5 mx-4 my-2">
@@ -33,7 +39,9 @@ export default function SessionCard({ session }) {
       {/* Info */}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <p className="text-white font-semibold text-lg truncate">{duration}</p>
-        <p className="text-white/40 text-xs mt-0.5">{format(new Date(session.startedAt), 'EEEE, yyyy', { locale: es }).toUpperCase().slice(0, 1) +  format(new Date(session.startedAt), 'EEEE, yyyy', { locale: es }).toLowerCase().slice(1)}</p>
+        <p className="text-white/40 text-xs mt-0.5 capitalize">
+          {format(startedAtDate, "EEEE d 'de' MMMM, yyyy • HH:mm 'hs'", { locale: es })}
+        </p>
       </div>
     </div>
   )
