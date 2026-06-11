@@ -7,10 +7,14 @@ import ChevronIcon from '../components/icons/ChevronIcon';
 import { Mancuerna } from '../components/icons';
 import FlameIcon from '../components/icons/FlameIcon';
 import SessionTimer from '../components/sessionTimer';
+import { useAuth } from '../hooks/queries/useAuth';
 
 export default function Sessions() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
   
   // estados q usarian la bdd una vez integrada
   const [stats, setStats] = useState({ thisMonth: 0, totalHours: 0 });
@@ -181,7 +185,7 @@ export default function Sessions() {
       </div>
 
       <div className='fixed bottom-22 h-fit left-0 right-0 bg-karga-gray py-4'>
-        <SessionTimer />
+        <SessionTimer profile_id={profile_id} />
       </div>
 
     </div>

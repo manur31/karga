@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../../hooks/queries/useAuth';
 import { useCreateSet } from '../../../hooks/mutations/useSetsMutations';
 import { CheckIcon, PlusIcon } from '../../icons';
+import { useRestStore } from '../../../stores/restStore';
+import { useSetsStore } from '../../../stores/setsStore';
+import { useCalendarStore } from '../../../stores/calendarStore';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -15,7 +18,7 @@ const XIcon = ({ className }) => (
   </svg>
 );
 
-export default function SetModal({ exercise, onClose }) {
+export default function SetModal({ exercise, onClose, rest_time }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [unit, setUnit] = useState('kg');
@@ -29,9 +32,14 @@ export default function SetModal({ exercise, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const { startRest } = useRestStore();
+
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const restTime = rest_time || 1;
+  // const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const { addSet, sets, syncLocalData } = useSetsStore();
+  const { addLocalSets } = useCalendarStore();
 
   if (!exercise) return null;
 
@@ -61,12 +69,14 @@ export default function SetModal({ exercise, onClose }) {
     }
 
     try {
-      await createSet({
+       addSet({
         profile_id,
         exercise_id: exercise.id,
         rep: Number(reps || 0),
         weight: Number(weightInKg.toFixed(2))
-      });
+      })
+ 
+      startRest(restTime);
       handleCloseWithAnimation(null);
     } catch (error) {
       console.error("Error al guardar el set:", error);

@@ -1,8 +1,14 @@
 import { FiMoreVertical, FiPause, FiPlay, FiX } from "react-icons/fi";
 import { useSesionStore } from "../stores/sesionStore";
 import { useState } from "react";
+import formatSeconds from "../lib/formatSeconds";
+import { useCalendarStore } from "../stores/calendarStore";
+import { useSyncSessions, useSyncSets } from "../hooks/useSync";
+import { useAuth } from "../hooks/queries/useAuth";
+import { useNavigate } from "react-router";
 
-function SessionTimer() {
+function SessionTimer({profile_id}) {
+  const navigate = useNavigate();
   const {
     start,
     pause,
@@ -11,16 +17,19 @@ function SessionTimer() {
     seconds,
     continue: continueTimer,
     isStarted,
+    startedAt,
+    finishedAt,
+    sessions
   } = useSesionStore();
+
+
+  const { addLocalSessions } = useCalendarStore();
+  const { sync: syncSessions } = useSyncSessions();
+  const { sync: syncSets } = useSyncSets();
+
   const [isRunning, setIsRunning] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
-  const fmtTime = (seconds) => {
-    const hour = Math.floor(seconds / 3600);
-    const minute = Math.floor((seconds % 3600) / 60);
-    const sec = seconds % 60;
-    return [hour, minute, sec].map((n) => String(n).padStart(2, "0")).join(":");
-  };
 
   const handlePlayPause = () => {
     if (isRunning) {
@@ -43,9 +52,12 @@ function SessionTimer() {
   };
 
   const handleFinish = () => {
-    finish();
+    finish(profile_id);
     setIsRunning(false);
     setShowMenu(false);
+    syncSessions(profile_id);
+    syncSets(profile_id);
+    navigate('/today')
   };
 
   return (
@@ -53,17 +65,17 @@ function SessionTimer() {
       <div className="flex items-center justify-between px-10">
         {isStarted ? (
           <p className="text-center text-xl font-medium tracking-widest tabular-nums text-white mb-1">
-            {fmtTime(seconds)}
+            {formatSeconds(seconds)}
           </p>
         ) : (
-          <h2>Session Timer</h2>
+          <h2 className="text-lg font-bold text-white">Nueva Sesión</h2>
         )}
 
         <div className="flex items-center gap-2">
           {isRunning ? (
-            <FiPause onClick={handlePlayPause} />
+            <FiPause onClick={handlePlayPause} strokeWidth={3} />
           ) : (
-            <FiPlay onClick={handlePlayPause} />
+            <FiPlay onClick={handlePlayPause} strokeWidth={3} />
           )}
           <div className="relative">
             <FiMoreVertical onClick={() => setShowMenu(!showMenu)} />
@@ -76,13 +88,13 @@ function SessionTimer() {
                       className="border-none bg-transparent text-white"
                       onClick={handleDiscard}
                     >
-                      Discard
+                      Descartar
                     </button>
                     <button
                       className="border-none bg-transparent text-white"
                       onClick={handleFinish}
                     >
-                      Finish
+                      Finalizar
                     </button>
                   </div>
                 </div>

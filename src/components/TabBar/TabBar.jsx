@@ -14,7 +14,7 @@ const navItems = [
 
 export default function TabBar() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-[#443737] border-t border-white/5">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-input-bg border-t border-white/5">
       <div className="flex items-center justify-around w-full max-w-md px-4 py-3">
         {navItems.map((item) => {
           const Icon = item.icon;

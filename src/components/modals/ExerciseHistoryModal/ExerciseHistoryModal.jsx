@@ -5,14 +5,15 @@ import { useDeleteSet } from '../../../hooks/mutations/useSetsMutations';
 import { ArrowLeft, PlusIcon } from '../../icons';
 import SetModal from '../SetModal/SetModal';
 import EditSetModal from '../EditSetModal/EditSetModal';
+import { useSetsStore } from '../../../stores/setsStore';
 
 export default function ExerciseHistoryModal({ exercise, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
   const [selectedSetToEdit, setSelectedSetToEdit] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Estados para modo de selección/borrado
+ 
+  // Estados para modo de selección/borrado 
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedSets, setSelectedSets] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -20,8 +21,9 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const { data: sets, isLoading } = useSetsForExercise(profile_id, exercise?.id);
+  const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
+  const { syncedSets, sets: allSetsFromStore } = useSetsStore();
 
   if (!exercise) return null;
 
@@ -31,6 +33,10 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       onClose();
     }, 300);
   };
+
+  const filteredSetsFromStore = allSetsFromStore.filter(set => set.exercise_id === exercise.id)
+
+  const allSets = [...filteredSetsFromStore, ...sets, ...syncedSets.filter(set => set.exercise_id === exercise.id)];
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -61,7 +67,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   };
 
   // Agrupar sets por fecha
-  const groupedSets = sets?.reduce((groups, set) => {
+  const groupedSets = allSets?.reduce((groups, set) => {
     const date = new Date(set.created_at);
     
     const dateStr = date.toLocaleDateString('es-ES', { 

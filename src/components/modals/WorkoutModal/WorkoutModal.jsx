@@ -106,17 +106,18 @@ export default function WorkoutModal({ onClose, onSave }) {
     setIsCustomExerciseModalOpen(true);
   };
 
+
   return (
     
-    <div className="fixed top-0 bottom-[76px] left-1/2 -translate-x-1/2 w-full max-w-md z-40 flex flex-col overflow-hidden pointer-events-none">
+    <div className="fixed top-0 bottom-19 left-1/2 -translate-x-1/2 w-full max-w-md z-40 flex flex-col overflow-hidden pointer-events-none">
       
       
-      <div className={`w-full h-full flex flex-col relative bg-[var(--color-dark-bg)] pointer-events-auto ${
+      <div className={`w-full h-full flex flex-col relative bg-dark-bg pointer-events-auto ${
         isClosing ? 'animate-slide-out-custom' : 'animate-slide-in-custom'
       }`}>
         
         {/* HEADER */}
-        <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] shrink-0 z-20">
+        <div className="flex items-center justify-between p-5 bg-input-bg shrink-0 z-20">
           <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -131,7 +132,7 @@ export default function WorkoutModal({ onClose, onSave }) {
         </div>
 
         {/* SCROLL */}
-        <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:none z-10">
+        <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 scrollbar-none z-10">
           
           {/* INPUT NOMBRE RUTINA */}
           <div className="flex flex-col gap-2">
@@ -143,7 +144,7 @@ export default function WorkoutModal({ onClose, onSave }) {
               placeholder="Ej: Push Day" 
               value={routineName}
               onChange={(e) => setRoutineName(e.target.value)}
-              className="bg-[var(--color-input-bg)] border border-transparent rounded-2xl p-4 text-white placeholder:text-zinc-500 focus:outline-none focus:border-karga-orange transition-colors font-medium shadow-inner"
+              className="bg-input-bg border border-transparent rounded-2xl p-4 text-white placeholder:text-zinc-500 focus:outline-none focus:border-karga-orange transition-colors font-medium shadow-inner"
             />
           </div>
 
@@ -157,7 +158,7 @@ export default function WorkoutModal({ onClose, onSave }) {
               placeholder="Ej: Rutina de fuerza para tren superior" 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="bg-[var(--color-input-bg)] border border-transparent rounded-2xl p-4 text-white placeholder:text-zinc-500 focus:outline-none focus:border-karga-orange transition-colors font-medium shadow-inner"
+              className="bg-input-bg border border-transparent rounded-2xl p-4 text-white placeholder:text-zinc-500 focus:outline-none focus:border-karga-orange transition-colors font-medium shadow-inner"
             />
           </div>
 
@@ -193,13 +194,13 @@ export default function WorkoutModal({ onClose, onSave }) {
                   onClick={() => handleToggleExercise(exercise.id)}
                   className={`flex items-center p-4 rounded-2xl cursor-pointer transition-all border ${
                     isSelected 
-                      ? 'bg-[var(--color-karga-gray)] border-green-500/50 shadow-lg shadow-green-500/5' 
-                      : 'bg-[var(--color-karga-gray)] border-transparent hover:bg-white/[0.02]'
+                      ? 'bg-karga-gray border-green-500/50 shadow-lg shadow-green-500/5' 
+                      : 'bg-karga-gray border-transparent hover:bg-white/2'
                   }`}
                 >
                   <div className="flex flex-col flex-1">
                     <span className="text-[15px] text-zinc-100 font-bold tracking-tight">{exercise.name}</span>
-                    <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">{exercise.muscle}</span>
+                    <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">{exercise.muscle.join(' - ')}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -234,11 +235,11 @@ export default function WorkoutModal({ onClose, onSave }) {
         </div>
 
         {/* BOTÓN CREAR EJERCICIO */}
-        <div className="absolute bottom-[-0.1px] inset-x-0 p-5 pb-0 pt-12 bg-gradient-to-t from-[var(--color-dark-bg)] via-[var(--color-dark-bg)] to-transparent z-30">
+        <div className="absolute bottom-[-0.1px] inset-x-0 p-5 pb-0 pt-12 bg-linear-to-t from-dark-bg via-dark-bg to-transparent z-30">
           <button
             type="button"
             onClick={handleCreateCustomExercise}
-            className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl border-2 border-dashed border-white/10 text-zinc-400 font-bold text-sm hover:border-karga-orange/40 hover:text-karga-orange hover:bg-karga-orange/5 transition-all active:scale-[0.99] bg-[var(--color-dark-bg)] shadow-2xl"
+            className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl border-2 border-dashed border-white/10 text-zinc-400 font-bold text-sm hover:border-karga-orange/40 hover:text-karga-orange hover:bg-karga-orange/5 transition-all active:scale-[0.99] bg-dark-bg shadow-2xl"
           >
             <PlusIcon className="w-4 h-4" />
             Crear ejercicio personalizado

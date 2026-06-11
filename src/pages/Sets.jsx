@@ -1,5 +1,4 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
 import Button from "../components/Button/Button";
 import PlusIcon from "../components/icons/PlusIcon";
 import WorkoutModal from "../components/modals/WorkoutModal/WorkoutModal";
@@ -26,17 +25,23 @@ import { getRoutineforID } from "../service/routinesService";
 
 import StatsCards from "../components/sets/StatsCards";
 import RoutinesList from "../components/sets/RoutinesList";
+import RestTimer from "../components/RestTimer";
+import { useRestStore } from "../stores/restStore";
+import { useSets } from "../hooks/queries/useSets";
+import { useSetsStore } from "../stores/setsStore";
+import { useSessions } from "../hooks/queries/useSessions";
+import { useCalendarStore } from "../stores/calendarStore";
 
 export default function Sets() {
-  const inputRef = useRef(null);
-  const iputRef2 = useRef(null);
-  const navigate = useNavigate();
-
   // estados para almacenar los datos que vendrán de la base de datos
   const [stats, setStats] = useState({ weeklyWorkouts: 0, streak: 0 });
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
+
+  const { restTime } = useRestStore();
+  const { addSyncedSets } = useSetsStore();
+  const { loadFromSupabase } = useCalendarStore()
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -54,15 +59,17 @@ export default function Sets() {
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
   const { mutateAsync: editRoutines } = useEditRoutines(profile_id);
   
-  const { data: exercises, isLoading } = useExercises(profile_id);
+  // const { data: exercises, isLoading } = useExercises(profile_id); No se esta utilizando
   const { data: routines, isLoading: isRoutinesLoading } = useRoutines(profile_id);
-  const { data: exerciseFavorites, isLoading: isExerciseFavoritesLoading } =
-    useFavoriteExercises(profile_id);
+  // const { data: exerciseFavorites, isLoading: isExerciseFavoritesLoading } = useFavoriteExercises(profile_id); No se esta utilizando.
 
-  if (isLoading || isRoutinesLoading || isExerciseFavoritesLoading) {
+  // if (isLoading || isRoutinesLoading || isExerciseFavoritesLoading) {
+  //   return <div>Cargando...</div>;
+  // }
+
+  if (isRoutinesLoading) {
     return <div>Cargando...</div>;
   }
-
   
   const handleTestCreateExercise = () => {
     console.log("Creando nuevo entrenamiento");
@@ -223,20 +230,20 @@ export default function Sets() {
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[10px] bg-karga-orange/10 flex items-center justify-center">
-              <svg className="w-[18px] h-[18px] text-karga-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-4 h-4 text-karga-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
             <span className="text-[16px] font-bold text-zinc-200">Mis ejercicios</span>
           </div>
-          <svg className="w-[18px] h-[18px] text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </Button>
       </div>
 
       {/* ESTADÍSTICAS */}
-      <StatsCards stats={stats} isLoading={isLoading} />
+      {/* <StatsCards stats={stats} isLoading={isLoading} /> */}
 
       {/* MIS RUTINAS */}
       <RoutinesList
@@ -268,6 +275,13 @@ export default function Sets() {
       {/* MODAL DE MIS EJERCICIOS */}
       {isMyExercisesModalOpen && (
         <MyExercisesModal onClose={() => setIsMyExercisesModalOpen(false)} />
+      )}
+
+      {/* TIMER DE DESCANSO */}
+      {restTime > 0 && (
+        <div className='fixed bottom-22 h-fit left-0 right-0 bg-karga-gray py-4'>
+          <RestTimer />
+        </div>
       )}
     </div>
   );
