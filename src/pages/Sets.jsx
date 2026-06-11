@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import Button from "../components/Button/Button";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiSettings } from "react-icons/fi";
 import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
+import ProfileModal from "../components/modals/ProfileModal";
 import {
   useExercises,
   useFavoriteExercises,
@@ -37,6 +38,7 @@ export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const { restTime } = useRestStore();
   const { addSyncedSets } = useSetsStore();
@@ -199,13 +201,23 @@ export default function Sets() {
   return (
     <div className="flex flex-col w-full animate-fade-in pb-10">
       {/* HEADER */}
-      <div className="mb-6 pl-2">
-        <h1 className="text-3xl font-black text-white tracking-tight mb-1">
-          Mis Entrenamientos
-        </h1>
-        <p className="text-sm font-medium text-zinc-400">
-          Elige tu rutina o crea una nueva
-        </p>
+      <div className="mb-6 pl-2 relative">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-white tracking-tight mb-1">
+              Mis Entrenamientos
+            </h1>
+            <p className="text-sm font-medium text-zinc-400">
+              Elige tu rutina o crea una nueva
+            </p>
+          </div>
+          <button 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="p-3 text-zinc-400 hover:text-white transition-colors"
+          >
+            <FiSettings size={24} />
+          </button>
+        </div>
       </div>
 
       {/* BOTÓN NUEVA RUTINA Y MIS EJERCICIOS */}
@@ -277,8 +289,19 @@ export default function Sets() {
 
       {/* MODAL DE MIS EJERCICIOS */}
       {isMyExercisesModalOpen && (
-        <MyExercisesModal onClose={() => setIsMyExercisesModalOpen(false)} />
+        <MyExercisesModal 
+          onClose={() => setIsMyExercisesModalOpen(false)}
+          onAddExercise={(exercise) => {
+            console.log("Ejercicio añadido desde modal:", exercise);
+            setIsMyExercisesModalOpen(false);
+          }}
+        />
       )}
+
+      <ProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+      />
     </div>
   );
 }
