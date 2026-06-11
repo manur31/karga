@@ -146,13 +146,13 @@ export default function SetModal({ exercise, onClose }) {
           <div className="grid grid-cols-2 gap-4 mb-6">
             {/* Lado izquierdo: REPS */}
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl">
-              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Reps</span>
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Repeticiones</span>
               <div className="flex items-center justify-between w-full px-2">
                 <button 
                   onClick={() => handleAdjustReps(-1)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <MinusIcon className="w-5 h-5" />
+                  <MinusIcon className="w-4 h-4" />
                 </button>
                 
                 <input 
@@ -165,9 +165,9 @@ export default function SetModal({ exercise, onClose }) {
                 
                 <button 
                   onClick={() => handleAdjustReps(1)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -178,9 +178,9 @@ export default function SetModal({ exercise, onClose }) {
               <div className="flex items-center justify-between w-full px-2">
                 <button 
                   onClick={() => handleAdjustWeight(-weightStep)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <MinusIcon className="w-5 h-5" />
+                  <MinusIcon className="w-4 h-4" />
                 </button>
                 
                 <input 
@@ -193,9 +193,9 @@ export default function SetModal({ exercise, onClose }) {
                 
                 <button 
                   onClick={() => handleAdjustWeight(weightStep)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>

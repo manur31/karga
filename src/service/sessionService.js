@@ -9,16 +9,16 @@ export const getSession = async (profile_id) => {
 };
 export const insertSession = async ({
   profile_id,
-  time_init,
-  time_end,
+  startedAt,
+  finishedAt,
   note,
 }) => {
   const { data, error } = await supabase
     .from("sessions")
     .insert([
       {
-        time_init,
-        time_end,
+        startedAt,
+        finishedAt,
         profile_id,
         note,
       },
@@ -40,15 +40,15 @@ export const deleteSession = async ({ profile_id, session_id }) => {
 export const updateSession = async ({
   profile_id,
   session_id,
-  time_end,
-  time_init,
+  finishedAt,
+  startedAt,
   note,
 }) => {
   const { error } = await supabase
     .from("sessions")
     .update({
-      time_init,
-      time_end,
+      startedAt,
+      finishedAt,
       note,
     })
     .eq("session_id", session_id)

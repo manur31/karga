@@ -6,6 +6,7 @@ import { useWeightUnit } from '../../../hooks/useWeightUnit';
 import { ArrowLeft, PlusIcon } from '../../icons';
 import SetModal from '../SetModal/SetModal';
 import EditSetModal from '../EditSetModal/EditSetModal';
+import ConfirmModal from '../ConfirmModal';
 
 export default function ExerciseHistoryModal({ exercise, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
@@ -208,7 +209,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
           {/* FABs */}
           {isSelectMode ? (
             selectedSets.length > 0 && (
-              <div className="absolute bottom-6 left-6 z-30 animate-slide-in-up">
+              <div className="absolute bottom-8 left-6 z-30 animate-slide-in-up">
                 <button
                   onClick={() => setShowConfirmDialog(true)}
                   className="h-14 px-6 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center transition-all active:scale-95 gap-2"
@@ -221,7 +222,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
               </div>
             )
           ) : (
-            <div className="absolute bottom-6 right-6 z-30">
+            <div className="absolute bottom-8 right-5 z-30">
               <button
                 onClick={() => setIsSetModalOpen(true)}
                 className="w-16 h-16 bg-karga-orange hover:bg-orange-500 text-white rounded-[22px] shadow-lg shadow-karga-orange/30 flex items-center justify-center transition-all active:scale-95"
@@ -234,45 +235,16 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       </div>
 
       {/* Modal de Confirmación */}
-      {showConfirmDialog && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isDeleting && setShowConfirmDialog(false)} />
-          <div className="relative bg-[#2A2424] border border-white/10 rounded-3xl p-6 w-full max-w-[320px] shadow-2xl animate-fade-in flex flex-col gap-6">
-            <div className="flex flex-col gap-2 text-center">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-black text-white">¿Eliminar sets?</h3>
-              <p className="text-sm font-medium text-zinc-400">
-                Estás a punto de eliminar {selectedSets.length} set{selectedSets.length !== 1 ? 's' : ''} de tu historial de forma permanente. Esta acción no se puede deshacer.
-              </p>
-            </div>
-            
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setShowConfirmDialog(false)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 active:scale-95 text-white font-bold rounded-xl transition-all disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleDeleteSelected}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-400 active:scale-95 text-white font-bold rounded-xl transition-all disabled:opacity-50 flex justify-center items-center"
-              >
-                {isDeleting ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  'Eliminar'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal 
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleDeleteSelected}
+        title="¿Eliminar sets?"
+        description={`Estás a punto de eliminar ${selectedSets.length} set${selectedSets.length !== 1 ? 's' : ''} de tu historial de forma permanente. Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        danger={true}
+      />
 
       {/* SetModal */}
       {isSetModalOpen && (

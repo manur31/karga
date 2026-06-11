@@ -1,190 +1,167 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { useWeightUnit } from '../hooks/useWeightUnit';
+import { useState } from 'react';
+import { useAuth } from '../hooks/queries/useAuth';
+import { useSesions } from '../hooks/queries/useSesions';
+import { useSets } from '../hooks/queries/useSets';
+import Mancuerna from '../components/icons/Mancuerna';
+import { FiChevronRight } from 'react-icons/fi';
+import SessionDetailModal from '../components/modals/SessionDetailModal';
 import Card from '../components/Card/Card';
-import CalendarIcon from '../components/icons/CalendarIcon';
-import ClockIcon from '../components/icons/ClockIcon';
-import ChevronIcon from '../components/icons/ChevronIcon';
-import { Mancuerna } from '../components/icons';
-import FlameIcon from '../components/icons/FlameIcon';
-import SessionTimer from '../components/sessionTimer';
+import { formatRelativeTime } from '../utils/timeFormatter';
 
 export default function Sessions() {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const { unit, displayWeight } = useWeightUnit();
-  
-  // estados q usarian la bdd una vez integrada
-  const [stats, setStats] = useState({ thisMonth: 0, totalHours: 0 });
-  const [sessions, setSessions] = useState([]);
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+  const { data: sessions, isLoading } = useSesions(profile_id);
+  const { data: sets } = useSets(profile_id);
 
-  useEffect(() => {
-    // hacer el fetch a la tabla de sesiones completadas del usuario
-    const fetchSessionsData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // delay simulado, 
-        await new Promise(resolve => setTimeout(resolve, 800));
+  const [sortOrder, setSortOrder] = useState('recent');
+  const [selectedSession, setSelectedSession] = useState(null);
 
-        // mock con la estructura de la consulta
-        const mockStats = {
-          thisMonth: 18,
-          totalHours: 16.5
-        };
+  // Helper para agrupar sesiones por mes/año
+  const getGroupedSessions = (sessionsList, order) => {
+    if (!sessionsList) return {};
+    
+    // Sort based on selected order
+    const sorted = [...sessionsList].sort((a, b) => {
+      return order === 'recent' 
+        ? new Date(b.startedAt) - new Date(a.startedAt)
+        : new Date(a.startedAt) - new Date(b.startedAt);
+    });
 
-        const mockSessions = [
-          { 
-            id: 1, 
-            name: 'Push Day', 
-            date: 'Hoy • 09:30', 
-            duration: '52 min', 
-            volume: 4250,
-            calories: '320' 
-          },
-          { 
-            id: 2, 
-            name: 'Legs', 
-            date: 'Ayer • 10:00', 
-            duration: '65 min', 
-            volume: 6800, 
-            calories: '480' 
-          },
-          { 
-            id: 3, 
-            name: 'Pull Day', 
-            date: 'Hace 2 días • 08:45', 
-            duration: '48 min', 
-            volume: 3900, 
-            calories: '290' 
-          }
-        ];
-
-        setStats(mockStats);
-        setSessions(mockSessions);
-      } catch (error) {
-        console.error("Error al cargar el historial de sesiones:", error);
-      } finally {
-        setIsLoading(false);
+    const groups = {};
+    sorted.forEach(session => {
+      const date = new Date(session.startedAt);
+      let monthYear = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      // Capitalize first letter
+      monthYear = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+      
+      if (!groups[monthYear]) {
+        groups[monthYear] = [];
       }
-    };
-
-    fetchSessionsData();
-  }, []);
-
-  const handleOpenSessionDetail = (id) => {
-    // navegaria al detalle de la sesión finalizada
-    console.log(`Abriendo detalle de sesión ID: ${id}`);
-    // navigate(`/sessions/${id}`);
+      groups[monthYear].push(session);
+    });
+    return groups;
   };
 
+  const calculateDuration = (init, end) => {
+    if (!end) return 'En curso';
+    const startDate = new Date(init);
+    const endDate = new Date(end);
+    const diffInSeconds = Math.floor((endDate - startDate) / 1000);
+    
+    if (diffInSeconds < 0) return '00:00:00';
+
+    const h = Math.floor(diffInSeconds / 3600);
+    const m = Math.floor((diffInSeconds % 3600) / 60);
+    const s = diffInSeconds % 60;
+
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const getSessionTitle = (session, allSets) => {
+    if (session.note) return session.note;
+    
+    if (!allSets) return "0 ejercicios, 0 sets";
+
+    const sessionSets = allSets.filter(set => {
+      if (!set.created_at) return false;
+      const setTime = new Date(set.created_at).getTime();
+      const initTime = new Date(session.startedAt).getTime();
+      const endTime = session.finishedAt ? new Date(session.finishedAt).getTime() : new Date().getTime();
+      return setTime >= initTime && setTime <= endTime;
+    });
+
+    const setCount = sessionSets.length;
+    const distinctExercises = new Set(sessionSets.map(set => set.exercise_id));
+    const exerciseCount = distinctExercises.size;
+
+    const exerciseText = exerciseCount === 1 ? "ejercicio" : "ejercicios";
+    const setText = setCount === 1 ? "set" : "sets";
+    
+    return `${exerciseCount} ${exerciseText}, ${setCount} ${setText}`;
+  };
+
+  const groupedSessions = getGroupedSessions(sessions, sortOrder);
+
   return (
-    <div className="flex flex-col w-full animate-fade-in relative">
-      
+    <div className="flex flex-col w-full animate-fade-in pb-10">
       {/* HEADER */}
       <div className="mb-6 pl-2">
-        <h1 className="text-3xl font-black text-white tracking-tight mb-1">
-          Sesiones
-        </h1>
-        <p className="text-sm font-medium text-zinc-400">
-          Historial de entrenamientos
-        </p>
+        <h1 className="text-3xl font-black text-white tracking-tight mb-1">Tus Sesiones</h1>
       </div>
 
-      {/* ESTADÍSTICAS GLOBALES */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        
-        {/* card de este mes */}
-        <Card variant="default" className="p-4 flex flex-col justify-between h-26">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs font-semibold tracking-wide">
-            <CalendarIcon/>
-            Este mes
-          </div>
-          <div className="flex flex-col">
-            <span className="text-3xl font-black text-white leading-none mb-0.5">
-              {isLoading ? '-' : stats.thisMonth}
-            </span>
-            <span className="text-[11px] text-zinc-500 font-medium tracking-wide">sesiones</span>
-          </div>
-        </Card>
-
-        {/* card de tiempo total */}
-        <Card variant="default" className="p-4 flex flex-col justify-between h-26">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs font-semibold tracking-wide">
-            <ClockIcon/>
-            Tiempo total
-          </div>
-          <div className="flex flex-col">
-            <span className="text-3xl font-black text-white leading-none mb-0.5">
-              {isLoading ? '-' : stats.totalHours}
-            </span>
-            <span className="text-[11px] text-zinc-500 font-medium tracking-wide">horas</span>
-          </div>
-        </Card>
-
+      {/* ORDENAMIENTO */}
+      <div className="flex items-center gap-2 mb-6 pl-2 overflow-x-auto no-scrollbar">
+        <button 
+          onClick={() => setSortOrder('recent')}
+          className={`px-4 py-1.5 rounded-full font-bold text-sm transition-colors whitespace-nowrap border ${sortOrder === 'recent' ? 'bg-karga-orange text-white border-transparent' : 'bg-white/10 text-zinc-300 border-transparent'}`}
+        >
+          Más recientes
+        </button>
+        <button 
+          onClick={() => setSortOrder('oldest')}
+          className={`px-4 py-1.5 rounded-full font-bold text-sm transition-colors whitespace-nowrap border ${sortOrder === 'oldest' ? 'bg-karga-orange text-white border-transparent' : 'bg-[#2a2a2a] border-white/5 text-zinc-300'}`}
+        >
+          Más antiguas
+        </button>
       </div>
 
-      {/* HISTORIAL DE SESIONES */}
-      <div className="flex flex-col">
-        <h2 className="text-lg font-bold text-white mb-4 pl-2">Historial</h2>
-        
+      {/* LISTADO DE SESIONES */}
+      <div className="flex flex-col gap-6">
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-t-karga-orange border-white/5 rounded-full animate-spin" />
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-4 border-t-karga-orange border-white/10 rounded-full animate-spin" />
           </div>
+        ) : Object.keys(groupedSessions).length === 0 ? (
+          <div className="text-center text-zinc-500 py-10 font-medium">No hay sesiones aún</div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {sessions.map((session) => (
-              <Card 
-                key={session.id} 
-                variant="default"
-                onClick={() => handleOpenSessionDetail(session.id)}
-                className="p-4 flex flex-col gap-3 cursor-pointer hover:bg-white/5 active:scale-[0.98] transition-all"
-              >
-                {/* fila de título, fecha y flecha */}
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-base font-bold text-zinc-100 leading-tight">
-                      {session.name}
-                    </span>
-                    <span className="text-xs font-medium text-zinc-500 mt-0.5">
-                      {session.date}
-                    </span>
-                  </div>
-                  <ChevronIcon className="w-5 h-5 text-zinc-600 mt-1" direction="right" />
-                </div>
+          Object.entries(groupedSessions).map(([monthYear, monthSessions]) => (
+            <div key={monthYear} className="flex flex-col">
+              <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3 pl-2">{monthYear}</h2>
+              
+              <div className="flex flex-col gap-3">
+                {monthSessions.map((session, index) => (
+                  <Card 
+                    key={session.session_id} 
+                    variant="default"
+                    onClick={() => setSelectedSession(session)}
+                    className="p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all min-w-0 flex-1 hover:bg-white/5 border-transparent"
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* Icon Container */}
+                      <div className="w-12 h-12 rounded-[10px] bg-karga-orange/10 flex items-center justify-center shrink-0">
+                        <Mancuerna className="w-6 h-6 text-karga-orange" />
+                      </div>
+                      
+                      {/* Text details */}
+                      <div className="flex flex-col gap-0.5 justify-center">
+                        <span className="text-[15px] font-bold text-zinc-100 mb-0.5">
+                          {getSessionTitle(session, sets)}
+                        </span>
+                        <span className="text-zinc-400 text-sm font-medium">
+                          {calculateDuration(session.startedAt, session.finishedAt)}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* fila  con las metricas de duración, volumen y calorías) */}
-                <div className="flex items-center gap-4 mt-1">
-                  
-                  {/* duración */}
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <ClockIcon className="w-3.5 h-3.5 text-red-500" />
-                    <span className="text-xs font-medium">{session.duration}</span>
-                  </div>
-
-                  {/* volumen de carga */}
-                  <div className="flex items-center gap-1.5">
-                    <Mancuerna className="w-3.5 h-3.5 text-karga-orange" />
-                    <span className="text-xs font-bold text-white tracking-wide">{displayWeight(session.volume)} {unit}</span>
-                  </div>
-
-                  {/* calorías */}
-                  <div className="flex items-center gap-1.5">
-                    <FlameIcon className="w-3.5 h-3.5 text-red-500" />
-                    <span className="text-xs font-bold text-white tracking-wide">{session.calories} kcal</span>
-                  </div>
-
-                </div>
-              </Card>
-            ))}
-          </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-zinc-500 font-medium">
+                        {formatRelativeTime(session.finishedAt || session.startedAt)}
+                      </span>
+                      <FiChevronRight className="w-5 h-5 text-zinc-600" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))
         )}
       </div>
 
-      <div className='fixed bottom-22 h-fit left-0 right-0 bg-karga-gray py-4'>
-        <SessionTimer />
-      </div>
+      <SessionDetailModal 
+        session={selectedSession} 
+        onClose={() => setSelectedSession(null)} 
+      />
 
     </div>
   );

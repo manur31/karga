@@ -20,6 +20,14 @@ html,
 body,
 #root {
     min-height: 100%;
+    overflow-x: hidden;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Chrome, Safari, Edge, Opera */
+::-webkit-scrollbar {
+    display: none;
 }
 
 body {
