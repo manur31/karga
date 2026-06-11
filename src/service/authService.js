@@ -1,3 +1,4 @@
+import { th } from "zod/v4/locales";
 import { supabase } from "../lib/supabaseClient";
 //register
 export const register = async ({ email, password, name }) => {
@@ -84,12 +85,9 @@ export const setProfile = async ({
     })
     .eq("profile_id", user.id)
     .select();
-  if (error) {
-    console.log(error);
-    return error.message;
-  }
+  if (error) throw error;
 
-  console.log(data);
+  /*   console.log(data); */
   return data;
 };
 //getProfile
