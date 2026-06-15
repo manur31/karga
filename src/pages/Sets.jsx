@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Button from "../components/Button/Button";
 import { FiPlus, FiSettings } from "react-icons/fi";
 import WorkoutModal from "../components/modals/WorkoutModal";
@@ -6,67 +6,28 @@ import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
 import ProfileModal from "../components/modals/ProfileModal";
 import {
-  useExercises,
-  useFavoriteExercises,
-} from "../hooks/queries/useExercises";
-import {
-  useCreateExercise,
-  useAddToFavorite,
-  useDeleteExercise,
-} from "../hooks/mutations/useExercisesMutations";
-import {
   useCreateRoutines,
   useInsertExercisesRoutine,
   useDeleteRoutines,
-  useEditRoutines,
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
 import { useAuth } from "../hooks/queries/useAuth";
-import { getRoutineforID } from "../service/routinesService";
-
-import StatsCards from "../components/sets/StatsCards";
 import RoutinesList from "../components/sets/RoutinesList";
-import { useRestStore } from "../stores/restStore";
-import { useSets } from "../hooks/queries/useSets";
-import { useSetsStore } from "../stores/setsStore";
-import { useSessions } from "../hooks/queries/useSessions";
-import { useCalendarStore } from "../stores/calendarStore";
 
 export default function Sets() {
-  // estados para almacenar los datos que vendrán de la base de datos
-  const [stats, setStats] = useState({ weeklyWorkouts: 0, streak: 0 });
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const { restTime } = useRestStore();
-  const { addSyncedSets } = useSetsStore();
-  const { loadFromSupabase } = useCalendarStore()
-
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
 
-  const {
-    mutate: createExercise,
-    isPending: isCreatingExercise,
-    isSuccess: isExerciseCreated,
-    isError: isExerciseError,
-  } = useCreateExercise(profile_id);
-  const { mutateAsync: deleteExercise } = useDeleteExercise(profile_id);
-  const { mutateAsync: AddFavorite } = useAddToFavorite(profile_id);
+  const { data: routines, isLoading: isRoutinesLoading } = useRoutines(profile_id);
+
   const { mutateAsync: createRoutines } = useCreateRoutines(profile_id);
   const { mutateAsync: insertExercisesRoutine } = useInsertExercisesRoutine(profile_id);
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
-  const { mutateAsync: editRoutines } = useEditRoutines(profile_id);
-  
-  // const { data: exercises, isLoading } = useExercises(profile_id); No se esta utilizando
-  const { data: routines, isLoading: isRoutinesLoading } = useRoutines(profile_id);
-  // const { data: exerciseFavorites, isLoading: isExerciseFavoritesLoading } = useFavoriteExercises(profile_id); No se esta utilizando.
-
-  // if (isLoading || isRoutinesLoading || isExerciseFavoritesLoading) {
-  //   return <div>Cargando...</div>;
-  // }
 
   if (isRoutinesLoading) {
     return (
@@ -75,23 +36,6 @@ export default function Sets() {
       </div>
     );
   }
-  
-  const handleTestCreateExercise = () => {
-    console.log("Creando nuevo entrenamiento");
-    createExercise({
-      name: "Ejercicio de prueba ",
-      category: 123,
-      muscle: ["back"],
-    });
-
-    if (isExerciseCreated) {
-      console.log("Entrenamiento creado exitosamente");
-    }
-
-    if (isExerciseError) {
-      console.log("Error al crear el entrenamiento");
-    }
-  };
 
   const handleCreateWorkout = () => {
     setOpenModal(true);  
@@ -104,56 +48,14 @@ export default function Sets() {
     });
   };
 
-  const handleshowRoutineDetails = (id) => {
-    getRoutineforID(id).then((data) => {
-      console.log("data rutina por id:", data);
-    });
-  };
-
-  const selectid = (data) => {
-    setSelectedRoutineId(data.routine_id);
-  };
-
-  const handleAddtoFavorite = (id) => {
-    if (!selectedRoutineId) {
-      console.log("No hay rutina creada/seleccionada");
-      return;
-    }
-    handleAddRoutine(id);
-    AddFavorite(id);
-  };
-
   const handleDeleteRoutine = (id) => {
     usedeleteRoutines(id);
-  };
-
-  const handleDeleteExercise = (id) => {
-    deleteExercise(id);
-  };
-
-  const handleEditRoutine = (data) => {
-    editRoutines(data);
-  };
-
-  const handleAddRoutine = (id) => {
-    if (!selectedRoutineId) {
-      console.log("No hay rutina seleccionada para agregar ejercicio");
-      return;
-    }
-    insertExercisesRoutine({
-      routine_id: selectedRoutineId,
-      id_exercises: id,
-      rest_time: 60,
-      orden: 1,
-    });
-    console.log("Ejercicio agregado a la rutina");
   };
 
   const handleAddExercisesToRoutine = async (selectedExerciseIds) => {
     if (!selectedRoutineId) return;
     
     console.log("Agregando ejercicios a la rutina:", selectedExerciseIds);
-    // Ejecutamos la mutación por cada ejercicio seleccionado
     for (const exerciseId of selectedExerciseIds) {
       await insertExercisesRoutine({
         routine_id: selectedRoutineId,
@@ -175,10 +77,8 @@ export default function Sets() {
   const handleSaveWorkoutModal = async (name, description, selectedExerciseIds) => {
     console.log("Guardando rutina desde modal:", { name, description, selectedExerciseIds });
     try {
-      // crea la rutina
       const newRoutine = await createroutine(name, description);
       
-      // inserta los ejercicios seleccionados
       if (newRoutine && newRoutine.routine_id && selectedExerciseIds.length > 0) {
         for (let i = 0; i < selectedExerciseIds.length; i++) {
           await insertExercisesRoutine({
@@ -195,7 +95,6 @@ export default function Sets() {
     }
   };
 
-  //  la versión más reciente de la rutina seleccionada
   const activeRoutine = selectedRoutineId ? routines?.find(r => r.routine_id === selectedRoutineId) : null;
 
   return (
@@ -256,9 +155,6 @@ export default function Sets() {
           </svg>
         </Button>
       </div>
-
-      {/* ESTADÍSTICAS */}
-      {/* <StatsCards stats={stats} isLoading={isLoading} /> */}
 
       {/* MIS RUTINAS */}
       <RoutinesList

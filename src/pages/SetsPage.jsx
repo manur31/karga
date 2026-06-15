@@ -1,6 +1,4 @@
-import { useAuth } from "../hooks/queries/useAuth";
-import { useEffect, useState } from "react";
-import { getExercises } from "../service/exersiseService";
+import { useState } from "react";
 import { useSetsStore } from "../stores/setsStore";
 import { useForm } from "react-hook-form";
 import { useWeightUnit } from "../hooks/useWeightUnit";

@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/queries/useAuth';
-import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
 import { useRestStore } from '../../stores/restStore';
 import { useSetsStore } from '../../stores/setsStore';
-import { useCalendarStore } from '../../stores/calendarStore';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -45,9 +43,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const restTime = rest_time || 1;
-  // const { mutateAsync: createSet } = useCreateSet(profile_id);
-  const { addSet, sets, syncLocalData } = useSetsStore();
-  const { addLocalSets } = useCalendarStore();
+  const { addSet } = useSetsStore();
 
   if (!exercise) return null;
 

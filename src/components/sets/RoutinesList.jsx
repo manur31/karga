@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Card from "../../components/Card/Card";
 import Avatar from "../../components/Avatar/Avatar";
 import ChevronIcon from "../../components/icons/ChevronIcon";

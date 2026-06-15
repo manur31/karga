@@ -55,7 +55,6 @@ export default function Onboarding() {
       time_for_week: data.weeklyFrequency,
       weight: convertToKg(data.weight),
       rest_time: data.restTime,
-      id: "02e22669-2c7c-452f-b459-0741cdaf8d3e",
     };
   
     onboardingMutate(onboardingData, {

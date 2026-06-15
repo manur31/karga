@@ -8,15 +8,8 @@ import { FiChevronRight } from 'react-icons/fi';
 import SessionDetailModal from '../components/modals/SessionDetailModal';
 import Card from '../components/Card/Card';
 import { formatRelativeTime } from '../utils/timeFormatter';
-import { useNavigate } from 'react-router';
-import CalendarIcon from '../components/icons/CalendarIcon';
-import ClockIcon from '../components/icons/ClockIcon';
-import ChevronIcon from '../components/icons/ChevronIcon';
-import FlameIcon from '../components/icons/FlameIcon';
-import SessionTimer from '../components/SessionTimer';
 
 export default function Sessions() {
-  const navigate = useNavigate();
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -131,7 +124,7 @@ export default function Sessions() {
               <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3 pl-2">{monthYear}</h2>
               
               <div className="flex flex-col gap-3">
-                {monthSessions.map((session, index) => (
+                {monthSessions.map((session) => (
                   <Card 
                     key={session.session_id} 
                     variant="default"
