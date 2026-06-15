@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../../hooks/queries/useAuth';
-import { useCreateSet } from '../../../hooks/mutations/useSetsMutations';
-import { CheckIcon, PlusIcon } from '../../icons';
+import { useState } from 'react';
+import { useAuth } from '../../hooks/queries/useAuth';
+import { useWeightUnit } from '../../hooks/useWeightUnit';
+import { CheckIcon, PlusIcon } from '../icons';
+import { useRestStore } from '../../stores/restStore';
+import { useSetsStore } from '../../stores/setsStore';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -15,23 +17,33 @@ const XIcon = ({ className }) => (
   </svg>
 );
 
-export default function SetModal({ exercise, onClose }) {
+export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
-  const [unit, setUnit] = useState('kg');
+  
+  const { unit, toggleUnit, convertToKg } = useWeightUnit();
   
   const [etiqueta, setEtiqueta] = useState('none');
   const [isEtiquetaModalOpen, setIsEtiquetaModalOpen] = useState(false);
   
-  const [date, setDate] = useState('Ahora');
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const handleToggleUnit = () => {
+    if (unit === 'kg') {
+      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(2)));
+    } else {
+      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(2)));
+    }
+    toggleUnit();
+  };
+
+  const { startRest } = useRestStore();
+
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const restTime = rest_time || 1;
+  const { addSet } = useSetsStore();
 
   if (!exercise) return null;
 
@@ -55,18 +67,23 @@ export default function SetModal({ exercise, onClose }) {
     if (!profile_id || isSaving) return;
 
     setIsSaving(true);
-    let weightInKg = Number(weight || 0);
-    if (unit === 'lb') {
-      weightInKg = weightInKg * 0.453592;
-    }
+    const weightInKg = convertToKg(weight);
 
     try {
-      await createSet({
+      const setData = {
         profile_id,
         exercise_id: exercise.id,
         rep: Number(reps || 0),
         weight: Number(weightInKg.toFixed(2))
-      });
+      };
+
+      if (onSaveOverride) {
+        onSaveOverride(setData);
+      } else {
+        addSet(setData);
+      }
+ 
+      startRest(restTime);
       handleCloseWithAnimation(null);
     } catch (error) {
       console.error("Error al guardar el set:", error);
@@ -138,13 +155,13 @@ export default function SetModal({ exercise, onClose }) {
           <div className="grid grid-cols-2 gap-4 mb-6">
             {/* Lado izquierdo: REPS */}
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl">
-              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Reps</span>
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Repeticiones</span>
               <div className="flex items-center justify-between w-full px-2">
                 <button 
                   onClick={() => handleAdjustReps(-1)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <MinusIcon className="w-5 h-5" />
+                  <MinusIcon className="w-4 h-4" />
                 </button>
                 
                 <input 
@@ -157,9 +174,9 @@ export default function SetModal({ exercise, onClose }) {
                 
                 <button 
                   onClick={() => handleAdjustReps(1)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -170,9 +187,9 @@ export default function SetModal({ exercise, onClose }) {
               <div className="flex items-center justify-between w-full px-2">
                 <button 
                   onClick={() => handleAdjustWeight(-weightStep)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <MinusIcon className="w-5 h-5" />
+                  <MinusIcon className="w-4 h-4" />
                 </button>
                 
                 <input 
@@ -185,9 +202,9 @@ export default function SetModal({ exercise, onClose }) {
                 
                 <button 
                   onClick={() => handleAdjustWeight(weightStep)}
-                  className="w-10 h-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -202,7 +219,6 @@ export default function SetModal({ exercise, onClose }) {
                 <button 
                   onClick={() => {
                     setIsEtiquetaModalOpen(!isEtiquetaModalOpen);
-                    setIsCalendarOpen(false);
                   }}
                   className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors capitalize ${
                     etiqueta !== 'none' ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/20' : 'bg-white/10 hover:bg-white/20 text-zinc-300'
@@ -230,52 +246,11 @@ export default function SetModal({ exercise, onClose }) {
 
               {/* Botón LB / KG */}
               <button 
-                onClick={() => setUnit(prev => prev === 'kg' ? 'lb' : 'kg')}
+                onClick={handleToggleUnit}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold text-zinc-300 whitespace-nowrap transition-colors uppercase"
               >
                 {unit === 'kg' ? 'LB' : 'KG'}
               </button>
-
-              {/* Dropdown Ahora (Calendario) */}
-              <div className="relative">
-                <button 
-                  onClick={() => {
-                    setIsCalendarOpen(!isCalendarOpen);
-                    setIsEtiquetaModalOpen(false);
-                  }}
-                  className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                    date !== 'Ahora' ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/20' : 'bg-white/10 hover:bg-white/20 text-zinc-300'
-                  }`}
-                >
-                  {date === 'Ahora' ? 'Ahora' : new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </button>
-                
-                {isCalendarOpen && (
-                  <div className="absolute bottom-full mb-2 left-0 p-4 bg-[#2A2424] border border-white/10 rounded-2xl shadow-xl z-50 animate-fade-in flex flex-col gap-3 min-w-[200px]">
-                    <span className="text-sm font-bold text-white">Seleccionar fecha</span>
-                    <input 
-                      type="datetime-local" 
-                      value={date === 'Ahora' ? '' : date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="bg-white/5 border border-white/10 text-white text-sm rounded-xl p-2 outline-none focus:border-karga-orange transition-colors [color-scheme:dark]"
-                    />
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button 
-                        onClick={() => { setDate('Ahora'); setIsCalendarOpen(false); }}
-                        className="px-3 py-1.5 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
-                      >
-                        Reset
-                      </button>
-                      <button 
-                        onClick={() => setIsCalendarOpen(false)}
-                        className="px-3 py-1.5 text-xs font-bold bg-karga-orange text-white rounded-lg active:scale-95 transition-transform"
-                      >
-                        Listo
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
             
             {/* Botón Guardar */}

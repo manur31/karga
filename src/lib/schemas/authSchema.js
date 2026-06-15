@@ -25,5 +25,5 @@ export const onboardingSchema = z.object({
   weight: z.coerce
     .number({ invalid_type_error: "Ingresá un número válido" })
     .positive("El peso debe ser mayor a 0")
-    .max(300, "Ingresá un peso real"),
+    .max(800, "Ingresá un peso real"),
 });

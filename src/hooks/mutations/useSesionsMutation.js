@@ -10,10 +10,7 @@ export const useCreateSession = (profile_id) => {
 
   return useMutation({
     mutationFn: (data) => {
-      return insertSession({
-        ...data,
-        profile_id,
-      });
+      return insertSession(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

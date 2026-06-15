@@ -1,8 +1,17 @@
-import { FiMoreVertical, FiPause, FiPlay, FiX } from "react-icons/fi";
+import { FiMoreVertical, FiPause, FiPlay, FiX, FiEdit3 } from "react-icons/fi";
 import { useSesionStore } from "../stores/sesionStore";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import formatSeconds from "../lib/formatSeconds";
+import { useCalendarStore } from "../stores/calendarStore";
+import { useSyncSessions, useSyncSets } from "../hooks/useSync";
+import { useAuth } from "../hooks/queries/useAuth";
+import { useNavigate, useLocation } from "react-router";
+import ConfirmModal from "./modals/ConfirmModal";
+import ManualSessionModal from "./modals/ManualSessionModal";
+import SessionNoteModal from "./modals/SessionNoteModal";
 
-function SessionTimer() {
+function SessionTimer({profile_id}) {
+  const navigate = useNavigate();
   const {
     start,
     pause,
@@ -11,87 +20,189 @@ function SessionTimer() {
     seconds,
     continue: continueTimer,
     isStarted,
+    startedAt,
+    finishedAt,
+    sessions,
+    note,
+    setNote
   } = useSesionStore();
+
+
+  const { addLocalSessions } = useCalendarStore();
+  const { sync: syncSessions } = useSyncSessions(profile_id);
+  const { sync: syncSets } = useSyncSets(profile_id);
+
+  const location = useLocation();
   const [isRunning, setIsRunning] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [showConfirmDiscard, setShowConfirmDiscard] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  
+  const menuRef = useRef(null);
 
-  const fmtTime = (seconds) => {
-    const hour = Math.floor(seconds / 3600);
-    const minute = Math.floor((seconds % 3600) / 60);
-    const sec = seconds % 60;
-    return [hour, minute, sec].map((n) => String(n).padStart(2, "0")).join(":");
+  const closeMenu = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setShowMenu(false);
+      setIsClosing(false);
+    }, 200);
   };
 
-  const handlePlayPause = () => {
-    if (isRunning) {
-      pause();
-      setIsRunning(false);
-    } else {
-      if (isStarted) {
-        continueTimer();
-      } else {
-        start();
-      }
-
-      setIsRunning(true);
+  const toggleMenu = () => {
+    if (showMenu && !isClosing) {
+      closeMenu();
+    } else if (!showMenu) {
+      setShowMenu(true);
     }
   };
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        if (showMenu && !isClosing) {
+          closeMenu();
+        }
+      }
+    }
+    
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMenu, isClosing]);
+
   const handleDiscard = () => {
     discard();
     setIsRunning(false);
     setShowMenu(false);
+    setIsClosing(false);
+    setShowConfirmDiscard(false);
   };
 
   const handleFinish = () => {
-    finish();
+    finish(profile_id);
     setIsRunning(false);
     setShowMenu(false);
+    setIsClosing(false);
+    syncSessions(profile_id);
+    syncSets(profile_id);
   };
 
-  return (
-    <section>
-      <div className="flex items-center justify-between px-10">
-        {isStarted ? (
-          <p className="text-center text-xl font-medium tracking-widest tabular-nums text-white mb-1">
-            {fmtTime(seconds)}
-          </p>
-        ) : (
-          <h2>Session Timer</h2>
-        )}
+  const isSessionsPage = location.pathname.toLowerCase().includes('/sessions');
 
-        <div className="flex items-center gap-2">
-          {isRunning ? (
-            <FiPause onClick={handlePlayPause} />
-          ) : (
-            <FiPlay onClick={handlePlayPause} />
-          )}
-          <div className="relative">
-            <FiMoreVertical onClick={() => setShowMenu(!showMenu)} />
-            <div>
-              {showMenu && (
-                <div className="absolute -top-20 right-0 bg-karga-gray py-2 px-4 rounded-lg flex flex-col gap-2 items-end">
-                  <FiX onClick={() => setShowMenu(false)} />
-                  <div className="flex flex-col gap-2">
-                    <button
-                      className="border-none bg-transparent text-white"
-                      onClick={handleDiscard}
-                    >
-                      Discard
-                    </button>
-                    <button
-                      className="border-none bg-transparent text-white"
-                      onClick={handleFinish}
-                    >
-                      Finish
-                    </button>
-                  </div>
-                </div>
-              )}
+  if (!isStarted && !isSessionsPage) return null;
+
+  if (!isStarted) {
+    return (
+      <>
+        <div className="fixed bottom-[107px] z-40 w-full max-w-md mx-auto left-0 right-0 flex justify-end px-4 pointer-events-none">
+        <div className="relative pointer-events-auto" ref={menuRef}>
+            {(showMenu || isClosing) && (
+              <div className={`absolute bottom-full right-0 mb-4 bg-[#2A2424] py-3 px-4 rounded-2xl flex flex-col gap-3 min-w-48 border border-white/5 shadow-2xl text-left ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
+                <button 
+                  className="text-white text-sm font-bold text-left hover:text-karga-orange transition-colors"
+                  onClick={() => { start(); setIsRunning(true); setShowMenu(false); setIsClosing(false); }}
+                >
+                  Empezar sesión
+                </button>
+                <div className="h-px bg-white/5 w-full" />
+                <button 
+                  className="text-white text-sm font-bold text-left hover:text-karga-orange transition-colors"
+                  onClick={() => { closeMenu(); setShowManualModal(true); }}
+                >
+                  Entrada manual
+                </button>
+              </div>
+            )}
+            <button 
+              onClick={toggleMenu} 
+              className="w-14 h-14 bg-karga-orange hover:bg-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-karga-orange/20 transition-all active:scale-95"
+            >
+              <FiPlay className="w-6 h-6 text-white ml-1" />
+            </button>
+          </div>
+        </div>
+
+        {showManualModal && (
+          <ManualSessionModal onClose={() => setShowManualModal(false)} />
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="fixed bottom-[90px] left-0 right-0 bg-[#2A2424] border-t border-white/5 text-white py-3 px-6 z-40 shadow-lg animate-slide-in-up">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-karga-orange animate-pulse" />
+            <span className="font-bold text-sm text-zinc-300 tracking-wide">
+              Sesión activa: <span className="text-white tabular-nums ml-1">{formatSeconds(seconds)}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowNoteModal(true)} 
+              className={`w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors ${note ? 'text-karga-orange border-karga-orange/30' : 'text-zinc-300'}`}
+            >
+              <FiEdit3 className="w-4 h-4" />
+            </button>
+            <div className="relative" ref={menuRef}>
+              <button 
+                onClick={toggleMenu} 
+                className="w-8 h-8 flex items-center justify-center bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <FiX className="w-5 h-5 text-zinc-300" />
+              </button>
+              
+              {(showMenu || isClosing) && (
+              <div className={`absolute bottom-full right-0 mb-4 bg-[#2A2424] py-3 px-4 rounded-2xl flex flex-col gap-3 min-w-48 border border-white/5 shadow-2xl text-left ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
+                <button 
+                  onClick={handleFinish} 
+                  className="text-white text-sm font-bold text-left hover:text-karga-orange transition-colors"
+                >
+                  Finalizar sesión
+                </button>
+                <div className="h-px bg-white/5 w-full" />
+                <button 
+                  onClick={() => { closeMenu(); setShowConfirmDiscard(true); }} 
+                  className="text-red-500 text-sm font-bold text-left hover:text-red-400 transition-colors"
+                >
+                  Descartar sesión
+                </button>
+              </div>
+            )}
             </div>
           </div>
         </div>
       </div>
-    </section>
+
+      <ConfirmModal
+        isOpen={showConfirmDiscard}
+        title="¿Descartar sesión?"
+        description="Se perderá el progreso actual de esta sesión y no se guardará en tu historial."
+        confirmText="Descartar"
+        cancelText="Cancelar"
+        danger={true}
+        onConfirm={handleDiscard}
+        onClose={() => setShowConfirmDiscard(false)}
+      />
+
+      {showManualModal && (
+        <ManualSessionModal onClose={() => setShowManualModal(false)} />
+      )}
+
+      <SessionNoteModal 
+        isOpen={showNoteModal}
+        onClose={() => setShowNoteModal(false)}
+        initialNote={note}
+        onSave={setNote}
+      />
+    </>
   );
 }
 

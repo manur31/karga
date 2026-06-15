@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useAuth } from '../../../hooks/queries/useAuth';
-import { useFavoriteExercises } from '../../../hooks/queries/useExercises';
-import { useDeleteExercise, useUpdateFavorite } from '../../../hooks/mutations/useExercisesMutations';
-import { ArrowLeft } from '../../icons';
+import { createPortal } from 'react-dom';
+import { useAuth } from '../../hooks/queries/useAuth';
+import { useFavoriteExercises } from '../../hooks/queries/useExercises';
+import { useDeleteExercise, useUpdateFavorite } from '../../hooks/mutations/useExercisesMutations';
+import { ArrowLeft } from '../icons';
 
 const HeartIcon = ({ filled, className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={filled ? 0 : 2} stroke="currentColor" className={className}>
@@ -55,7 +56,7 @@ export default function MyExercisesModal({ onClose }) {
     return false;
   }) || [];
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end pointer-events-auto">
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
@@ -185,5 +186,5 @@ export default function MyExercisesModal({ onClose }) {
       )}
 
     </div>
-  );
+  , document.body);
 }

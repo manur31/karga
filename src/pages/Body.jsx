@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import Card from '../components/Card/Card';
 import Button from '../components/Button/Button';
 import ExpandArrowIcon from '../components/icons/ExpandArrowIcon';
 
 export default function Body() {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   
   //estados 

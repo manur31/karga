@@ -28,6 +28,16 @@ export const deleteRoutines = async ({ profile_id, routine_id }) => {
   if (error) throw error;
 };
 
+export const deleteExercisesRoutine = async ({ routine_id, id_exercises }) => {
+  const { error } = await supabase
+    .from("routines_exercises")
+    .delete()
+    .eq("routine_id", routine_id)
+    .in("id_exercises", id_exercises);
+
+  if (error) throw error;
+};
+
 export const insertExercisesRoutine = async ({
   profile_id,
   routine_id,

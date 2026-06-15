@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../../hooks/queries/useAuth';
-import { useExercises, useFavoriteExercises } from '../../../hooks/queries/useExercises';
-import { useUpdateFavorite, useAddToFavorite } from '../../../hooks/mutations/useExercisesMutations';
-import { formatRelativeTime } from '../../../utils/timeFormatter';
-import { ArrowLeft, CheckIcon, PlusIcon } from '../../icons';
-import SetModal from '../SetModal/SetModal';
-import ExerciseHistoryModal from '../ExerciseHistoryModal/ExerciseHistoryModal';
+import { createPortal } from 'react-dom';
+import { useAuth } from '../../hooks/queries/useAuth';
+import { useExercises, useFavoriteExercises } from '../../hooks/queries/useExercises';
+import { useUpdateFavorite, useAddToFavorite } from '../../hooks/mutations/useExercisesMutations';
+import { useDeleteExercisesRoutine } from '../../hooks/mutations/useRoutinesMutation';
+import { formatRelativeTime } from '../../utils/timeFormatter';
+import { ArrowLeft, CheckIcon, PlusIcon } from '../icons';
+import SetModal from './SetModal';
+import ExerciseHistoryModal from './ExerciseHistoryModal';
+import CustomExerciseModal from './CustomExerciseModal';
+import ConfirmModal from './ConfirmModal';
 
 const HeartIcon = ({ filled, className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={filled ? 0 : 2} stroke="currentColor" className={className}>
@@ -72,6 +76,11 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [isClosing, setIsClosing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
+
+  const handleCreateCustomExercise = () => {
+    setIsCustomExerciseModalOpen(true);
+  };
 
   const [selectedExerciseToLog, setSelectedExerciseToLog] = useState(null);
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
@@ -79,6 +88,45 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] = useState(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedExercisesForDelete, setSelectedExercisesForDelete] = useState([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showDeleteRoutineConfirmDialog, setShowDeleteRoutineConfirmDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { mutateAsync: deleteExercisesRoutine } = useDeleteExercisesRoutine(profile_id);
+
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    setSelectedExercisesForDelete([]);
+    setIsMenuOpen(false);
+  };
+
+  const toggleDeleteSelection = (exerciseId) => {
+    setSelectedExercisesForDelete(prev => 
+      prev.includes(exerciseId) 
+        ? prev.filter(id => id !== exerciseId)
+        : [...prev, exerciseId]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!profile_id || selectedExercisesForDelete.length === 0) return;
+    setIsDeleting(true);
+    try {
+      await deleteExercisesRoutine({
+        routine_id: routine.routine_id,
+        id_exercises: selectedExercisesForDelete
+      });
+      setIsEditMode(false);
+      setSelectedExercisesForDelete([]);
+      setShowConfirmDialog(false);
+    } catch (error) {
+      console.error("Error al borrar ejercicios de la rutina:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -97,6 +145,12 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
   }, [isMenuOpen]);
 
   const handleDeleteClick = () => {
+    setIsMenuOpen(false);
+    setShowDeleteRoutineConfirmDialog(true);
+  };
+
+  const handleConfirmDeleteRoutine = () => {
+    setShowDeleteRoutineConfirmDialog(false);
     if (onDeleteRoutine) {
       onDeleteRoutine();
     }
@@ -145,7 +199,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
 
   if (!routine) return null;
 
-  return (
+  return createPortal(
     <>
       <div className="fixed top-0 bottom-[76px] left-0 w-full sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 z-40 flex flex-col overflow-hidden pointer-events-none">
       
@@ -166,11 +220,6 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
             <span className="text-lg font-black text-white tracking-tight truncate w-full text-center">
               {isAddingExercises && !isAddingClosing ? "Seleccionar ejercicios" : (routine.name?.trim() ? routine.name : "Nueva rutina")}
             </span>
-            {(!isAddingExercises || isAddingClosing) && routine.description && (
-              <span className="text-sm font-medium text-zinc-400 truncate w-full text-center mt-0.5 animate-fade-in">
-                {routine.description}
-              </span>
-            )}
           </div>
           
           {isAddingExercises && !isAddingClosing ? (
@@ -180,6 +229,13 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
               className="text-karga-orange font-bold text-sm px-2 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity animate-fade-in"
             >
               Guardar
+            </button>
+          ) : isEditMode ? (
+            <button 
+              onClick={toggleEditMode}
+              className="text-karga-orange font-bold text-sm px-2 py-1.5 active:scale-95 transition-all w-16 text-right"
+            >
+              Cancelar
             </button>
           ) : (
             <div className="relative" ref={menuRef}>
@@ -192,6 +248,12 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
               
               {isMenuOpen && (
                 <div className="absolute top-full right-0 mt-2 w-48 bg-[#2A2424] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+                  <button 
+                    onClick={toggleEditMode}
+                    className="w-full text-left px-4 py-3 text-sm font-bold text-zinc-300 hover:bg-white/5 transition-colors border-b border-white/5"
+                  >
+                    Editar ejercicios
+                  </button>
                   <button 
                     onClick={handleDeleteClick}
                     className="w-full text-left px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors"
@@ -209,13 +271,22 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
           
           {/* VISTA DE DETALLE (SCROLLABLE) */}
           <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:none">
-            <button
-              onClick={() => setIsAddingExercises(true)}
-              className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-full font-bold shadow-xl shadow-karga-orange/20 transition-all active:scale-[0.98]"
-            >
-              <PlusIcon className="w-5 h-5" />
-              Agregar ejercicios
-            </button>
+            
+            {routine.description && (
+              <p className="text-sm font-medium text-zinc-400 text-center -mt-2 animate-fade-in leading-relaxed">
+                {routine.description}
+              </p>
+            )}
+
+            {!isEditMode && (
+              <button
+                onClick={() => setIsAddingExercises(true)}
+                className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-full font-bold shadow-lg transition-all active:scale-[0.98]"
+              >
+                <PlusIcon className="w-5 h-5" />
+                Agregar ejercicios
+              </button>
+            )}
 
             <div className="flex flex-col gap-3">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1 mb-1">
@@ -240,12 +311,32 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                       return (
                         <div 
                           key={exercise.id}
-                          onClick={() => handleExerciseClick(exercise)}
-                          className="flex items-center justify-between p-4 bg-[var(--color-input-bg)] rounded-2xl hover:bg-white/5 transition-colors cursor-pointer"
+                          onClick={() => {
+                            if (isEditMode) toggleDeleteSelection(exercise.id);
+                            else handleExerciseClick(exercise);
+                          }}
+                          className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
+                            isEditMode && selectedExercisesForDelete.includes(exercise.id)
+                              ? 'bg-red-500/10 border border-red-500/50'
+                              : 'bg-[var(--color-input-bg)] border border-transparent hover:bg-white/5'
+                          }`}
                         >
-                          <div className="flex flex-col pr-4">
-                            <span className="text-[15px] font-bold text-white tracking-tight">{exercise.name}</span>
-                            <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">{exercise.muscle}</span>
+                          <div className="flex items-center gap-3">
+                            {isEditMode && (
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                                selectedExercisesForDelete.includes(exercise.id) ? 'bg-red-500 border-red-500' : 'border-zinc-500'
+                              }`}>
+                                {selectedExercisesForDelete.includes(exercise.id) && (
+                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            )}
+                            <div className="flex flex-col pr-4">
+                              <span className="text-[15px] font-bold text-white tracking-tight">{exercise.name}</span>
+                              <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">{Array.isArray(exercise.muscle) ? exercise.muscle.join(' - ') : exercise.muscle}</span>
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-3">
@@ -255,16 +346,18 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                               >
                                 <HeartIcon filled={isFav} className={`w-5 h-5 ${isFav ? 'text-red-500' : ''}`} />
                               </button>
-                              <div 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedExerciseToLog(exercise);
-                                  setIsSetModalOpen(true);
-                                }}
-                                className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                              >
-                                <PlusIcon className="w-5 h-5 text-white" />
-                              </div>
+                              {!isEditMode && (
+                                <div 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedExerciseToLog(exercise);
+                                    setIsSetModalOpen(true);
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                >
+                                  <PlusIcon className="w-5 h-5 text-white" />
+                                </div>
+                              )}
                           </div>
                         </div>
                       );
@@ -318,8 +411,8 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                   >
                     <div className="flex flex-col flex-1 pr-4">
                       <span className="text-[15px] text-zinc-100 font-bold tracking-tight">{exercise.name}</span>
-                      <span className="text-[11px] text-zinc-500 font-semibold mt-0.5">
-                        {alreadyInRoutine ? 'Ya está en la rutina' : exercise.muscle}
+                      <span className="text-[11px] text-zinc-500 font-semibold mt-0.5 capitalize">
+                        {alreadyInRoutine ? 'Ya está en la rutina' : (Array.isArray(exercise.muscle) ? exercise.muscle.join(' - ') : exercise.muscle)}
                       </span>
                     </div>
 
@@ -350,6 +443,33 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
               })
             )}
               </div>
+
+              {/* BOTÓN CREAR EJERCICIO PERSONALIZADO */}
+              <div className="absolute bottom-[-0.1px] inset-x-0 p-5 pb-0 pt-12 bg-linear-to-t from-[var(--color-dark-bg)] via-[var(--color-dark-bg)] to-transparent z-30">
+                <button
+                  type="button"
+                  onClick={handleCreateCustomExercise}
+                  className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl border-2 border-dashed border-white/10 text-zinc-400 font-bold text-sm hover:border-karga-orange/40 hover:text-karga-orange hover:bg-karga-orange/5 transition-all active:scale-[0.99] bg-[var(--color-dark-bg)] shadow-2xl"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Crear ejercicio personalizado
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* FAB DELETE */}
+          {isEditMode && selectedExercisesForDelete.length > 0 && !isAddingExercises && (
+            <div className="absolute bottom-8 left-6 z-30 animate-slide-in-up">
+              <button
+                onClick={() => setShowConfirmDialog(true)}
+                className="h-14 px-6 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center transition-all active:scale-95 gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+                Eliminar {selectedExercisesForDelete.length} ejercicio{selectedExercisesForDelete.length !== 1 ? 's' : ''}
+              </button>
             </div>
           )}
 
@@ -372,6 +492,35 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
           onClose={() => setIsSetModalOpen(false)} 
         />
       )}
+
+      {/* CUSTOM EXERCISE MODAL */}
+      {isCustomExerciseModalOpen && (
+        <CustomExerciseModal onClose={() => setIsCustomExerciseModalOpen(false)} />
+      )}
+
+      {/* ConfirmModal para borrar ejercicios */}
+      <ConfirmModal 
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleDeleteSelected}
+        title="¿Eliminar ejercicios?"
+        description={`Estás a punto de eliminar ${selectedExercisesForDelete.length} ejercicio${selectedExercisesForDelete.length !== 1 ? 's' : ''} de esta rutina. Puedes volver a agregarlos en cualquier momento.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        danger={true}
+      />
+
+      {/* ConfirmModal para borrar rutina */}
+      <ConfirmModal 
+        isOpen={showDeleteRoutineConfirmDialog}
+        onClose={() => setShowDeleteRoutineConfirmDialog(false)}
+        onConfirm={handleConfirmDeleteRoutine}
+        title="¿Eliminar rutina?"
+        description={`Estás a punto de eliminar la rutina "${routine.name}". Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        danger={true}
+      />
     </>
-  );
+  , document.body);
 }

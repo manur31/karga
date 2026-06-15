@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Card from "../../components/Card/Card";
 import Avatar from "../../components/Avatar/Avatar";
 import ChevronIcon from "../../components/icons/ChevronIcon";
@@ -20,9 +20,18 @@ export default function RoutinesList({ routines, onOpenRoutine }) {
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => {
-    localStorage.setItem('pinnedRoutines', JSON.stringify(pinnedRoutines));
-  }, [pinnedRoutines]);
+  if(routines.length === 0) {
+    return (
+      <div>
+        <h2 className="text-lg font-bold text-white mb-4">Mis Rutinas</h2>
+        <p className="text-gray-400">No hay rutinas disponibles</p>
+      </div>
+    );
+  }
+
+  // useEffect(() => {
+  //   localStorage.setItem('pinnedRoutines', JSON.stringify(pinnedRoutines));
+  // }, []);
 
   const togglePin = (e, routineId) => {
     e.preventDefault();
@@ -62,7 +71,7 @@ export default function RoutinesList({ routines, onOpenRoutine }) {
               onClick={() => onOpenRoutine(data.routine_id)}
               className={`p-4 flex flex-row items-center gap-4 cursor-pointer active:scale-[0.98] transition-all min-w-0 flex-1 ${
                 isPinned 
-                  ? 'border-karga-orange/30 bg-[var(--color-dark-bg)] shadow-sm shadow-karga-orange/5' 
+                  ? 'border-karga-orange/30 bg-dark-bg shadow-sm shadow-karga-orange/5' 
                   : 'hover:bg-white/5 border-transparent'
               }`}
             >
@@ -84,7 +93,7 @@ export default function RoutinesList({ routines, onOpenRoutine }) {
                     isPinned ? 'text-karga-orange bg-karga-orange/10' : 'text-zinc-500 bg-transparent'
                   }`}
                 >
-                  <PinIcon filled={isPinned} className="w-[18px] h-[18px]" />
+                  <PinIcon filled={isPinned} className="w-4 h-4" />
                 </button>
                 <ChevronIcon className="w-5 h-5 text-zinc-600" direction="right" />
               </div>

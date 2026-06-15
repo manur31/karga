@@ -4,6 +4,7 @@ import Button from '../components/Button/Button';
 import Input from '../components/Input/Input';
 import { ArrowLeft, ArrowRight } from '../components/icons';
 import { useOnboarding } from '../hooks/mutations/useAuthMutations';
+import { useWeightUnit } from '../hooks/useWeightUnit';
 import { useForm } from "react-hook-form";
 import { onboardingSchema } from "../lib/schemas/authSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +17,7 @@ export default function Onboarding() {
     register,
     handleSubmit,
     setValue, //inyectar valores a mano sin usar <input>
+    getValues, //obtener valores para convertirlos manualmente
     watch,    //mirar en tiempo real cuánto vale una variable
     trigger,  //forzar la validación de un paso antes de avanzar
     formState: { errors },
@@ -32,9 +34,12 @@ export default function Onboarding() {
   const weeklyFrequency = watch("weeklyFrequency");
   const restTime = watch("restTime");
 
+  const { convertToKg } = useWeightUnit();
+
   const { mutate: onboardingMutate, isPending } = useOnboarding();
 
-  const handleNext = async () => {
+  const handleNext = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (step === 3) { 
       const isWeightValid = await trigger("weight");
       if (!isWeightValid) return;
@@ -48,9 +53,8 @@ export default function Onboarding() {
     const onboardingData = {
       size: 181,
       time_for_week: data.weeklyFrequency,
-      weight: data.weight,
+      weight: convertToKg(data.weight),
       rest_time: data.restTime,
-      id: "02e22669-2c7c-452f-b459-0741cdaf8d3e",
     };
   
     onboardingMutate(onboardingData, {
@@ -95,6 +99,8 @@ export default function Onboarding() {
                 <Step3
                   register={register}
                   errors={errors}
+                  setValue={setValue}
+                  getValues={getValues}
                 />
               )}
             </div>
@@ -112,12 +118,12 @@ export default function Onboarding() {
 
                 <div className={step > 1 ? "w-3/4" : "w-full"}>
                   {step < 3 ? (
-                    <Button type="button" variant="primary" size="lg" onClick={handleNext} className="w-full group">
+                    <Button key="btn-next" type="button" variant="primary" size="lg" onClick={handleNext} className="w-full group">
                       <span>Siguiente</span>
                       <ArrowRight className="w-6 h-5 inline-block transition-all duration-300 group-hover:translate-x-1" />
                     </Button>
                   ) : (
-                    <Button type="submit" variant="primary" size="lg" className="w-full group">
+                    <Button key="btn-submit" type="submit" variant="primary" size="lg" className="w-full group">
                       <span>Finalizar</span>
                     </Button>
                   )}
@@ -213,7 +219,21 @@ function Step2({ restTime, setValue }) {
   );
 }
 
-function Step3({ register, errors }) {
+function Step3({ register, errors, setValue, getValues }) {
+  const { unit, toggleUnit } = useWeightUnit();
+
+  const handleToggle = () => {
+    const currentVal = getValues("weight");
+    if (currentVal && !isNaN(currentVal)) {
+      if (unit === 'kg') {
+        setValue("weight", Number((currentVal * 2.20462).toFixed(1)));
+      } else {
+        setValue("weight", Number((currentVal / 2.20462).toFixed(1)));
+      }
+    }
+    toggleUnit();
+  };
+
   return (
     <div className="flex flex-col w-full animate-fade-in">
       <div className="flex flex-col mb-10">
@@ -248,9 +268,13 @@ function Step3({ register, errors }) {
             */
             {...register("weight")} 
           />
-          <span className="absolute right-6 text-zinc-500 font-bold text-xl pointer-events-none">
-            kg
-          </span>
+          <button 
+            type="button"
+            onClick={handleToggle}
+            className="absolute right-4 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl text-zinc-400 hover:text-white font-bold text-sm uppercase transition-all active:scale-95 border border-white/5"
+          >
+            {unit}
+          </button>
         </div>
         
         {/* El cartel de error solo aparecerá si realmente hay un error confirmado */}
