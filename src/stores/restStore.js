@@ -41,8 +41,9 @@ export const useRestStore = create(
         if (intervalId) {
           clearInterval(intervalId);
         }
-        
-        if (restTime !== 0 || isRunning) { // or just check if interval is needed
+
+        if (restTime !== 0 || isRunning) {
+          // or just check if interval is needed
           const id = setInterval(() => {
             const currentTime = get().restTime;
 
@@ -72,7 +73,7 @@ export const useRestStore = create(
       },
     }),
     {
-      name: 'rest-storage',
-    }
-  )
+      name: "rest-storage",
+    },
+  ),
 );
