@@ -84,7 +84,7 @@ export const useRestStore = create(
       },
     }),
     {
-      name: 'rest-storage',
-    }
-  )
+      name: "rest-storage",
+    },
+  ),
 );

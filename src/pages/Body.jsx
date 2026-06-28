@@ -1,66 +1,126 @@
-import { useState, useEffect } from 'react';
-import Card from '../components/Card/Card';
-import Button from '../components/Button/Button';
-import ExpandArrowIcon from '../components/icons/ExpandArrowIcon';
+import { useMemo, useState } from "react";
+import Card from "../components/Card/Card";
+import Button from "../components/Button/Button";
+import ExpandArrowIcon from "../components/icons/ExpandArrowIcon";
+import { useAuth } from "../hooks/queries/useAuth";
+import { useSets } from "../hooks/queries/useSets";
+import { useRegisterWeight } from "../hooks/mutations/useBodyMutations";
 
 export default function Body() {
-  const [isLoading, setIsLoading] = useState(true);
-  
-  //estados 
-  const [weightData, setWeightData] = useState({ current: 0, trend: '', isPositive: true });
-  const [weeklyProgress, setWeeklyProgress] = useState([]);
-  const [muscleActivity, setMuscleActivity] = useState([]);
+  const { data: user, isLoading: isAuthLoading } = useAuth();
 
-  useEffect(() => {
-    // hacer los fetch a las tablas 
-    const fetchBodyData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+  const profile_id = user?.profile_id;
 
-        // mock, boceto de estructura de respuesta esperada
-        const mockWeight = {
-          current: 72.4,
-          trend: '+0.6 kg',
-          isPositive: true // detalle, para saber si la card es verde (subida de masa) o rojo/naranja
-        };
+  const { data: sets = [], isLoading: isSetsLoading } = useSets(profile_id);
 
-        const mockWeekly = [
-          { day: 'L', value: 20 },
-          { day: 'M', value: 0 },
-          { day: 'M', value: 40 },
-          { day: 'J', value: 10 },
-          { day: 'V', value: 80 },
-          { day: 'S', value: 0 },
-          { day: 'D', value: 0 },
-        ];
+  const { mutateAsync: registerWeight, isPending: isRegisteringWeight } =
+    useRegisterWeight(profile_id);
 
-        const mockMuscles = [
-          { id: 1, name: 'Pecho', percentage: 82, colorClass: 'bg-karga-orange' },
-          { id: 2, name: 'Espalda', percentage: 64, colorClass: 'bg-amber-500' },
-          { id: 3, name: 'Piernas', percentage: 78, colorClass: 'bg-karga-orange' },
-          { id: 4, name: 'Hombros', percentage: 50, colorClass: 'bg-zinc-500' },
-        ];
+  const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
+  const [newWeight, setNewWeight] = useState("");
 
-        setWeightData(mockWeight);
-        setWeeklyProgress(mockWeekly);
-        setMuscleActivity(mockMuscles);
-      } catch (error) {
-        console.error("Error al cargar las métricas corporales:", error);
-      } finally {
-        setIsLoading(false);
+  const isLoading = isAuthLoading || isSetsLoading;
+
+  const getStartOfWeek = () => {
+    const today = new Date();
+    const day = today.getDay();
+
+    const diff = day === 0 ? -6 : 1 - day;
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+
+    return monday;
+  };
+
+  const weeklyProgress = useMemo(() => {
+    const days = [
+      { day: "L", value: 0 },
+      { day: "M", value: 0 },
+      { day: "M", value: 0 },
+      { day: "J", value: 0 },
+      { day: "V", value: 0 },
+      { day: "S", value: 0 },
+      { day: "D", value: 0 },
+    ];
+
+    const startOfWeek = getStartOfWeek();
+
+    sets.forEach((set) => {
+      const setDate = new Date(set.created_at);
+
+      if (Number.isNaN(setDate.getTime())) return;
+      if (setDate < startOfWeek) return;
+
+      const jsDay = setDate.getDay();
+      const index = jsDay === 0 ? 6 : jsDay - 1;
+
+      if (days[index]) {
+        days[index].value += 1;
       }
-    };
+    });
 
-    fetchBodyData();
-  }, []);
+    const maxValue = Math.max(...days.map((day) => day.value), 1);
+
+    return days.map((day) => ({
+      ...day,
+      value: Math.round((day.value / maxValue) * 100),
+      realValue: day.value,
+    }));
+  }, [sets]);
+
+  const muscleActivity = useMemo(() => {
+    const muscleCounter = {};
+
+    sets.forEach((set) => {
+      const muscles = set.exercises?.muscle;
+
+      if (!Array.isArray(muscles)) return;
+
+      muscles.forEach((muscle) => {
+        muscleCounter[muscle] = (muscleCounter[muscle] || 0) + 1;
+      });
+    });
+
+    const maxValue = Math.max(...Object.values(muscleCounter), 1);
+
+    return Object.entries(muscleCounter)
+      .map(([name, value], index) => ({
+        id: index + 1,
+        name,
+        percentage: Math.round((value / maxValue) * 100),
+        colorClass:
+          index % 3 === 0
+            ? "bg-karga-orange"
+            : index % 3 === 1
+              ? "bg-amber-500"
+              : "bg-zinc-500",
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+  }, [sets]);
+
+  const weightData = {
+    current: user?.weight || 0,
+    trend: "+0 kg",
+    isPositive: true,
+  };
 
   const handleRegisterWeight = () => {
-    // aca navegar a la vista de registro de peso o abrir un modal
-    console.log("Abriendo flujo de registro de peso...");
-    // navigate('/body/weight'); por ejmplo
+    setNewWeight(user?.weight || "");
+    setIsWeightModalOpen(true);
+  };
+
+  const handleSubmitWeight = async () => {
+    if (!profile_id) return;
+    if (!newWeight) return;
+
+    await registerWeight({
+      weight: Number(newWeight),
+    });
+
+    setNewWeight("");
+    setIsWeightModalOpen(false);
   };
 
   return (
@@ -82,14 +142,12 @@ export default function Body() {
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          
-          {/*PESO CORPORAL */}
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-2 pl-2">
               Peso Corporal
             </span>
+
             <Card variant="default" className="p-5 flex flex-col gap-5">
-              
               <div className="flex justify-between items-start">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-5xl font-black text-white tracking-tighter">
@@ -100,21 +158,20 @@ export default function Body() {
                   </span>
                 </div>
 
-                {/* Badge de tendencia (Sube de peso) */}
-                <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
-                  weightData.isPositive ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'
-                }`}>
-                  {weightData.isPositive ? (
-                    <ExpandArrowIcon/>
-                  ) : (
-                    <ExpandArrowIcon className="w-3.5 h-3.5 text-zinc-600"/>
-                  )}
+                <div
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
+                    weightData.isPositive
+                      ? "bg-green-500/15 text-green-400"
+                      : "bg-red-500/15 text-red-400"
+                  }`}
+                >
+                  <ExpandArrowIcon />
                   {weightData.trend}
                 </div>
               </div>
 
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 className="w-full py-3.5 text-sm"
                 onClick={handleRegisterWeight}
               >
@@ -123,23 +180,28 @@ export default function Body() {
             </Card>
           </div>
 
-          {/* PROGRESO SEMANAL */}
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-2 pl-2">
               Progreso Semanal
             </span>
-            <Card variant="default" className="p-6 h-40 flex items-end justify-between">
-              {/* gráfico de barras generado con Tailwind */}
+
+            <Card
+              variant="default"
+              className="p-6 h-40 flex items-end justify-between"
+            >
               {weeklyProgress.map((day, index) => (
-                <div key={index} className="flex flex-col items-center gap-2 w-8 h-full">
-                  {/* Track de la barra */}
+                <div
+                  key={index}
+                  className="flex flex-col items-center gap-2 w-8 h-full"
+                >
                   <div className="w-full flex-1 bg-white/5 rounded-md relative flex items-end overflow-hidden">
-                    {/* Fill de la barra */}
-                    <div 
-                      className="w-full bg-karga-orange rounded-sm transition-all duration-700 ease-out" 
-                      style={{ height: `${day.value}%` }} 
+                    <div
+                      className="w-full bg-karga-orange rounded-sm transition-all duration-700 ease-out"
+                      style={{ height: `${day.value}%` }}
+                      title={`${day.realValue} sets`}
                     />
                   </div>
+
                   <span className="text-[10px] text-zinc-500 font-bold uppercase">
                     {day.day}
                   </span>
@@ -148,39 +210,84 @@ export default function Body() {
             </Card>
           </div>
 
-          {/* ACTIVIDAD MUSCULAR . probablemente haya diferencia con las tablas*/}
           <div className="flex flex-col mb-4">
             <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-2 pl-2">
               Actividad Muscular
             </span>
+
             <div className="flex flex-col gap-2">
-              {muscleActivity.map((muscle) => (
-                <Card 
-                  key={muscle.id} 
-                  variant="default" 
-                  className="p-4 flex flex-col gap-2"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-white tracking-wide">
-                      {muscle.name}
-                    </span>
-                    <span className="text-xs font-semibold text-zinc-400">
-                      {muscle.percentage}%
-                    </span>
-                  </div>
-                  
-                  {/* barrahorizontal */}
-                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-1000 ease-out ${muscle.colorClass}`} //
-                      style={{ width: `${muscle.percentage}%` }}
-                    />
-                  </div>
+              {muscleActivity.length === 0 ? (
+                <Card variant="default" className="p-4">
+                  <p className="text-sm text-zinc-400">
+                    Todavía no hay actividad muscular registrada.
+                  </p>
                 </Card>
-              ))}
+              ) : (
+                muscleActivity.map((muscle) => (
+                  <Card
+                    key={muscle.id}
+                    variant="default"
+                    className="p-4 flex flex-col gap-2"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-white tracking-wide">
+                        {muscle.name}
+                      </span>
+
+                      <span className="text-xs font-semibold text-zinc-400">
+                        {muscle.percentage}%
+                      </span>
+                    </div>
+
+                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-1000 ease-out ${muscle.colorClass}`}
+                        style={{ width: `${muscle.percentage}%` }}
+                      />
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
+        </div>
+      )}
 
+      {isWeightModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+          <div className="bg-karga-gray text-white rounded-2xl p-5 w-full max-w-sm border border-white/10 space-y-4">
+            <h2 className="text-2xl font-black">Registrar peso</h2>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm text-zinc-300">Nuevo peso</label>
+
+              <input
+                type="number"
+                step="0.1"
+                placeholder="Ej: 72.4"
+                value={newWeight}
+                onChange={(e) => setNewWeight(e.target.value)}
+                className="bg-black/30 border border-white/10 rounded-xl p-3 text-white outline-none"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsWeightModalOpen(false)}
+                className="flex-1 bg-white/10 rounded-xl p-3"
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={handleSubmitWeight}
+                disabled={isRegisteringWeight}
+                className="flex-1 bg-karga-orange rounded-xl p-3 font-bold disabled:opacity-50"
+              >
+                {isRegisteringWeight ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
