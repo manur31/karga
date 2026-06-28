@@ -52,10 +52,7 @@ export const getSetforID = async (set_id, profile_id) => {
 
 export const createSet = async (sets) => {
   const payload = Array.isArray(sets) ? sets : [sets];
-  const { data, error } = await supabase
-    .from("sets")
-    .insert(payload)
-    .select();
+  const { data, error } = await supabase.from("sets").insert(payload).select();
 
   if (error) throw error;
 
