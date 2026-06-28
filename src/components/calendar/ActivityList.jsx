@@ -31,7 +31,7 @@ export default function ActivityList({ dayActivity, exercises }) {
         </button>
       </div>
 
-      <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'opacity-100 max-h-[2000px] mt-2' : 'opacity-0 max-h-0'}`}>
+      <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'opacity-100 max-h-80 overflow-y-auto mt-2' : 'opacity-0 max-h-0'}`}>
         { isLoading ? (
         <LoadingState/>
       ) : (

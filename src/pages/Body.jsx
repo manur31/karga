@@ -124,7 +124,9 @@ export default function Body() {
   };
 
   return (
-    <div className="flex flex-col w-full animate-fade-in">
+    <div className="flex flex-col w-full animate-fade-in px-4">
+      
+      {/* HEADER*/}
       <div className="mb-6 pl-2">
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">
           Progreso físico

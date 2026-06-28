@@ -136,8 +136,7 @@ export default function HistoryScreen() {
   return (
     // Full-screen dark container — adjust to your router/nav setup
     <div
-      className="min-h-screen flex flex-col w-full animate-fade-in pb-10"
-      style={{ backgroundColor: '#272121' }}
+      className="min-h-screen flex flex-col w-full animate-fade-in bg-dark-bg overflow-hidden relative pb-20 pt-10 px-4"
     >
       {/* Header: title + month navigator */}
       <CalendarHeader
@@ -178,7 +177,7 @@ export default function HistoryScreen() {
             </button>
           </div>
           
-          <div className={`transition-all duration-300 overflow-hidden ${isSessionsOpen ? 'opacity-100 max-h-[1000px] mt-2' : 'opacity-0 max-h-0'}`}>
+          <div className={`transition-all duration-300 overflow-hidden ${isSessionsOpen ? 'opacity-100 max-h-250 mt-2' : 'opacity-0 max-h-0'}`}>
             {selectedSessions?.length > 0 ? (
               selectedSessions.map((session) => (
                 <SessionCard key={session.id} session={session} />

@@ -14,7 +14,7 @@ import DayCell from './DayCell'
 /**
  * WeeklyStrip
  * Props:
- *   selectedDate   string  — "yyyy-MM-dd"
+ *   selectedDate   string  — "yyyy-MM-dd" 
  *   activeDates    Set<string>  — date keys that have activity
  *   onSelectDate   fn(string)  — called with "yyyy-MM-dd"
  *   monthRef       Date        — anchor month from CalendarHeader
@@ -68,7 +68,7 @@ export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate, m
   }
 
   return (
-    <div className="flex items-center gap-1 px-2">
+    <div className="flex items-center">
       {/* Prev week */}
       <button
         onClick={handlePrevWeek}
@@ -81,7 +81,7 @@ export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate, m
       {/* Days strip */}
       <div
         ref={scrollRef}
-        className="flex gap-1 overflow-x-auto flex-1 scrollbar-hide scroll-smooth py-3 -my-3"
+        className="flex gap-1 justify-evenly overflow-x-auto flex-1 scrollbar-hide scroll-smooth py-3 -my-3"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {days.map((day) => {

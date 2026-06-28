@@ -41,9 +41,12 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
       t = setTimeout(() => setVisible(false), 320)
     }
     prevOpen.current = isOpen
+
+    document.body.style.overflow = isOpen ? 'hidden' : 'auto'
     
     return () => {
       if (t) clearTimeout(t)
+      document.body.style.overflow = 'auto'
     }
   }, [isOpen])
 
@@ -59,7 +62,7 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0 bg-black/60 z-[60] transition-opacity duration-300
+          fixed inset-0 ${isOpen ? 'overflow-hidden' : 'overflow-auto'} bg-black/60 z-60 transition-opacity duration-300
           ${animating ? 'opacity-100' : 'opacity-0'}
         `}
         onClick={onClose}
@@ -67,13 +70,12 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
 
       {/* Sheet */}
       <div
-        className={`
-          fixed bottom-0 left-0 right-0 z-[70]
+        className={`absolute bottom-[9%] left-0 right-0 z-70 h-fit
           bg-karga-gray rounded-t-3xl
+          ${isOpen ? 'overflow-hidden' : 'overflow-auto'}
           transition-transform duration-300 ease-out
           ${animating ? 'translate-y-0' : 'translate-y-full'}
         `}
-        style={{ maxHeight: '75vh' }}
       >
         {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-1">

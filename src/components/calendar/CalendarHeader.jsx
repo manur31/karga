@@ -11,6 +11,11 @@ import { toMonthYearLabel } from '../../lib/calendarUtils'
  *   onMonthPress   fn     — called when user taps the month/year label
  */
 export default function CalendarHeader({ referenceDate, onPrevMonth, onNextMonth, onMonthPress }) {
+  const handleMonthPress = () => {
+    onMonthPress();
+    window.scrollTo(0, document.body.scrollHeight);
+  };
+  
   return (
     <div className="flex items-center justify-between px-4 pt-1 pb-2">
       {/* Left: screen title */}
@@ -27,7 +32,7 @@ export default function CalendarHeader({ referenceDate, onPrevMonth, onNextMonth
         </button>
 
         <button
-          onClick={onMonthPress}
+          onClick={handleMonthPress}
           className="text-white text-sm font-medium px-1 active:text-karga-orange transition-colors"
         >
           {toMonthYearLabel(referenceDate)}
