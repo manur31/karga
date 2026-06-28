@@ -63,7 +63,7 @@ export function getNextMonth(referenceDate) {
   return addMonths(referenceDate, 1)
 }
 
-export function getPrevMonth(referenceDate) {
+export function getPrevMonth(referenceDate) { 
   return subMonths(referenceDate, 1)
 }
 
@@ -76,7 +76,7 @@ export function toDateKey(date) {
 
 /** "JUE" */
 export function toDayLabel(date) {
-  return format(date, 'EEE', { locale: es }).toUpperCase().slice(0, 3)
+  return format(date, 'E', { locale: es }).toUpperCase().slice(0, 1)
 }
 
 /** "Mayo 2026" */

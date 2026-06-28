@@ -85,7 +85,7 @@ export default function Sessions() {
   const groupedSessions = getGroupedSessions(sessions, sortOrder);
 
   return (
-    <div className="flex flex-col w-full animate-fade-in pb-10">
+    <div className="flex flex-col w-full animate-fade-in pb-30 pt-10 px-4">
       {/* HEADER */}
       <div className="mb-6 pl-2">
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">Mis Sesiones</h1>

@@ -64,7 +64,7 @@ export default function Body() {
   };
 
   return (
-    <div className="flex flex-col w-full animate-fade-in">
+    <div className="flex flex-col w-full animate-fade-in px-4">
       
       {/* HEADER*/}
       <div className="mb-6 pl-2">
