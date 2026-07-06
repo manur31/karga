@@ -58,15 +58,15 @@ export default function HistoryScreen() {
 
   const { data: popularExercises} = useExercises(profile_id);
   const { data: userExercises} = useFavoriteExercises(profile_id);
-  const { data: sets, isLoading: isLoadingSets} = useSets(profile_id)
-  const { data: sessions, isLoading: isLoadingsessions} = useSessions(profile_id)
+  const { data: sets } = useSets(profile_id)
+  const { data: sessions, isLoading: isSessionsLoading } = useSessions(profile_id)
   const { sets: setsFromStore } = useSetsStore()
   const { sessions: sessionsFromStore } = useSesionStore()
 
   useEffect(() => {
     loadFromSupabase({ sets, sessions })
     syncLocalData({ sets: setsFromStore, sessions: sessionsFromStore })
-  }, [sets, sessions, setsFromStore, sessionsFromStore])
+  }, [sets, sessions, setsFromStore, sessionsFromStore, loadFromSupabase, syncLocalData])
 
   const userExercisesList = userExercises?.map(exercise => ({
     ...exercise.exercises
@@ -82,7 +82,7 @@ export default function HistoryScreen() {
   const [isSessionsOpen, setIsSessionsOpen] = useState(false)
 
   // Active dates set — memoized so DayCell/MonthGrid don't recalculate each render
-  const activeDates = useMemo(() => getActiveDates(), [activityByDate])
+  const activeDates = useMemo(() => getActiveDates(), [activityByDate, getActiveDates])
 
   // Current day's data
   const dayActivity = getActivityForDate(selectedDate)
@@ -178,14 +178,18 @@ export default function HistoryScreen() {
             </button>
           </div>
           
-          <div className={`transition-all duration-300 overflow-hidden ${isSessionsOpen ? 'opacity-100 max-h-[1000px] mt-2' : 'opacity-0 max-h-0'}`}>
-            {selectedSessions?.length > 0 ? (
-              selectedSessions.map((session) => (
-                <SessionCard key={session.id} session={session} />
-              ))
-            ) : (
-              <p className="text-white/40 text-sm px-4">Sin sesiones este día</p>
-            )}
+          <div className={`grid transition-all duration-300 ease-in-out ${isSessionsOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}`}>
+            <div className="overflow-hidden">
+              {isSessionsLoading ? (
+                <SessionsLoadingState />
+              ) : selectedSessions?.length > 0 ? (
+                selectedSessions.map((session) => (
+                  <SessionCard key={session.id} session={session} />
+                ))
+              ) : (
+                <SessionsEmptyState />
+              )}
+            </div>
           </div>
         </div>
 
@@ -204,6 +208,26 @@ export default function HistoryScreen() {
         onSelectDate={handleModalSelectDate}
         onClose={closeMonthModal}
       />
+    </div>
+  )
+}
+
+function SessionsLoadingState() {
+  return (
+    <div className="mx-4 bg-karga-gray rounded-2xl px-4 py-10 flex flex-col items-center gap-2">
+      <span className="animate-pulse size-12 bg-karga-gray rounded-full"></span>
+      <p className="text-white/60 text-sm font-medium">Cargando sesiones...</p>
+    </div>
+  )
+}
+
+function SessionsEmptyState() {
+  return (
+    <div className="mx-4 bg-karga-gray rounded-2xl px-4 py-10 flex flex-col items-center gap-2">
+      <p className="text-white/60 text-sm font-medium">Sin sesiones creadas este día</p>
+      <p className="text-zinc-500 text-xs text-center font-medium">
+        Completa una sesión para ver tu registro aquí
+      </p>
     </div>
   )
 }

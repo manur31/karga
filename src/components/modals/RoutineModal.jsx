@@ -4,7 +4,6 @@ import { useAuth } from '../../hooks/queries/useAuth';
 import { useExercises, useFavoriteExercises } from '../../hooks/queries/useExercises';
 import { useUpdateFavorite, useAddToFavorite } from '../../hooks/mutations/useExercisesMutations';
 import { useDeleteExercisesRoutine } from '../../hooks/mutations/useRoutinesMutation';
-import { formatRelativeTime } from '../../utils/timeFormatter';
 import { ArrowLeft, CheckIcon, PlusIcon } from '../icons';
 import SetModal from './SetModal';
 import ExerciseHistoryModal from './ExerciseHistoryModal';
@@ -92,7 +91,6 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
   const [selectedExercisesForDelete, setSelectedExercisesForDelete] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showDeleteRoutineConfirmDialog, setShowDeleteRoutineConfirmDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { mutateAsync: deleteExercisesRoutine } = useDeleteExercisesRoutine(profile_id);
 
   const toggleEditMode = () => {
@@ -111,7 +109,6 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
 
   const handleDeleteSelected = async () => {
     if (!profile_id || selectedExercisesForDelete.length === 0) return;
-    setIsDeleting(true);
     try {
       await deleteExercisesRoutine({
         routine_id: routine.routine_id,
@@ -122,8 +119,6 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
       setShowConfirmDialog(false);
     } catch (error) {
       console.error("Error al borrar ejercicios de la rutina:", error);
-    } finally {
-      setIsDeleting(false);
     }
   };
 

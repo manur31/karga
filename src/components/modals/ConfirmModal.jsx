@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function ConfirmModal({ 
   isOpen, 
@@ -11,12 +12,14 @@ export default function ConfirmModal({
   danger = false 
 }) {
   const [isClosing, setIsClosing] = useState(false);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-  useEffect(() => {
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setIsClosing(false);
     }
-  }, [isOpen]);
+  }
 
   const handleClose = () => {
     setIsClosing(true);
@@ -28,9 +31,9 @@ export default function ConfirmModal({
 
   if (!isOpen && !isClosing) return null;
 
-  return (
+  return createPortal(
     <div 
-      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-[80] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={handleClose}
     >
       <div 
@@ -66,6 +69,7 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

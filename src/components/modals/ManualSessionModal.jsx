@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiPlus, FiTrash2, FiClock, FiCalendar, FiFileText } from 'react-icons/fi';
+import { FiX, FiPlus, FiClock, FiCalendar, FiFileText } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useSesionStore } from '../../stores/sesionStore';
@@ -15,9 +15,9 @@ export default function ManualSessionModal({ onClose }) {
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
 
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [startTime, setStartTime] = useState(format(new Date(Date.now() - 3600000), 'HH:mm')); // 1 hour ago
-  const [endTime, setEndTime] = useState(format(new Date(), 'HH:mm')); // now
+  const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  const [startTime, setStartTime] = useState(() => format(new Date(Date.now() - 3600000), 'HH:mm')); // 1 hour ago
+  const [endTime, setEndTime] = useState(() => format(new Date(), 'HH:mm')); // now
 
   const [sessionSets, setSessionSets] = useState([]); // Array of { tempId, exercise, rep, weight }
   const [note, setNote] = useState('');

@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 
 export default function SessionNoteModal({ isOpen, onClose, initialNote, onSave }) {
   const [localNote, setLocalNote] = useState(initialNote || '');
   const [isClosing, setIsClosing] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setLocalNote(initialNote || '');
-      setIsClosing(false);
-    }
-  }, [isOpen]);
 
   if (!isOpen && !isClosing) return null;
 

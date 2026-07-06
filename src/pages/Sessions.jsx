@@ -162,10 +162,12 @@ export default function Sessions() {
         )}
       </div>
 
-      <SessionDetailModal 
-        session={selectedSession} 
-        onClose={() => setSelectedSession(null)} 
-      />
+      {selectedSession && (
+        <SessionDetailModal 
+          session={selectedSession} 
+          onClose={() => setSelectedSession(null)} 
+        />
+      )}
 
 
 
