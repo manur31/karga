@@ -32,7 +32,7 @@ export default function ActivityList({ dayActivity, exercises }) {
       </div>
 
       <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}`}>
-        <div className="overflow-hidden">
+        <div className="overflow-y-auto max-h-80">
           { isLoading ? (
             <LoadingState/>
           ) : (

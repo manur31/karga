@@ -64,9 +64,9 @@ export const setProfile = async ({
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
-  if (userError) {
-    return userError.message;
-  }
+
+  if (userError) throw userError;
+
   const { data, error } = await supabase
     .from("profile")
     .update({
@@ -76,12 +76,28 @@ export const setProfile = async ({
       rest_time,
     })
     .eq("profile_id", user.id)
-    .select();
-  if (error) {
-    return error.message;
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  const { error: profileError } = await supabase.from("users_proge").insert([
+    {
+      profile_id: user.id,
+      weight,
+      sets_id: null,
+    },
+  ]);
+
+  if (profileError) {
+    console.log("Error users_proge:", profileError);
+    throw profileError;
   }
 
-  return data;
+  return {
+    profile: data,
+    progress: progressData,
+  };
 };
 //getProfile
 export const getProfile = async () => {

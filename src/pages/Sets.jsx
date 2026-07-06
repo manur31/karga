@@ -130,7 +130,7 @@ export default function Sets() {
   const activeRoutine = selectedRoutineId ? routines?.find(r => r.routine_id === selectedRoutineId) : null;
 
   return (
-    <div className="flex flex-col w-full animate-fade-in pb-10">
+    <div className="flex flex-col w-full animate-fade-in pb-10 px-4 py-10">
       {/* HEADER */}
       <div className="mb-6 pl-2 relative">
         <div className="flex items-center justify-between">

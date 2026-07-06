@@ -38,9 +38,12 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
       t = setTimeout(() => setVisible(false), 300)
     }
     prevOpen.current = isOpen
+
+    document.body.style.overflow = isOpen ? 'hidden' : 'auto'
     
     return () => {
       if (t) clearTimeout(t)
+      document.body.style.overflow = 'auto'
     }
   }, [isOpen])
 

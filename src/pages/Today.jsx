@@ -136,8 +136,7 @@ export default function HistoryScreen() {
   return (
     // Full-screen dark container — adjust to your router/nav setup
     <div
-      className="min-h-screen flex flex-col w-full animate-fade-in pb-10"
-      style={{ backgroundColor: '#272121' }}
+      className="min-h-screen flex flex-col w-full animate-fade-in bg-dark-bg overflow-hidden relative pb-20 pt-10 px-4"
     >
       {/* Header: title + month navigator */}
       <CalendarHeader

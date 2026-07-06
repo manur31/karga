@@ -28,7 +28,7 @@ export default function MonthGrid({ referenceDate, selectedDate, activeDates, on
         {WEEK_DAYS.map((d) => (
           <span
             key={d}
-            className="text-center text-[11px] font-semibold text-white/30 tracking-widest py-1"
+            className="text-center text-xs font-semibold text-white/30 tracking-widest py-1"
           >
             {d}
           </span>
