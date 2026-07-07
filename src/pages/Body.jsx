@@ -5,10 +5,13 @@ import ExpandArrowIcon from "../components/icons/ExpandArrowIcon";
 import { useAuth } from "../hooks/queries/useAuth";
 import { useSets } from "../hooks/queries/useSets";
 import { useRegisterWeight } from "../hooks/mutations/useBodyMutations";
-
+import { useWeight } from "../hooks/queries/useBody";
+import WeightChart from "../components/WeightChart";
 export default function Body() {
   const { data: user, isLoading: isAuthLoading } = useAuth();
-
+  const { data: weight, isLoading: isWeightLoading } = useWeight(
+    user?.profile_id,
+  );
   const profile_id = user?.profile_id;
 
   const { data: sets = [], isLoading: isSetsLoading } = useSets(profile_id);
@@ -19,56 +22,7 @@ export default function Body() {
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [newWeight, setNewWeight] = useState("");
 
-  const isLoading = isAuthLoading || isSetsLoading;
-
-  const getStartOfWeek = () => {
-    const today = new Date();
-    const day = today.getDay();
-
-    const diff = day === 0 ? -6 : 1 - day;
-
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + diff);
-    monday.setHours(0, 0, 0, 0);
-
-    return monday;
-  };
-
-  const weeklyProgress = useMemo(() => {
-    const days = [
-      { day: "L", value: 0 },
-      { day: "M", value: 0 },
-      { day: "M", value: 0 },
-      { day: "J", value: 0 },
-      { day: "V", value: 0 },
-      { day: "S", value: 0 },
-      { day: "D", value: 0 },
-    ];
-
-    const startOfWeek = getStartOfWeek();
-
-    sets.forEach((set) => {
-      const setDate = new Date(set.created_at);
-
-      if (Number.isNaN(setDate.getTime())) return;
-      if (setDate < startOfWeek) return;
-
-      const jsDay = setDate.getDay();
-      const index = jsDay === 0 ? 6 : jsDay - 1;
-
-      if (days[index]) {
-        days[index].value += 1;
-      }
-    });
-
-    const maxValue = Math.max(...days.map((day) => day.value), 1);
-
-    return days.map((day) => ({
-      ...day,
-      value: Math.round((day.value / maxValue) * 100),
-      realValue: day.value,
-    }));
-  }, [sets]);
+  const isLoading = isAuthLoading || isSetsLoading || isWeightLoading;
 
   const muscleActivity = useMemo(() => {
     const muscleCounter = {};
@@ -100,11 +54,49 @@ export default function Body() {
       .sort((a, b) => b.percentage - a.percentage);
   }, [sets]);
 
-  const weightData = {
-    current: user?.weight || 0,
-    trend: "+0 kg",
-    isPositive: true,
-  };
+  const weightData = useMemo(() => {
+    if (!weight || weight.length === 0) {
+      return {
+        current: user?.weight || 0,
+        trend: "Primer registro",
+        type: "neutral",
+      };
+    }
+
+    const orderedWeights = [...weight].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at),
+    );
+
+    const lastWeight = orderedWeights[orderedWeights.length - 1];
+    const previousWeight = orderedWeights[orderedWeights.length - 2];
+
+    const current = Number(lastWeight?.weight || user?.weight || 0);
+
+    if (!previousWeight) {
+      return {
+        current,
+        trend: "Primer registro",
+        type: "neutral",
+      };
+    }
+
+    const previous = Number(previousWeight.weight);
+    const diff = current - previous;
+
+    if (diff === 0) {
+      return {
+        current,
+        trend: "Sin cambios",
+        type: "neutral",
+      };
+    }
+
+    return {
+      current,
+      trend: `${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg`,
+      type: diff > 0 ? "up" : "down",
+    };
+  }, [weight, user?.weight]);
 
   const handleRegisterWeight = () => {
     setNewWeight(user?.weight || "");
@@ -178,34 +170,12 @@ export default function Body() {
             </Card>
           </div>
 
-          <div className="flex flex-col">
-            <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-2 pl-2">
-              Progreso Semanal
+          <div className="flex flex-col align-center">
+            <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mb-2 pl-1">
+              Gráfica de peso
             </span>
 
-            <Card
-              variant="default"
-              className="p-6 h-40 flex items-end justify-between"
-            >
-              {weeklyProgress.map((day, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center gap-2 w-8 h-full"
-                >
-                  <div className="w-full flex-1 bg-white/5 rounded-md relative flex items-end overflow-hidden">
-                    <div
-                      className="w-full bg-karga-orange rounded-sm transition-all duration-700 ease-out"
-                      style={{ height: `${day.value}%` }}
-                      title={`${day.realValue} sets`}
-                    />
-                  </div>
-
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase">
-                    {day.day}
-                  </span>
-                </div>
-              ))}
-            </Card>
+            <WeightChart data={weight} />
           </div>
 
           <div className="flex flex-col mb-4">

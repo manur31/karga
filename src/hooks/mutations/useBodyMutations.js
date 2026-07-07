@@ -13,11 +13,11 @@ export const useRegisterWeight = (profile_id) => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["profile"],
+        queryKey: ["weightHistory", profile_id],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["profile", profile_id],
+        queryKey: ["weightHistory", profile_id],
       });
 
       queryClient.invalidateQueries({
