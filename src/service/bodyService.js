@@ -47,3 +47,15 @@ export const getBodyLastWeek = async (profile_id) => {
 
   return data;
 };
+export const getWeight = async (profile_id) => {
+  const { data, error } = await supabase
+    .from("users_proge")
+    .select("weight, created_at")
+    .eq("profile_id", profile_id)
+    .not("weight", "is", null)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  return data;
+};

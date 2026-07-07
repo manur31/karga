@@ -15,10 +15,12 @@ import {
 import { useRoutines } from "../hooks/queries/useRoutines";
 import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
+import { NewTrainModal } from "../components/modals/newTrainModal";
 
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
+  const [isNewTrainModalOpen, setIsNewTrainModalOpen] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -28,7 +30,8 @@ export default function Sets() {
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
 
-  const { data: routines, isLoading: isRoutinesLoading } = useRoutines(profile_id);
+  const { data: routines, isLoading: isRoutinesLoading } =
+    useRoutines(profile_id);
 
   useEffect(() => {
     if (profile_id && routines && routines.length === 1) {
@@ -50,7 +53,8 @@ export default function Sets() {
   };
 
   const { mutateAsync: createRoutines } = useCreateRoutines(profile_id);
-  const { mutateAsync: insertExercisesRoutine } = useInsertExercisesRoutine(profile_id);
+  const { mutateAsync: insertExercisesRoutine } =
+    useInsertExercisesRoutine(profile_id);
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
 
   if (isRoutinesLoading) {
@@ -62,7 +66,10 @@ export default function Sets() {
   }
 
   const handleCreateWorkout = () => {
-    setOpenModal(true);  
+    setOpenModal(true);
+  };
+  const handleCreateNewTrain = () => {
+    setIsNewTrainModalOpen(true);
   };
 
   const createroutine = async (name, description = "descripcion de prueba") => {
@@ -78,14 +85,14 @@ export default function Sets() {
 
   const handleAddExercisesToRoutine = async (selectedExerciseIds) => {
     if (!selectedRoutineId) return;
-    
+
     console.log("Agregando ejercicios a la rutina:", selectedExerciseIds);
     for (const exerciseId of selectedExerciseIds) {
       await insertExercisesRoutine({
         routine_id: selectedRoutineId,
         id_exercises: exerciseId,
         rest_time: 60,
-        orden: 1, 
+        orden: 1,
       });
     }
   };
@@ -106,12 +113,24 @@ export default function Sets() {
     setSelectedRoutineId(id);
   };
 
-  const handleSaveWorkoutModal = async (name, description, selectedExerciseIds) => {
-    console.log("Guardando rutina desde modal:", { name, description, selectedExerciseIds });
+  const handleSaveWorkoutModal = async (
+    name,
+    description,
+    selectedExerciseIds,
+  ) => {
+    console.log("Guardando rutina desde modal:", {
+      name,
+      description,
+      selectedExerciseIds,
+    });
     try {
       const newRoutine = await createroutine(name, description);
-      
-      if (newRoutine && newRoutine.routine_id && selectedExerciseIds.length > 0) {
+
+      if (
+        newRoutine &&
+        newRoutine.routine_id &&
+        selectedExerciseIds.length > 0
+      ) {
         for (let i = 0; i < selectedExerciseIds.length; i++) {
           await insertExercisesRoutine({
             routine_id: newRoutine.routine_id,
@@ -127,7 +146,9 @@ export default function Sets() {
     }
   };
 
-  const activeRoutine = selectedRoutineId ? routines?.find(r => r.routine_id === selectedRoutineId) : null;
+  const activeRoutine = selectedRoutineId
+    ? routines?.find((r) => r.routine_id === selectedRoutineId)
+    : null;
 
   return (
     <div className="flex flex-col w-full animate-fade-in pb-10 px-4 py-10">
@@ -142,7 +163,7 @@ export default function Sets() {
               Elige tu rutina o crea una nueva
             </p>
           </div>
-          <button 
+          <button
             onClick={() => setIsProfileModalOpen(true)}
             className="p-3 text-zinc-400 hover:text-white transition-colors"
           >
@@ -194,14 +215,36 @@ export default function Sets() {
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[10px] bg-karga-orange/10 flex items-center justify-center">
-              <svg className="w-4 h-4 text-karga-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <svg
+                className="w-4 h-4 text-karga-orange"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
               </svg>
             </div>
-            <span className="text-[16px] font-bold text-zinc-200">Mis ejercicios</span>
+            <span className="text-[16px] font-bold text-zinc-200">
+              Mis ejercicios
+            </span>
           </div>
-          <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4 text-zinc-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </Button>
       </div>
@@ -215,17 +258,31 @@ export default function Sets() {
 
       {/* MODAL DE CREACIÓN DE WORKOUT */}
       {openModal && (
-        <WorkoutModal 
-          onClose={handleCloseModal} 
+        <WorkoutModal
+          onClose={handleCloseModal}
           onSave={handleSaveWorkoutModal}
+        />
+      )}
+      {/* MODAL DE CREACIÓN DE TRAIN */}
+      {isNewTrainModalOpen && (
+        <NewTrainModal
+          isOpen={isNewTrainModalOpen}
+          onClose={() => setIsNewTrainModalOpen(false)}
+          onStarted={({ session, routine }) => {
+            console.log("Sesión iniciada:", session);
+            console.log("Rutina seleccionada:", routine);
+
+            setSelectedRoutineId(routine.routine_id);
+            setIsNewTrainModalOpen(false);
+          }}
         />
       )}
 
       {/* MODAL DE DETALLE DE RUTINA */}
       {activeRoutine && (
-        <RoutineModal 
-          routine={activeRoutine} 
-          onClose={() => setSelectedRoutineId(null)} 
+        <RoutineModal
+          routine={activeRoutine}
+          onClose={() => setSelectedRoutineId(null)}
           onAddExercises={handleAddExercisesToRoutine}
           onDeleteRoutine={() => {
             handleDeleteRoutine(activeRoutine.routine_id);
@@ -236,7 +293,7 @@ export default function Sets() {
 
       {/* MODAL DE MIS EJERCICIOS */}
       {isMyExercisesModalOpen && (
-        <MyExercisesModal 
+        <MyExercisesModal
           onClose={() => setIsMyExercisesModalOpen(false)}
           onAddExercise={(exercise) => {
             console.log("Ejercicio añadido desde modal:", exercise);
@@ -245,9 +302,9 @@ export default function Sets() {
         />
       )}
 
-      <ProfileModal 
-        isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)} 
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
 
       {showOnboarding && createPortal(
