@@ -31,25 +31,27 @@ export default function ActivityList({ dayActivity, exercises }) {
         </button>
       </div>
 
-      <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'opacity-100 max-h-80 overflow-y-auto mt-2' : 'opacity-0 max-h-0'}`}>
-        { isLoading ? (
-        <LoadingState/>
-      ) : (
-        groups.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {groups.map((group) => (
-              <SessionCard
-                key={group.exercise_id}
-                exerciseName={group.exerciseName}
-                sets={group.sets}
-                sessionTime={group.sessionTime}
-              />
-            ))}
-          </div>
-        )
-      )}
+      <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="overflow-y-auto max-h-80">
+          { isLoading ? (
+            <LoadingState/>
+          ) : (
+            groups.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {groups.map((group) => (
+                  <SessionCard
+                    key={group.exercise_id}
+                    exerciseName={group.exerciseName}
+                    sets={group.sets}
+                    sessionTime={group.sessionTime}
+                  />
+                ))}
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   )

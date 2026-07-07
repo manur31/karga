@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useSetsForExercise } from '../../hooks/queries/useSets';
 import { useDeleteSet } from '../../hooks/mutations/useSetsMutations';
@@ -19,7 +19,6 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedSets, setSelectedSets] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { unit, displayWeight } = useWeightUnit();
 
@@ -57,7 +56,6 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   const handleDeleteSelected = async () => {
     if (!profile_id || selectedSets.length === 0) return;
-    setIsDeleting(true);
     try {
       await Promise.all(selectedSets.map(setId => deleteSet(setId)));
       setIsSelectMode(false);
@@ -65,8 +63,6 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       setShowConfirmDialog(false);
     } catch (error) {
       console.error("Error al borrar sets:", error);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -262,7 +258,6 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       {isEditModalOpen && selectedSetToEdit && (
         <EditSetModal 
           setToEdit={selectedSetToEdit}
-          exerciseName={exercise.name}
           onClose={() => setIsEditModalOpen(false)} 
         />
       )}

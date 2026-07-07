@@ -8,11 +8,11 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { routineSchema } from "../../lib/schemas/routineSchema";
 
-function NewWorkoutModal({ onClose, isOpen }) {
+function NewWorkoutModal({ onClose }) {
     const { data: user } = useAuth();
     const profile_id = user?.profile_id;
 
-    const { data: exercises, isLoading, isError, isSuccess } = useExercises(profile_id);
+    const { data: exercises, isLoading, isSuccess } = useExercises(profile_id);
     const { mutate: createRoutines } = useCreateRoutines(profile_id);
     const [isClosing, setIsClosing] = useState(false);
     const [step, setStep] = useState(1);
@@ -49,13 +49,6 @@ function NewWorkoutModal({ onClose, isOpen }) {
         setTimeout(() => {
         onClose();
         }, 300);
-    };
-
-    const handleModal = () => {
-        setIsClosing(!isClosing);
-        setTimeout(() => {
-            onClose();
-        }, 200);
     };
 
     const handleSaveRoutine = (data) => {

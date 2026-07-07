@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useFavoriteExercises } from '../../hooks/queries/useExercises';
 import { useDeleteExercise, useUpdateFavorite } from '../../hooks/mutations/useExercisesMutations';
-import { ArrowLeft } from '../icons';
+import { ArrowLeft, PlusIcon } from '../icons';
+import CustomExerciseModal from './CustomExerciseModal';
 
 const HeartIcon = ({ filled, className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={filled ? 0 : 2} stroke="currentColor" className={className}>
@@ -16,6 +17,7 @@ export default function MyExercisesModal({ onClose }) {
   const [filterCustom, setFilterCustom] = useState(true);
   const [filterFavs, setFilterFavs] = useState(false);
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
+  const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -103,7 +105,7 @@ export default function MyExercisesModal({ onClose }) {
           </div>
 
           {/* LISTA */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-3">
             {isLoading ? (
               <p className="text-center text-sm text-zinc-500 mt-10">Cargando...</p>
             ) : filteredExercises.length === 0 ? (
@@ -155,6 +157,18 @@ export default function MyExercisesModal({ onClose }) {
             )}
           </div>
         </div>
+
+        {/* BOTÓN CREAR EJERCICIO */}
+        <div className="absolute bottom-[-0.1px] inset-x-0 p-5 pb-5 pt-12 bg-linear-to-t from-dark-bg via-dark-bg to-transparent z-30">
+          <button
+            type="button"
+            onClick={() => setIsCustomExerciseModalOpen(true)}
+            className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl border-2 border-dashed border-white/10 text-zinc-400 font-bold text-sm hover:border-karga-orange/40 hover:text-karga-orange hover:bg-karga-orange/5 transition-all active:scale-[0.99] bg-dark-bg shadow-2xl"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Crear ejercicio personalizado
+          </button>
+        </div>
       </div>
 
       {/* MODAL CONFIRMACION DE BORRADO */}
@@ -183,6 +197,10 @@ export default function MyExercisesModal({ onClose }) {
             </div>
           </div>
         </div>
+      )}
+
+      {isCustomExerciseModalOpen && (
+        <CustomExerciseModal onClose={() => setIsCustomExerciseModalOpen(false)} />
       )}
 
     </div>

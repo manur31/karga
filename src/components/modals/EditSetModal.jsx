@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useUpdateSet } from '../../hooks/mutations/useSetsMutations';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
@@ -16,11 +16,11 @@ const XIcon = ({ className }) => (
   </svg>
 );
 
-export default function EditSetModal({ setToEdit, exerciseName, onClose }) {
-  const [reps, setReps] = useState(0);
-  const [weight, setWeight] = useState(0);
-  
+export default function EditSetModal({ setToEdit, onClose }) {
   const { unit, toggleUnit, convertToKg, displayWeight } = useWeightUnit();
+
+  const [reps, setReps] = useState(setToEdit?.rep || 0);
+  const [weight, setWeight] = useState(() => displayWeight(setToEdit?.weight || 0));
   
   const [etiqueta, setEtiqueta] = useState('none');
   const [isEtiquetaModalOpen, setIsEtiquetaModalOpen] = useState(false);
@@ -40,14 +40,6 @@ export default function EditSetModal({ setToEdit, exerciseName, onClose }) {
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const { mutateAsync: updateSet } = useUpdateSet(profile_id);
-
-  // Inicializar estado con los datos del set a editar
-  useEffect(() => {
-    if (setToEdit) {
-      setReps(setToEdit.rep || 0);
-      setWeight(displayWeight(setToEdit.weight));
-    }
-  }, [setToEdit]);
 
   if (!setToEdit) return null;
 

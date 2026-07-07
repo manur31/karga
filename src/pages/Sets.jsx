@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Button from "../components/Button/Button";
-import { FiPlus, FiSettings } from "react-icons/fi";
+import { FiPlus, FiSettings, FiPlay } from "react-icons/fi";
 import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
 import ProfileModal from "../components/modals/ProfileModal";
+import { useSesionStore } from "../stores/sesionStore";
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
@@ -21,12 +23,34 @@ export default function Sets() {
   const [isNewTrainModalOpen, setIsNewTrainModalOpen] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  const { start: startSession, isStarted } = useSesionStore();
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
 
   const { data: routines, isLoading: isRoutinesLoading } =
     useRoutines(profile_id);
+
+  useEffect(() => {
+    if (profile_id && routines && routines.length === 1) {
+      const seen = localStorage.getItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`);
+      if (!seen) {
+        const id = setTimeout(() => {
+          setShowOnboarding(true);
+        }, 0);
+        return () => clearTimeout(id);
+      }
+    }
+  }, [routines, profile_id]);
+
+  const handleCloseOnboarding = () => {
+    if (profile_id) {
+      localStorage.setItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`, 'true');
+    }
+    setShowOnboarding(false);
+  };
 
   const { mutateAsync: createRoutines } = useCreateRoutines(profile_id);
   const { mutateAsync: insertExercisesRoutine } =
@@ -71,6 +95,14 @@ export default function Sets() {
         orden: 1,
       });
     }
+  };
+
+  const handleStartWorkoutClick = () => {
+    if (isStarted) {
+      alert("Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.");
+      return;
+    }
+    startSession();
   };
 
   const handleCloseModal = () => {
@@ -142,23 +174,39 @@ export default function Sets() {
 
       {/* BOTÓN NUEVA RUTINA Y MIS EJERCICIOS */}
       <div className="flex flex-col gap-3 mb-6">
-        <Button
-          variant="primary"
-          onClick={handleCreateNewTrain}
-          className="w-full flex-row items-center justify-start gap-4 p-5 bg-linear-to-r from-karga-orange to-red-600 border-none rounded-3xl shadow-lg transition-transform active:scale-[0.98]"
-        >
-          <div className="w-12 h-12 shrink-0 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-            <FiPlus className="w-6 h-6 text-white" />
-          </div>
-          <div className="flex flex-col items-start text-left">
-            <span className="text-xl font-black text-white">
-              Nuevo Entrenamiento
-            </span>
-            <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
-              Crear rutina personalizada
-            </span>
-          </div>
-        </Button>
+        {routines && routines.length > 0 ? (
+          <Button
+            variant="primary"
+            onClick={handleStartWorkoutClick}
+            className="w-full flex-row items-center justify-start gap-4 p-5 bg-linear-to-r from-karga-orange to-red-600 border-none rounded-3xl shadow-lg transition-transform active:scale-[0.98]"
+          >
+            <div className="w-12 h-12 shrink-0 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <FiPlay className="w-6 h-6 text-white ml-0.5" />
+            </div>
+            <div className="flex flex-col items-start text-left">
+              <span className="text-xl font-black text-white">Empezar entrenamiento</span>
+              <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
+                Iniciar una sesión vacía de ejercicio
+              </span>
+            </div>
+          </Button>
+        ) : (
+          <Button
+            variant="primary"
+            onClick={handleCreateWorkout}
+            className="w-full flex-row items-center justify-start gap-4 p-5 bg-linear-to-r from-karga-orange to-red-600 border-none rounded-3xl shadow-lg transition-transform active:scale-[0.98]"
+          >
+            <div className="w-12 h-12 shrink-0 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <FiPlus className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex flex-col items-start text-left">
+              <span className="text-xl font-black text-white">Nueva Rutina</span>
+              <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
+                Crear rutina personalizada
+              </span>
+            </div>
+          </Button>
+        )}
 
         <Button
           variant="secondary"
@@ -205,6 +253,7 @@ export default function Sets() {
       <RoutinesList
         routines={routines || []}
         onOpenRoutine={handleOpenRoutine}
+        onCreateRoutine={handleCreateWorkout}
       />
 
       {/* MODAL DE CREACIÓN DE WORKOUT */}
@@ -257,6 +306,41 @@ export default function Sets() {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
       />
+
+      {showOnboarding && createPortal(
+        <div 
+          className="fixed inset-0 bg-black/50 z-[99] flex flex-col items-center justify-start px-4 pt-[220px] animate-fade-in"
+        >
+          <div 
+            className="w-full max-w-[340px] bg-[#2A2424] rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in"
+          >
+            {/* Tooltip triangle pointing up */}
+            <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-[#2A2424]" />
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col gap-1">
+                <h4 className="text-white font-bold text-sm tracking-wide">¡Tu primera rutina está lista!</h4>
+                <p className="text-zinc-400 text-xs leading-relaxed font-medium">
+                  Ahora que ya tienes tu primera rutina, podrás empezar tus entrenamientos rápidamente desde aquí o desde la pestaña de <strong>Sesiones</strong>.
+                </p>
+              </div>
+            </div>
+
+            <button 
+              onClick={handleCloseOnboarding}
+              className="w-full py-2.5 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-xl font-bold text-xs transition-colors shadow-lg shadow-karga-orange/10"
+            >
+              ¡Entendido!
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

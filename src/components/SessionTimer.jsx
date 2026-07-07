@@ -196,12 +196,14 @@ function SessionTimer({profile_id}) {
         <ManualSessionModal onClose={() => setShowManualModal(false)} />
       )}
 
-      <SessionNoteModal 
-        isOpen={showNoteModal}
-        onClose={() => setShowNoteModal(false)}
-        initialNote={note}
-        onSave={setNote}
-      />
+      {showNoteModal && (
+        <SessionNoteModal 
+          isOpen={showNoteModal}
+          onClose={() => setShowNoteModal(false)}
+          initialNote={note}
+          onSave={setNote}
+        />
+      )}
     </>
   );
 }

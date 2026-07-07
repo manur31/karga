@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { MdChevronLeft, MdChevronRight, MdClose } from 'react-icons/md'
 import { getNextMonth, getPrevMonth, toMonthYearLabel } from '../../lib/calendarUtils'
 import MonthGrid from './MonthGrid'
@@ -18,7 +19,6 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
     selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date()
   )
   const [visible, setVisible] = useState(false)
-  const [animating, setAnimating] = useState(false)
   const prevOpen = useRef(false)
 
   // Sync monthRef when modal opens with a new selectedDate
@@ -33,12 +33,9 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
     if (isOpen && !prevOpen.current) {
       // Opening
       setVisible(true)
-      // Small delay to ensure DOM is ready before CSS transition triggers
-      setTimeout(() => setAnimating(true), 10)
     } else if (!isOpen && prevOpen.current) {
       // Closing
-      setAnimating(false)
-      t = setTimeout(() => setVisible(false), 320)
+      t = setTimeout(() => setVisible(false), 300)
     }
     prevOpen.current = isOpen
 
@@ -54,28 +51,27 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
 
   function handleSelectDate(dateStr) {
     onSelectDate(dateStr)
-    // onSelectDate closes the modal via parent — no extra close call needed
   }
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0 ${isOpen ? 'overflow-hidden' : 'overflow-auto'} bg-black/60 z-60 transition-opacity duration-300
-          ${animating ? 'opacity-100' : 'opacity-0'}
+          fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]
+          ${isOpen ? 'animate-fade-in' : 'animate-fade-out'}
         `}
         onClick={onClose}
       />
 
       {/* Sheet */}
       <div
-        className={`absolute bottom-[9%] left-0 right-0 z-70 h-fit
+        className={`
+          fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[416px] z-[110]
           bg-karga-gray rounded-t-3xl
-          ${isOpen ? 'overflow-hidden' : 'overflow-auto'}
-          transition-transform duration-300 ease-out
-          ${animating ? 'translate-y-0' : 'translate-y-full'}
+          ${isOpen ? 'animate-slide-in-up' : 'animate-slide-out-down'}
         `}
+        style={{ maxHeight: '75vh' }}
       >
         {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-1">
@@ -114,6 +110,7 @@ export default function MonthModal({ isOpen, selectedDate, activeDates, onSelect
         {/* Bottom safe area padding */}
         <div className="h-6" />
       </div>
-    </>
+    </>,
+    document.body
   )
 }
