@@ -81,13 +81,15 @@ export const setProfile = async ({
 
   if (error) throw error;
 
-  const { error: profileError } = await supabase.from("users_proge").insert([
-    {
-      profile_id: user.id,
-      weight,
-      sets_id: null,
-    },
-  ]);
+  const { data: progressData, error: profileError } = await supabase
+    .from("users_proge")
+    .insert([
+      {
+        profile_id: user.id,
+        weight,
+        sets_id: null,
+      },
+    ]);
 
   if (profileError) {
     console.log("Error users_proge:", profileError);
