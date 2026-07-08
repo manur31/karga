@@ -15,6 +15,8 @@ import { useSesionStore } from '../stores/sesionStore'
 import SessionCard from '../components/calendar/SessionCard'
 import { format } from 'date-fns'
 import { FiChevronDown } from 'react-icons/fi'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../lib/db'
 
 /**
  * HistoryScreen
@@ -53,15 +55,21 @@ export default function HistoryScreen() {
     syncLocalData
   } = useCalendarStore()
 
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  // const { data: user } = useAuth();
+  const profile_id  = JSON.parse(localStorage.getItem('sb-brgpmmolyighfdlfitia-auth-token'))?.user?.id;
 
   const { data: popularExercises} = useExercises(profile_id);
   const { data: userExercises} = useFavoriteExercises(profile_id);
-  const { data: sets, isLoading: isLoadingSets} = useSets(profile_id)
+  // const { data: sets, isLoading: isLoadingSets} = useSets()
+  // const { data: sets, isLoading: isLoadingSets} = useSets(profile_id)
   const { data: sessions, isLoading: isLoadingsessions} = useSessions(profile_id)
   const { sets: setsFromStore } = useSetsStore()
   const { sessions: sessionsFromStore } = useSesionStore()
+
+  const sets = useLiveQuery(
+    () => db.sets.toArray(), // toArray sin filtro para ver TODOS, incluyendo deleted
+    []
+  );
 
   useEffect(() => {
     loadFromSupabase({ sets, sessions })
@@ -113,7 +121,7 @@ export default function HistoryScreen() {
   }
 
   {/* Session card */}
-  const selectedSessions = sessionsFromStore?.filter((session) => {
+  const selectedSessions = sessions?.filter((session) => {
     const rawDate =
       session.created_at ||
       session.time_init ||

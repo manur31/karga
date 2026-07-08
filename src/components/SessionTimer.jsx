@@ -3,7 +3,7 @@ import { useSesionStore } from "../stores/sesionStore";
 import { useState, useRef, useEffect } from "react";
 import formatSeconds from "../lib/formatSeconds";
 import { useCalendarStore } from "../stores/calendarStore";
-import { useSyncSessions, useSyncSets } from "../hooks/useSync";
+// import { useSyncSessions, useSyncSets } from "../hooks/useSync";
 import { useAuth } from "../hooks/queries/useAuth";
 import { useNavigate, useLocation } from "react-router";
 import ConfirmModal from "./modals/ConfirmModal";
@@ -29,8 +29,8 @@ function SessionTimer({profile_id}) {
 
 
   const { addLocalSessions } = useCalendarStore();
-  const { sync: syncSessions } = useSyncSessions(profile_id);
-  const { sync: syncSets } = useSyncSets(profile_id);
+  // const { sync: syncSessions } = useSyncSessions(profile_id);
+  // const { sync: syncSets } = useSyncSets(profile_id);
 
   const location = useLocation();
   const [isRunning, setIsRunning] = useState(false);
@@ -88,8 +88,8 @@ function SessionTimer({profile_id}) {
     setIsRunning(false);
     setShowMenu(false);
     setIsClosing(false);
-    syncSessions(profile_id);
-    syncSets(profile_id);
+    // syncSessions(profile_id);
+    // syncSets(profile_id);
   };
 
   const isSessionsPage = location.pathname.toLowerCase().includes('/sessions');

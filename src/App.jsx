@@ -11,10 +11,12 @@ import Sessions from "./pages/Sessions";
 import Body from "./pages/Body";
 import Today from "./pages/Today";
 import SetsPage from "./pages/SetsPage";
-import TestPage from "./pages/TestPage";
+// import TestPage from "./pages/TestPage";
 import SetsNewPage from "./pages/SetsNewPage";
+import { useSync } from "./hooks/useSync";
 
 function App() {
+  useSync();
   return (
     <>
       <BrowserRouter>
@@ -33,7 +35,7 @@ function App() {
               <Route path={"/body"} element={<Body/>} />
               <Route path={"/today"} element={<Today/>} />
               <Route path={"/profile"} element={<SetsPage/>} />
-              <Route path={"/test"} element={<TestPage/>} />
+              {/* <Route path={"/test"} element={<TestPage/>} /> */}
               <Route path={"/sets-new"} element={<SetsNewPage/>} />
             </Route>
           </Route>

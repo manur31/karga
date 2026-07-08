@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useSesionStore } from '../../stores/sesionStore';
 import { useSetsStore } from '../../stores/setsStore';
-import { useSyncSessions, useSyncSets } from '../../hooks/useSync';
+// import { useSyncSessions, useSyncSets } from '../../hooks/useSync';
 import ExerciseSelectorModal from './ExerciseSelectorModal';
 import SetModal from './SetModal';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
@@ -26,8 +26,8 @@ export default function ManualSessionModal({ onClose }) {
   
   const { displayWeight, unit } = useWeightUnit();
 
-  const { sync: syncSessions } = useSyncSessions(profile_id);
-  const { sync: syncSets } = useSyncSets(profile_id);
+  // const { sync: syncSessions } = useSyncSessions(profile_id);
+  // const { sync: syncSets } = useSyncSets(profile_id);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -96,8 +96,8 @@ export default function ManualSessionModal({ onClose }) {
     });
 
     // Sync
-    syncSessions(profile_id);
-    syncSets(profile_id);
+    // syncSessions(profile_id);
+    // syncSets(profile_id);
 
     handleClose();
   };
