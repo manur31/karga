@@ -8,7 +8,7 @@ export const registerWeight = async ({ profile_id, weight }) => {
     })
     .eq("profile_id", profile_id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (profileError) throw profileError;
 

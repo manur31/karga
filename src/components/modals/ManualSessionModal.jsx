@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { FiX, FiPlus, FiClock, FiCalendar, FiFileText } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { useAuth } from '../../hooks/queries/useAuth';
-import { useSesionStore } from '../../stores/sesionStore';
+import { useSessionStore } from '../../stores/sessionStore';
 import { useSetsStore } from '../../stores/setsStore';
 import { useSyncSessions, useSyncSets } from '../../hooks/useSync';
 import ExerciseSelectorModal from './ExerciseSelectorModal';
@@ -69,7 +69,7 @@ export default function ManualSessionModal({ onClose }) {
     }
 
     // Insert Session
-    useSesionStore.getState().addSession({
+    useSessionStore.getState().addSession({
       startedAt,
       finishedAt,
       created_at: finishedAt,

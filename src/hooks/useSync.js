@@ -1,6 +1,6 @@
 import { useSetsStore } from '../stores/setsStore'
 import { useCreateSet } from '../hooks/mutations/useSetsMutations'
-import { useSesionStore } from '../stores/sesionStore'
+import { useSessionStore } from '../stores/sessionStore'
 import { useCreateSession } from './mutations/useSesionsMutation'
 import { se } from 'date-fns/locale'
 
@@ -40,7 +40,7 @@ export const useSyncSets = (profile_id) => {
 }
 
 export const useSyncSessions = (profile_id) => {
-    const { getPendingSessions, markAsSynced } = useSesionStore()
+    const { getPendingSessions, markAsSynced } = useSessionStore()
     const { mutateAsync: createSession } = useCreateSession(profile_id)
 
     const sync = async () => {
