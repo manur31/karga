@@ -198,10 +198,6 @@ export default function ProfileModal({ isOpen, onClose }) {
                   <span className="text-sm font-medium text-white">
                     Tiempo de descanso
                   </span>
-
-                  <span className="text-[10px] text-white/30">
-                    Descanso predeterminado
-                  </span>
                 </div>
               </div>
 
@@ -238,10 +234,6 @@ export default function ProfileModal({ isOpen, onClose }) {
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-white">
                     Días de entrenamiento
-                  </span>
-
-                  <span className="text-[10px] text-white/30">
-                    Meta semanal
                   </span>
                 </div>
               </div>

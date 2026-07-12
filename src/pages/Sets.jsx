@@ -16,8 +16,7 @@ import { useRoutines } from "../hooks/queries/useRoutines";
 import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
 import { NewTrainModal } from "../components/modals/newTrainModal";
-import { WeekActivity } from "../components/sets/WeekActivity";
-import { useWeekActivity } from "../hooks/queries/useSessions";
+
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
@@ -32,11 +31,6 @@ export default function Sets() {
 
   const { data: routines, isLoading: isRoutinesLoading } =
     useRoutines(profile_id);
-
-  const { data: weekActivity, isLoading: isWeekActivityLoading } =
-    useWeekActivity(profile_id);
-
-  console.log(weekActivity);
 
   useEffect(() => {
     if (profile_id && routines && routines.length === 1) {
@@ -67,7 +61,7 @@ export default function Sets() {
     useInsertExercisesRoutine(profile_id);
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
 
-  if (isRoutinesLoading || isWeekActivityLoading) {
+  if (isRoutinesLoading) {
     return (
       <div className="flex justify-center items-center h-[50vh] w-full">
         <div className="w-10 h-10 border-4 border-karga-orange border-t-transparent rounded-full animate-spin" />
@@ -78,10 +72,6 @@ export default function Sets() {
   const handleCreateWorkout = () => {
     setOpenModal(true);
   };
-  const handleCreateNewTrain = () => {
-    setIsNewTrainModalOpen(true);
-  };
-
   const createroutine = async (name, description = "descripcion de prueba") => {
     return await createRoutines({
       name,
@@ -96,7 +86,6 @@ export default function Sets() {
   const handleAddExercisesToRoutine = async (selectedExerciseIds) => {
     if (!selectedRoutineId) return;
 
-    console.log("Agregando ejercicios a la rutina:", selectedExerciseIds);
     for (const exerciseId of selectedExerciseIds) {
       await insertExercisesRoutine({
         routine_id: selectedRoutineId,
@@ -130,11 +119,6 @@ export default function Sets() {
     description,
     selectedExerciseIds,
   ) => {
-    console.log("Guardando rutina desde modal:", {
-      name,
-      description,
-      selectedExerciseIds,
-    });
     try {
       const newRoutine = await createroutine(name, description);
 
@@ -163,7 +147,7 @@ export default function Sets() {
     : null;
 
   return (
-    <div className="flex flex-col w-full animate-fade-in pb-10 px-4 py-10">
+    <div className="flex flex-col w-full animate-fade-in px-4 pb-20 pt-10">
       {/* HEADER */}
       <div className="mb-6 pl-2 relative">
         <div className="flex items-center justify-between">
@@ -266,8 +250,6 @@ export default function Sets() {
       </div>
 
       {/*ACTIVIDAD SEMANAL*/}
-
-      <WeekActivity weekSessions={weekActivity} user={user} />
 
       {/* MIS RUTINAS */}
       <RoutinesList
