@@ -19,26 +19,75 @@ export const register = async ({ email, password, name }) => {
   if (profileError) {
     throw profileError;
   }
-  return getProfile();
+};
+
+// export const getUser = async () => {
+//   const { data, error } = await supabase.auth.getUser();
+//   if (error) {
+//     throw error;
+//   }
+
+//   const email = data?.user?.user_metadata?.email
+//   const name = data?.user?.user_metadata?.name
+//   const id = data?.user?.id
+
+//   return { email, name, id };
+// }
+
+export const authGoogle = async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  // const { name, email, id } = await getUser();
+  // console.log(name)
+  // console.log(email)
+  // console.log(id)
+
+  // const { data: profileData } = await supabase
+  //   .from("profile")
+  //   .select('*')
+  //   .eq("profile_id", id)
+  //   .maybeSingle();
+
+  //   console.log(profileData)
+
+  // if (!profileData) {
+  //   const { error: profileError } = await supabase.from("profile").insert([
+  //     {
+  //       profile_id: id,
+  //       name,
+  //       email,
+  //     },
+  //   ])
+
+  //   if (profileError) {
+  //     throw profileError;
+  //   }
+  // };
+
 };
 
 //login
 export const login = async ({ email, password }) => {
-  try {
+  try {    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) {
-      return error.message;
-    }
 
-    if (data) {
-      const profile = await getProfile(email);
-      return profile;
-    }
+    if (error) {
+      throw error;
+    } 
+
+    getProfile()
+    return data;
   } catch (error) {
-    return error.message;
+    throw error;
   }
 };
 

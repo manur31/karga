@@ -9,7 +9,7 @@ import {
   Mancuerna,
 } from "../components/icons";
 import { useForm } from "react-hook-form";
-import { useRegister } from "../hooks/mutations/useAuthMutations";
+import { useAuthGoogle, useRegister } from "../hooks/mutations/useAuthMutations";
 import { registerSchema } from "../lib/schemas/authSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -22,6 +22,7 @@ export default function Register() {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(registerSchema),
@@ -29,6 +30,7 @@ export default function Register() {
   }); 
 
   const { mutate: registerUser, isPending } = useRegister();
+  const { mutate: authGoogle, isPending: isAuthGooglePending } = useAuthGoogle();
 
   const onSubmit = (data) => {
     const formData = {
@@ -42,18 +44,22 @@ export default function Register() {
         reset(); 
         navigate("/onboarding"); 
       },
+      onError: () => {
+        setError("root", {message: 'Error al registrar usuario'})
+      },
     });
   };
 
-  // const handleGoogleRegister = () => {
-  //   setIsLoading(true);
-
-  //   // registro con Google (reempklazar)
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //     navigate("/onboarding");
-  //   }, 2000);
-  // };
+  const handleGoogleRegister = () => {
+    authGoogle({
+      onSuccess: () => {
+        navigate("/onboarding");
+      },
+      onError: () => {
+        setError("root", {message: 'Error al registrar con Google'})
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col h-full w-full max-w-sm mx-auto px-4 py-2">
@@ -76,7 +82,7 @@ export default function Register() {
           <Input
             type="text"
             placeholder="Nombre"
-            disabled={isPending}
+            disabled={isPending || isAuthGooglePending}
             {...register("name")}
           />
           {errors.name && (
@@ -91,7 +97,7 @@ export default function Register() {
           <Input 
             type="email" 
             placeholder="Email" 
-            disabled={isPending}
+            disabled={isPending || isAuthGooglePending}
             {...register("email")}
           />
           {errors.email && (
@@ -107,14 +113,14 @@ export default function Register() {
             <Input
               type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
-              disabled={isPending}
+              disabled={isPending || isAuthGooglePending}
               className="pr-12"
               {...register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              disabled={isPending}
+              disabled={isPending || isAuthGooglePending}
               className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
             >
               {showPassword ? <EyeIcon /> : <EyeOffIcon />}
@@ -133,14 +139,14 @@ export default function Register() {
             <Input
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirmar contraseña"
-              disabled={isPending}
+              disabled={isPending || isAuthGooglePending}
               className="pr-12"
               {...register("confirmPassword")}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              disabled={isPending}
+              disabled={isPending || isAuthGooglePending}
               className="absolute right-4 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
             >
               {showConfirmPassword ? <EyeIcon /> : <EyeOffIcon />}
@@ -158,10 +164,10 @@ export default function Register() {
           type="submit"
           variant="primary"
           size="lg"
-          disabled={isPending}
-          className={`mt-2 ${isPending ? "opacity-70 cursor-not-allowed" : ""}`}
+          disabled={isPending || isAuthGooglePending}
+          className={`mt-2 ${isPending || isAuthGooglePending ? "opacity-70 cursor-not-allowed" : ""}`}
         >
-          {isPending ? "Creando cuenta..." : "Registrarse"}
+          {isPending || isAuthGooglePending ? "Creando cuenta..." : "Registrarse"}
         </Button>
       </form>
  
@@ -175,8 +181,8 @@ export default function Register() {
         type="button"
         variant="secondary"
         size="lg"
-        disabled={isPending}
-        onClick={""}
+        disabled={isPending || isAuthGooglePending}
+        onClick={handleGoogleRegister}
         className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10"
       >
         <GoogleIcon />
@@ -188,7 +194,7 @@ export default function Register() {
         <button
           type="button"
           onClick={() => navigate("/login")}
-          disabled={isPending}
+          disabled={isPending || isAuthGooglePending}
           className="text-karga-orange hover:text-karga-lightorange transition-colors font-bold"
         >
           Inicia sesión
