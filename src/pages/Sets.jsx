@@ -16,7 +16,8 @@ import { useRoutines } from "../hooks/queries/useRoutines";
 import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
 import { NewTrainModal } from "../components/modals/newTrainModal";
-
+import { WeekActivity } from "../components/sets/WeekActivity";
+import { useWeekActivity } from "../hooks/queries/useSessions";
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
@@ -24,7 +25,6 @@ export default function Sets() {
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  
   const { start: startSession, isStarted } = useSesionStore();
 
   const { data: user } = useAuth();
@@ -33,9 +33,16 @@ export default function Sets() {
   const { data: routines, isLoading: isRoutinesLoading } =
     useRoutines(profile_id);
 
+  const { data: weekActivity, isLoading: isWeekActivityLoading } =
+    useWeekActivity(profile_id);
+
+  console.log(weekActivity);
+
   useEffect(() => {
     if (profile_id && routines && routines.length === 1) {
-      const seen = localStorage.getItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`);
+      const seen = localStorage.getItem(
+        `hasSeenWorkoutStartWalkthrough_${profile_id}`,
+      );
       if (!seen) {
         const id = setTimeout(() => {
           setShowOnboarding(true);
@@ -47,7 +54,10 @@ export default function Sets() {
 
   const handleCloseOnboarding = () => {
     if (profile_id) {
-      localStorage.setItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`, 'true');
+      localStorage.setItem(
+        `hasSeenWorkoutStartWalkthrough_${profile_id}`,
+        "true",
+      );
     }
     setShowOnboarding(false);
   };
@@ -57,7 +67,7 @@ export default function Sets() {
     useInsertExercisesRoutine(profile_id);
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
 
-  if (isRoutinesLoading) {
+  if (isRoutinesLoading || isWeekActivityLoading) {
     return (
       <div className="flex justify-center items-center h-[50vh] w-full">
         <div className="w-10 h-10 border-4 border-karga-orange border-t-transparent rounded-full animate-spin" />
@@ -99,7 +109,9 @@ export default function Sets() {
 
   const handleStartWorkoutClick = () => {
     if (isStarted) {
-      alert("Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.");
+      alert(
+        "Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.",
+      );
       return;
     }
     startSession();
@@ -184,7 +196,9 @@ export default function Sets() {
               <FiPlay className="w-6 h-6 text-white ml-0.5" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="text-xl font-black text-white">Empezar entrenamiento</span>
+              <span className="text-xl font-black text-white">
+                Empezar entrenamiento
+              </span>
               <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
                 Iniciar una sesión vacía de ejercicio
               </span>
@@ -200,7 +214,9 @@ export default function Sets() {
               <FiPlus className="w-6 h-6 text-white" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="text-xl font-black text-white">Nueva Rutina</span>
+              <span className="text-xl font-black text-white">
+                Nueva Rutina
+              </span>
               <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
                 Crear rutina personalizada
               </span>
@@ -248,6 +264,10 @@ export default function Sets() {
           </svg>
         </Button>
       </div>
+
+      {/*ACTIVIDAD SEMANAL*/}
+
+      <WeekActivity weekSessions={weekActivity} user={user} />
 
       {/* MIS RUTINAS */}
       <RoutinesList
@@ -307,40 +327,51 @@ export default function Sets() {
         onClose={() => setIsProfileModalOpen(false)}
       />
 
-      {showOnboarding && createPortal(
-        <div 
-          className="fixed inset-0 bg-black/50 z-[99] flex flex-col items-center justify-start px-4 pt-[220px] animate-fade-in"
-        >
-          <div 
-            className="w-full max-w-[340px] bg-[#2A2424] rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in"
-          >
-            {/* Tooltip triangle pointing up */}
-            <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-[#2A2424]" />
+      {showOnboarding &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 z-[99] flex flex-col items-center justify-start px-4 pt-[220px] animate-fade-in">
+            <div className="w-full max-w-[340px] bg-[#2A2424] rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in">
+              {/* Tooltip triangle pointing up */}
+              <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-[#2A2424]" />
 
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h4 className="text-white font-bold text-sm tracking-wide">
+                    ¡Tu primera rutina está lista!
+                  </h4>
+                  <p className="text-zinc-400 text-xs leading-relaxed font-medium">
+                    Ahora que ya tienes tu primera rutina, podrás empezar tus
+                    entrenamientos rápidamente desde aquí o desde la pestaña de{" "}
+                    <strong>Sesiones</strong>.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <h4 className="text-white font-bold text-sm tracking-wide">¡Tu primera rutina está lista!</h4>
-                <p className="text-zinc-400 text-xs leading-relaxed font-medium">
-                  Ahora que ya tienes tu primera rutina, podrás empezar tus entrenamientos rápidamente desde aquí o desde la pestaña de <strong>Sesiones</strong>.
-                </p>
-              </div>
+
+              <button
+                onClick={handleCloseOnboarding}
+                className="w-full py-2.5 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-xl font-bold text-xs transition-colors shadow-lg shadow-karga-orange/10"
+              >
+                ¡Entendido!
+              </button>
             </div>
-
-            <button 
-              onClick={handleCloseOnboarding}
-              className="w-full py-2.5 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-xl font-bold text-xs transition-colors shadow-lg shadow-karga-orange/10"
-            >
-              ¡Entendido!
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
