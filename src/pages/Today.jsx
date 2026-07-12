@@ -11,7 +11,7 @@ import { useAuth } from '../hooks/queries/useAuth'
 import { useSets } from '../hooks/queries/useSets'
 import { useSessions } from '../hooks/queries/useSessions'
 import { useSetsStore } from '../stores/setsStore'
-import { useSesionStore } from '../stores/sesionStore'
+import { useSessionStore } from '../stores/sessionStore'
 import SessionCard from '../components/calendar/SessionCard'
 import { format } from 'date-fns'
 import { FiChevronDown } from 'react-icons/fi'
@@ -33,10 +33,10 @@ import { FiChevronDown } from 'react-icons/fi'
  *   On app boot, after fetching from Supabase, call:
  *     useCalendarStore.getState().loadFromSupabase({ sets, sessions })
  *
- *   After every useSetsStore.addSet() or useSesionStore.finish(), call:
+ *   After every useSetsStore.addSet() or useSessionStore.finish(), call:
  *     useCalendarStore.getState().syncLocalData({
  *       sets: useSetsStore.getState().sets,
- *       sessions: useSesionStore.getState().sessions,
+ *       sessions: useSessionStore.getState().sessions,
  *     })
  */
 export default function HistoryScreen() {
@@ -61,7 +61,7 @@ export default function HistoryScreen() {
   const { data: sets } = useSets(profile_id)
   const { data: sessions, isLoading: isSessionsLoading } = useSessions(profile_id)
   const { sets: setsFromStore } = useSetsStore()
-  const { sessions: sessionsFromStore } = useSesionStore()
+  const { sessions: sessionsFromStore } = useSessionStore()
 
   useEffect(() => {
     loadFromSupabase({ sets, sessions })
@@ -144,6 +144,7 @@ export default function HistoryScreen() {
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
         onMonthPress={toggleMonthModal}
+        selectedDate={selectedDate}
       />
 
       {/* Weekly strip */}
