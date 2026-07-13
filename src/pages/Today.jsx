@@ -147,6 +147,7 @@ export default function HistoryScreen() {
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
         onMonthPress={toggleMonthModal}
+        selectedDate={selectedDate}
       />
 
       {/* Weekly strip */}

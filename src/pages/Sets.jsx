@@ -6,7 +6,7 @@ import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
 import ProfileModal from "../components/modals/ProfileModal";
-import { useSesionStore } from "../stores/sesionStore";
+import { useSessionStore } from "../stores/sessionStore";
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
