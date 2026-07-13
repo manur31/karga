@@ -55,22 +55,12 @@ export default function WeeklyStrip({ selectedDate, activeDates, onSelectDate, m
     const nextWeek = getPrevWeek(weekRef)
     setWeekRef(nextWeek)
     if (onWeekChange) onWeekChange(nextWeek)
-
-    const selectedDateObj = new Date(selectedDate + 'T00:00:00')
-    const newWeekDays = generateWeek(nextWeek)
-    const newDate = newWeekDays[(selectedDateObj.getDay() + 6) % 7]
-    onSelectDate(toDateKey(newDate))
   }
 
   function handleNextWeek() {
     const nextWeek = getNextWeek(weekRef)
     setWeekRef(nextWeek)
     if (onWeekChange) onWeekChange(nextWeek)
-
-    const selectedDateObj = new Date(selectedDate + 'T00:00:00')
-    const newWeekDays = generateWeek(nextWeek)
-    const newDate = newWeekDays[(selectedDateObj.getDay() + 6) % 7]
-    onSelectDate(toDateKey(newDate))
   }
 
   function handleSelectDay(date) {

@@ -14,11 +14,11 @@ export const useSetsStore = create(
             })),
 
             addSet: (newSet) => set((state) => ({
-                sets: [...state.sets, {
+                sets: [...state.sets, { 
+                    ...newSet,
                     id: crypto.randomUUID(),
                     synced: false,
                     created_at: new Date(),
-                    ...newSet,
                 }]
             })),
 
