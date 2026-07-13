@@ -1,30 +1,44 @@
-import { useState, useMemo, useEffect } from "react";
-import { useCalendarStore } from "../stores/calendarStore";
-import {
-  calculateDailyMetrics,
-  getNextMonth,
-  getPrevMonth,
-} from "../lib/calendarUtils";
-import CalendarHeader from "../components/calendar/CalendarHeader";
-import WeeklyStrip from "../components/calendar/WeeklyStrip";
-import DailySummary from "../components/calendar/DailySummary";
-import ActivityList from "../components/calendar/ActivityList";
-import MonthModal from "../components/calendar/MothModal";
-import {
-  useExercises,
-  useFavoriteExercises,
-} from "../hooks/queries/useExercises";
-import { useAuth } from "../hooks/queries/useAuth";
-import { useSets } from "../hooks/queries/useSets";
-import { useSessions } from "../hooks/queries/useSessions";
-import { useSetsStore } from "../stores/setsStore";
-import { useSesionStore } from "../stores/sesionStore";
-import SessionCard from "../components/calendar/SessionCard";
-import { format } from "date-fns";
-import { FiChevronDown } from "react-icons/fi";
-import { WeekActivity } from "../components/sets/WeekActivity";
-import { useWeekActivity } from "../hooks/queries/useSessions";
+import { useState, useMemo, useEffect } from 'react'
+import { useCalendarStore } from '../stores/calendarStore'
+import { calculateDailyMetrics, getNextMonth, getPrevMonth } from '../lib/calendarUtils'
+import CalendarHeader from '../components/calendar/CalendarHeader'
+import WeeklyStrip from '../components/calendar/WeeklyStrip'
+import DailySummary from '../components/calendar/DailySummary'
+import ActivityList from '../components/calendar/ActivityList'
+import MonthModal from '../components/calendar/MothModal'
+import { useExercises, useFavoriteExercises } from '../hooks/queries/useExercises'
+import { useAuth } from '../hooks/queries/useAuth'
+import { useSets } from '../hooks/queries/useSets'
+import { useSessions } from '../hooks/queries/useSessions'
+import { useSetsStore } from '../stores/setsStore'
+import { useSessionStore } from '../stores/sessionStore'
+import SessionCard from '../components/calendar/SessionCard'
+import { format } from 'date-fns'
+import { FiChevronDown } from 'react-icons/fi'
 
+/**
+ * HistoryScreen
+ *
+ * The main calendar / history view of Karga.
+ *
+ * Props:
+ *   exerciseMap   { [exercise_id]: exerciseName }
+ *                 Pass this down from wherever you resolve exercise names.
+ *                 Defaults to {} — cards will show the raw exercise_id if missing.
+ *
+ * Usage:
+ *   <HistoryScreen exerciseMap={exerciseMap} />
+ *
+ * Data integration:
+ *   On app boot, after fetching from Supabase, call:
+ *     useCalendarStore.getState().loadFromSupabase({ sets, sessions })
+ *
+ *   After every useSetsStore.addSet() or useSessionStore.finish(), call:
+ *     useCalendarStore.getState().syncLocalData({
+ *       sets: useSetsStore.getState().sets,
+ *       sessions: useSessionStore.getState().sessions,
+ *     })
+ */
 export default function HistoryScreen() {
   const {
     selectedDate,
@@ -36,88 +50,69 @@ export default function HistoryScreen() {
     getActivityForDate,
     getActiveDates,
     loadFromSupabase,
-    syncLocalData,
-  } = useCalendarStore();
+    syncLocalData
+  } = useCalendarStore()
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
 
-  const { data: popularExercises } = useExercises(profile_id);
-  const { data: userExercises } = useFavoriteExercises(profile_id);
-  const { data: sets } = useSets(profile_id);
-  const { data: sessions, isLoading: isSessionsLoading } =
-    useSessions(profile_id);
-  const { sets: setsFromStore } = useSetsStore();
-  const { sessions: sessionsFromStore } = useSesionStore();
+  const { data: popularExercises} = useExercises(profile_id);
+  const { data: userExercises} = useFavoriteExercises(profile_id);
+  const { data: sets } = useSets(profile_id)
+  const { data: sessions, isLoading: isSessionsLoading } = useSessions(profile_id)
+  const { sets: setsFromStore } = useSetsStore()
+  const { sessions: sessionsFromStore } = useSessionStore()
 
   useEffect(() => {
-    loadFromSupabase({ sets, sessions });
-    syncLocalData({ sets: setsFromStore, sessions: sessionsFromStore });
-  }, [
-    sets,
-    sessions,
-    setsFromStore,
-    sessionsFromStore,
-    loadFromSupabase,
-    syncLocalData,
-  ]);
+    loadFromSupabase({ sets, sessions })
+    syncLocalData({ sets: setsFromStore, sessions: sessionsFromStore })
+  }, [sets, sessions, setsFromStore, sessionsFromStore, loadFromSupabase, syncLocalData])
 
-  const userExercisesList = userExercises?.map((exercise) => ({
-    ...exercise.exercises,
-  }));
+  const userExercisesList = userExercises?.map(exercise => ({
+    ...exercise.exercises
+  }))
 
   const exercises = [...(popularExercises || []), ...(userExercisesList || [])];
 
   // Month navigator state (used by header and modal in sync)
   const [monthRef, setMonthRef] = useState(
-    selectedDate ? new Date(selectedDate + "T00:00:00") : new Date(),
-  );
+    selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date()
+  )
 
-  const [isSessionsOpen, setIsSessionsOpen] = useState(false);
+  const [isSessionsOpen, setIsSessionsOpen] = useState(false)
 
   // Active dates set — memoized so DayCell/MonthGrid don't recalculate each render
-  const activeDates = useMemo(
-    () => getActiveDates(),
-    [activityByDate, getActiveDates],
-  );
+  const activeDates = useMemo(() => getActiveDates(), [activityByDate, getActiveDates])
 
   // Current day's data
-  const dayActivity = getActivityForDate(selectedDate);
+  const dayActivity = getActivityForDate(selectedDate)
 
   // Metrics for the summary cards
-  const metrics = useMemo(
-    () => calculateDailyMetrics(dayActivity),
-    [dayActivity],
-  );
-
-  const { data: weekActivity, isLoading: isWeekActivityLoading } =
-    useWeekActivity(profile_id);
+  const metrics = useMemo(() => calculateDailyMetrics(dayActivity), [dayActivity])
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
   function handleSelectDate(dateStr) {
-    setSelectedDate(dateStr);
+    setSelectedDate(dateStr)
     // Keep monthRef in sync for the header label
-    setMonthRef(new Date(dateStr + "T00:00:00"));
+    setMonthRef(new Date(dateStr + 'T00:00:00'))
   }
 
   function handleModalSelectDate(dateStr) {
-    setSelectedDate(dateStr);
-    setMonthRef(new Date(dateStr + "T00:00:00"));
-    closeMonthModal();
+    setSelectedDate(dateStr)
+    setMonthRef(new Date(dateStr + 'T00:00:00'))
+    closeMonthModal()
   }
 
   function handlePrevMonth() {
-    setMonthRef((m) => getPrevMonth(m));
+    setMonthRef((m) => getPrevMonth(m))
   }
 
   function handleNextMonth() {
-    setMonthRef((m) => getNextMonth(m));
+    setMonthRef((m) => getNextMonth(m))
   }
 
-  {
-    /* Session card */
-  }
+  {/* Session card */}
   const selectedSessions = sessionsFromStore?.filter((session) => {
     const rawDate =
       session.created_at ||
@@ -132,7 +127,7 @@ export default function HistoryScreen() {
 
     if (isNaN(date.getTime())) return false;
 
-    const sessionDate = format(date, "yyyy-MM-dd");
+    const sessionDate = format(date, 'yyyy-MM-dd');
     return sessionDate === selectedDate;
   });
 
@@ -140,7 +135,9 @@ export default function HistoryScreen() {
 
   return (
     // Full-screen dark container — adjust to your router/nav setup
-    <div className="min-h-screen flex flex-col w-full animate-fade-in bg-dark-bg overflow-hidden relative pb-20 pt-10 ">
+    <div
+      className="min-h-screen flex flex-col w-full animate-fade-in bg-dark-bg overflow-hidden relative pb-20 pt-10 px-4"
+    >
       {/* Header: title + month navigator */}
       <CalendarHeader
         referenceDate={monthRef}
@@ -153,12 +150,12 @@ export default function HistoryScreen() {
       {/* Weekly strip */}
       <div className="mt-2">
         <WeeklyStrip
-          selectedDate={selectedDate}
-          activeDates={activeDates}
-          onSelectDate={handleSelectDate}
-          monthRef={monthRef}
-          onWeekChange={(newWeek) => setMonthRef(newWeek)}
-        />
+        selectedDate={selectedDate}
+        activeDates={activeDates}
+        onSelectDate={handleSelectDate}
+        monthRef={monthRef}
+        onWeekChange={(newWeek) => setMonthRef(newWeek)}
+      />
       </div>
 
       {/* Divider */}
@@ -168,25 +165,20 @@ export default function HistoryScreen() {
       <div className="flex-1 overflow-y-auto pb-8">
         {/* Summary cards */}
         <DailySummary metrics={metrics} />
-        {/* Week Activity */}
-        <WeekActivity weekSessions={weekActivity} user={user} />
+
         {/* Session card */}
         <div className="mt-8">
           <div className="mx-4">
-            <button
+            <button 
               onClick={() => setIsSessionsOpen(!isSessionsOpen)}
               className="w-full flex items-center justify-between text-white text-[17px] font-bold px-5 py-4 bg-white/5 hover:bg-white/10 rounded-2xl outline-none active:scale-[0.98] transition-all"
             >
               Sesiones del día
-              <FiChevronDown
-                className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${isSessionsOpen ? "rotate-180" : ""}`}
-              />
+              <FiChevronDown className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${isSessionsOpen ? 'rotate-180' : ''}`} />
             </button>
           </div>
-
-          <div
-            className={`grid transition-all duration-300 ease-in-out ${isSessionsOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"}`}
-          >
+          
+          <div className={`grid transition-all duration-300 ease-in-out ${isSessionsOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}`}>
             <div className="overflow-hidden">
               {isSessionsLoading ? (
                 <SessionsLoadingState />
@@ -202,7 +194,10 @@ export default function HistoryScreen() {
         </div>
 
         {/* Activity list */}
-        <ActivityList dayActivity={dayActivity} exercises={exercises} />
+        <ActivityList
+          dayActivity={dayActivity}
+          exercises={exercises}
+        />
       </div>
 
       {/* Month modal (bottom sheet) */}
@@ -214,7 +209,7 @@ export default function HistoryScreen() {
         onClose={closeMonthModal}
       />
     </div>
-  );
+  )
 }
 
 function SessionsLoadingState() {
@@ -223,18 +218,16 @@ function SessionsLoadingState() {
       <span className="animate-pulse size-12 bg-karga-gray rounded-full"></span>
       <p className="text-white/60 text-sm font-medium">Cargando sesiones...</p>
     </div>
-  );
+  )
 }
 
 function SessionsEmptyState() {
   return (
     <div className="mx-4 bg-karga-gray rounded-2xl px-4 py-10 flex flex-col items-center gap-2">
-      <p className="text-white/60 text-sm font-medium">
-        Sin sesiones creadas este día
-      </p>
+      <p className="text-white/60 text-sm font-medium">Sin sesiones creadas este día</p>
       <p className="text-zinc-500 text-xs text-center font-medium">
         Completa una sesión para ver tu registro aquí
       </p>
     </div>
-  );
+  )
 }
