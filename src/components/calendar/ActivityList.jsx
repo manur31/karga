@@ -17,7 +17,7 @@ export default function ActivityList({ dayActivity, exercises }) {
 
   setTimeout(() => {
     setIsLoading(false)
-  }, 300);
+  }, 800);
 
   return (
     <div className="mt-6">
@@ -40,12 +40,12 @@ export default function ActivityList({ dayActivity, exercises }) {
               <EmptyState />
             ) : (
               <div className="flex flex-col gap-2.5">
-                {groups.map((group, index) => (
+                {groups.map((group) => (
                   <SessionCard
-                    key={index}
+                    key={group.exercise_id}
                     exerciseName={group.exerciseName}
                     sets={group.sets}
-                    SetsTime={group.sessionTime}
+                    sessionTime={group.sessionTime}
                   />
                 ))}
               </div>

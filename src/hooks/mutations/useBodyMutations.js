@@ -17,6 +17,10 @@ export const useRegisterWeight = (profile_id) => {
       });
 
       queryClient.invalidateQueries({
+        queryKey: ["weightHistory", profile_id],
+      });
+
+      queryClient.invalidateQueries({
         queryKey: ["body", profile_id],
       });
 
