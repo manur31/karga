@@ -24,8 +24,11 @@ export default function Sets() {
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  
-  const { start: startSession, isStarted } = useSesionStore();
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const errorTimerRef = useRef(null);
+
+  const { start: startSession, isStarted } = useSessionStore();
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
