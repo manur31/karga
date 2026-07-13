@@ -43,6 +43,7 @@ export default function SessionNoteModal({ isOpen, onClose, initialNote, onSave 
           <textarea
             autoFocus
             value={localNote}
+            maxLength={300}
             onChange={(e) => setLocalNote(e.target.value)}
             placeholder="Empieza a escribir tu nota. Por ejemplo: Hoy me sentí con mucha energía..."
             className="w-full h-32 bg-black/20 border border-white/10 rounded-2xl p-4 text-white placeholder:text-zinc-500 outline-none focus:border-karga-orange/50 transition-colors resize-none text-sm"

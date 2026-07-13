@@ -167,7 +167,17 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
                 <input 
                   type="number"
                   value={reps}
-                  onChange={(e) => setReps(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setReps('');
+                    } else {
+                      const num = parseInt(val, 10);
+                      if (!isNaN(num)) {
+                        setReps(Math.min(999, Math.max(0, num)));
+                      }
+                    }
+                  }}
                   onFocus={handleFocus}
                   className={`min-w-0 flex-1 bg-transparent text-center font-black text-white tracking-tighter outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all ${getInputTextSize(reps)}`}
                 />
@@ -195,7 +205,17 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
                 <input 
                   type="number"
                   value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setWeight('');
+                    } else {
+                      const num = parseFloat(val);
+                      if (!isNaN(num)) {
+                        setWeight(Math.min(9999, Math.max(0, num)));
+                      }
+                    }
+                  }}
                   onFocus={handleFocus}
                   className={`min-w-0 flex-1 bg-transparent text-center font-black text-white tracking-tighter outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all ${getInputTextSize(weight)}`}
                 />

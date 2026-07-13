@@ -100,6 +100,7 @@ export default function CustomExerciseModal({ onClose }) {
               type="text" 
               placeholder="Ej: Curl de bíceps concentrado" 
               value={name}
+              maxLength={50}
               onChange={(e) => {
                 setName(e.target.value);
                 setErrorMsg("");

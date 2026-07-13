@@ -11,7 +11,7 @@ export default function Welcome() {
   const { data: profile, isLoading } = useAuth()
   
   if (isLoading) return <div>Loading...</div>
-  if (profile) return <Navigate to={"/sets"} />;
+  if (profile) return <Navigate to={"/rutinas"} />;
 
   return (
     <div className="relative flex flex-col justify-between items-center min-h-[85vh] w-full text-center px-4 py-8 overflow-hidden">

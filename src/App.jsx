@@ -6,13 +6,14 @@ import Welcome from './pages/Welcome';
 import Login from "./pages/Login";    
 import Register from './pages/Register';
 import Onboarding from "./pages/Onboarding";
-import Sets from "./pages/Sets";
+import Rutinas from "./pages/Rutinas";
 import Sessions from "./pages/Sessions";
-import Body from "./pages/Body";
+import Progreso from "./pages/Progreso";
 import Today from "./pages/Today";
 import SetsPage from "./pages/SetsPage";
 import TestPage from "./pages/TestPage";
 import SetsNewPage from "./pages/SetsNewPage";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
   return (
@@ -25,12 +26,13 @@ function App() {
             <Route path={'/login'} element={<Login/>}/>  
             <Route path={'/register'} element={<Register/>}/> 
             <Route path={'/onboarding'} element={<Onboarding/>}/>
+            <Route path={'/forgot-password'} element={<ForgotPassword/>}/>
           </Route>
           <Route element={<ProtectedRoutes/>}>
             <Route element={<MainLayout />}>
-              <Route path={"/sets"} element={<Sets/>} />
+              <Route path={"/rutinas"} element={<Rutinas/>} />
               <Route path={"/sessions"} element={<Sessions/>} />
-              <Route path={"/body"} element={<Body/>} />
+              <Route path={"/progreso"} element={<Progreso/>} />
               <Route path={"/today"} element={<Today/>} />
               <Route path={"/profile"} element={<SetsPage/>} />
               <Route path={"/test"} element={<TestPage/>} />

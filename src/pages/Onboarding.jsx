@@ -58,7 +58,7 @@ export default function Onboarding() {
     };
   
     onboardingMutate(onboardingData, {
-      onSuccess: () => navigate('/sets')
+      onSuccess: () => navigate('/rutinas')
     });
   };
 

@@ -34,7 +34,7 @@ export default function Login() {
     login(data, {
       onSuccess: () => {
         setTimeout(() => {
-          navigate("/sets");
+          navigate("/rutinas");
         }, 1000)
       },
       onError: (error) => {
@@ -47,7 +47,7 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     authWithGoogle({
       onSuccess: () => {
-        navigate("/sets");
+        navigate("/rutinas");
       },
       onError: () => {
         setError("root", {message: 'Error al iniciar sesión con Google'})

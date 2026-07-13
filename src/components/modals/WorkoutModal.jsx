@@ -2,16 +2,9 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useExercises, useFavoriteExercises } from '../../hooks/queries/useExercises';
-import { useUpdateFavorite, useAddToFavorite } from '../../hooks/mutations/useExercisesMutations';
 import { ArrowLeft, PlusIcon, CheckIcon } from '../icons';
 import CustomExerciseModal from './CustomExerciseModal';
 import ExerciseInfoModal from './ExerciseInfoModal';
-
-const HeartIcon = ({ filled, className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={filled ? 0 : 2} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-  </svg>
-);
 
 const QuestionIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
@@ -26,9 +19,6 @@ export default function WorkoutModal({ onClose, onSave }) {
   const { data: popularExercises, isLoading: isPopularLoading, isError: isPopularError } = useExercises(profile_id);
   const { data: userExercises, isLoading: isUserLoading, isError: isUserError } = useFavoriteExercises(profile_id);
   
-  const { mutateAsync: updateFavorite } = useUpdateFavorite(profile_id);
-  const { mutateAsync: addToFavorite } = useAddToFavorite(profile_id);
-
   const isLoading = isPopularLoading || isUserLoading;
   const isError = isPopularError || isUserError;
 
@@ -49,24 +39,7 @@ export default function WorkoutModal({ onClose, onSave }) {
   }
 
   const exercises = Array.from(exercisesMap.values());
-  exercises.sort((a, b) => {
-    if (a.is_favorite && !b.is_favorite) return -1;
-    if (!a.is_favorite && b.is_favorite) return 1;
-    return a.name.localeCompare(b.name);
-  });
-
-  const handleToggleFavorite = async (exercise) => {
-    const inUserExercises = userExercises?.some(ue => ue.exercise_id === exercise.id);
-    try {
-      if (inUserExercises) {
-        await updateFavorite({ exercise_id: exercise.id, is_favorite: !exercise.is_favorite });
-      } else {
-        await addToFavorite(exercise.id);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  exercises.sort((a, b) => a.name.localeCompare(b.name));
 
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [routineName, setRoutineName] = useState("");
@@ -211,20 +184,12 @@ export default function WorkoutModal({ onClose, onSave }) {
                       <QuestionIcon className="w-5 h-5" />
                     </button>
 
-                    <div className="flex items-center gap-3">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleToggleFavorite(exercise); }}
-                        className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors"
-                      >
-                        <HeartIcon filled={exercise.is_favorite} className={`w-5 h-5 ${exercise.is_favorite ? 'text-red-500' : ''}`} />
-                      </button>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 shrink-0 ${
-                        isSelected 
-                          ? 'border-green-500 bg-green-500/10 scale-105' 
-                          : 'border-zinc-600 bg-transparent'
-                      }`}>
-                        {isSelected && <CheckIcon className="w-4 h-4 text-green-500" />}
-                      </div>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 shrink-0 ${
+                      isSelected 
+                        ? 'border-green-500 bg-green-500/10 scale-105' 
+                        : 'border-zinc-600 bg-transparent'
+                    }`}>
+                      {isSelected && <CheckIcon className="w-4 h-4 text-green-500" />}
                     </div>
                   </div>
                 </div>

@@ -17,7 +17,7 @@ import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
 import { NewTrainModal } from "../components/modals/newTrainModal";
 
-export default function Sets() {
+export default function Rutinas() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [isNewTrainModalOpen, setIsNewTrainModalOpen] = useState(false);
@@ -68,9 +68,7 @@ export default function Sets() {
   const handleCreateWorkout = () => {
     setOpenModal(true);
   };
-  const handleCreateNewTrain = () => {
-    setIsNewTrainModalOpen(true);
-  };
+
 
   const createroutine = async (name, description = "descripcion de prueba") => {
     return await createRoutines({
