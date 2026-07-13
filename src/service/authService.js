@@ -1,5 +1,4 @@
 import { supabase } from "../lib/supabaseClient";
-import { clearCachedProfile, setCachedProfile } from "../storage/profile-storage";
 //register
 export const register = async ({ email, password, name }) => {
   const { data, error } = await supabase.auth.signUp({
@@ -20,75 +19,26 @@ export const register = async ({ email, password, name }) => {
   if (profileError) {
     throw profileError;
   }
-};
-
-// export const getUser = async () => {
-//   const { data, error } = await supabase.auth.getUser();
-//   if (error) {
-//     throw error;
-//   }
-
-//   const email = data?.user?.user_metadata?.email
-//   const name = data?.user?.user_metadata?.name
-//   const id = data?.user?.id
-
-//   return { email, name, id };
-// }
-
-export const authGoogle = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  // const { name, email, id } = await getUser();
-  // console.log(name)
-  // console.log(email)
-  // console.log(id)
-
-  // const { data: profileData } = await supabase
-  //   .from("profile")
-  //   .select('*')
-  //   .eq("profile_id", id)
-  //   .maybeSingle();
-
-  //   console.log(profileData)
-
-  // if (!profileData) {
-  //   const { error: profileError } = await supabase.from("profile").insert([
-  //     {
-  //       profile_id: id,
-  //       name,
-  //       email,
-  //     },
-  //   ])
-
-  //   if (profileError) {
-  //     throw profileError;
-  //   }
-  // };
-
+  return getProfile();
 };
 
 //login
 export const login = async ({ email, password }) => {
-  try {    
+  try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
     if (error) {
-      throw error;
-    } 
+      return error.message;
+    }
 
-    getProfile()
-    return data;
+    if (data) {
+      const profile = await getProfile(email);
+      return profile;
+    }
   } catch (error) {
-    throw error;
+    return error.message;
   }
 };
 
@@ -97,13 +47,10 @@ export const logout = async () => {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      throw error.message;
+      return error.message;
     }
-    
-    clearCachedProfile();
-    localStorage.clear()
   } catch (error) {
-    throw error.message;
+    return error.message;
   }
 };
 //setProfile
@@ -120,7 +67,7 @@ export const setProfile = async ({
 
   if (userError) throw userError;
 
-  const { data: profile, error } = await supabase
+  const { data, error } = await supabase
     .from("profile")
     .update({
       size,
@@ -149,48 +96,28 @@ export const setProfile = async ({
     throw profileError;
   }
 
-  setCachedProfile(profile);
-
   return {
-    profile,
+    profile: data,
     progress: progressData,
   };
 };
-
 //getProfile
 export const getProfile = async () => {
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
-
-  let { data: profile } = await supabase
+  if (userError) {
+    throw userError;
+  }
+  const { data, error } = await supabase
     .from("profile")
     .select("*")
     .eq("profile_id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    const { error } = await supabase.from("profile").insert({
-      profile_id: user.id,
-      email: user.email,
-      name: user.user_metadata.name,
-    });
-
-    if (error) throw error;
-
-    const result = await supabase
-      .from("profile")
-      .select("*")
-      .eq("profile_id", user.id)
-      .single();
-
-    profile = result.data;
+    .single();
+  if (error) {
+    throw error;
   }
-
-  console.log('Profile:', profile)
-  setCachedProfile(profile);
-
-  return profile;
+  return data;
 };

@@ -102,10 +102,10 @@ export const useCalendarStore = create(
 
       /**
        * Called after each addSet / addSession / finish action in the other stores.
-       * Reads directly from useSetsStore and useSessionStore and syncs into the calendar.
+       * Reads directly from useSetsStore and useSesionStore and syncs into the calendar.
        *
        * Pass the stores' state arrays directly to avoid circular imports:
-       *   syncLocalData({ sets: useSetsStore.getState().sets, sessions: useSessionStore.getState().sessions })
+       *   syncLocalData({ sets: useSetsStore.getState().sets, sessions: useSesionStore.getState().sessions })
        */
       syncLocalData: ({ sets = [], sessions = [] }) => {
         const current = get().activityByDate
@@ -134,9 +134,10 @@ export const useCalendarStore = create(
     }),
     {
       name: 'calendar-storage',
-      // Only persist the data index — not UI state
+      // Only persist the data index and selectedDate — not modal state
       partialize: (state) => ({
         activityByDate: state.activityByDate,
+        selectedDate: state.selectedDate,
       }),
     }
   )

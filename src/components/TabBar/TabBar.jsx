@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { useSessionStore } from "../../stores/sessionStore";
+import { useSesionStore } from "../../stores/sesionStore";
 
 import SetsIcon from "../icons/SetsIcon";
 import BodyIcon from "../icons/BodyIcon";
@@ -14,7 +14,7 @@ const navItems = [
 ];
 
 export default function TabBar() {
-  const { isStarted } = useSessionStore();
+  const { isStarted } = useSesionStore();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-input-bg border-t border-white/5">

@@ -6,7 +6,7 @@ import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
 import ProfileModal from "../components/modals/ProfileModal";
-import { useSessionStore } from "../stores/sessionStore";
+import { useSesionStore } from "../stores/sesionStore";
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
@@ -25,7 +25,7 @@ export default function Sets() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   
-  const { start: startSession, isStarted } = useSessionStore();
+  const { start: startSession, isStarted } = useSesionStore();
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
@@ -151,7 +151,7 @@ export default function Sets() {
     : null;
 
   return (
-    <div className="flex flex-col w-full animate-fade-in pb-20 px-4 pt-10">
+    <div className="flex flex-col w-full animate-fade-in pb-10 px-4 py-10">
       {/* HEADER */}
       <div className="mb-6 pl-2 relative">
         <div className="flex items-center justify-between">
