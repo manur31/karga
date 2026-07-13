@@ -40,7 +40,7 @@ import { WeekActivity } from "../components/sets/WeekActivity";
  *       sessions: useSessionStore.getState().sessions,
  *     })
  */
-export default function HistoryScreen() {
+export default function Hoy() {
   const {
     selectedDate,
     isMonthModalOpen,
@@ -104,7 +104,7 @@ export default function HistoryScreen() {
     [dayActivity],
   );
 
-  const { data: weekActivity, isLoading: isWeekActivityLoading } =
+  const { data: weekActivity } =
     useWeekActivity(profile_id);
 
   // ─── Handlers ──────────────────────────────────────────────────────────────

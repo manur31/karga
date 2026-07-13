@@ -10,7 +10,7 @@ const navItems = [
   { path: "/rutinas", label: "Rutinas", icon: SetsIcon },
   { path: "/sessions", label: "Sesiones", icon: Mancuerna },
   { path: "/progreso", label: "Progreso", icon: BodyIcon },
-  { path: "/today", label: "Hoy", icon: TodayIcon },
+  { path: "/hoy", label: "Hoy", icon: TodayIcon },
 ];
 
 export default function TabBar() {

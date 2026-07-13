@@ -9,7 +9,7 @@ import Onboarding from "./pages/Onboarding";
 import Rutinas from "./pages/Rutinas";
 import Sessions from "./pages/Sessions";
 import Progreso from "./pages/Progreso";
-import Today from "./pages/Today";
+import Hoy from "./pages/Hoy";
 import SetsPage from "./pages/SetsPage";
 import TestPage from "./pages/TestPage";
 import SetsNewPage from "./pages/SetsNewPage";
@@ -33,7 +33,7 @@ function App() {
               <Route path={"/rutinas"} element={<Rutinas/>} />
               <Route path={"/sessions"} element={<Sessions/>} />
               <Route path={"/progreso"} element={<Progreso/>} />
-              <Route path={"/today"} element={<Today/>} />
+              <Route path={"/hoy"} element={<Hoy/>} />
               <Route path={"/profile"} element={<SetsPage/>} />
               <Route path={"/test"} element={<TestPage/>} />
               <Route path={"/sets-new"} element={<SetsNewPage/>} />

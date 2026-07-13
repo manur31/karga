@@ -6,7 +6,6 @@ import {
   EyeIcon,
   EyeOffIcon,
   GoogleIcon,
-  Mancuerna,
 } from "../components/icons";
 import { useForm } from "react-hook-form";
 import { useAuthGoogle, useRegister } from "../hooks/mutations/useAuthMutations";
@@ -65,7 +64,7 @@ export default function Register() {
     <div className="flex flex-col h-full w-full max-w-sm mx-auto px-4 py-2">
       {/* LOGO */}
       <div className="flex flex-col items-center mb-10 text-center">
-        <Mancuerna className="w-12 h-12 text-karga-orange mb-2" />
+        <img src="/karga-logo-light.webp" className="w-12 h-12 object-contain mb-2" alt="Karga Logo" />
         <h1 className="text-7xl font-black tracking-tight text-karga-lightorange drop-shadow-[0_0_16px_rgba(255,168,130,0.1)]">
           Karga
         </h1>
