@@ -24,6 +24,7 @@ export default function Sets() {
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  
   const { start: startSession, isStarted } = useSesionStore();
 
   const { data: user } = useAuth();
@@ -247,8 +248,6 @@ export default function Sets() {
           </svg>
         </Button>
       </div>
-
-      {/*ACTIVIDAD SEMANAL*/}
 
       {/* MIS RUTINAS */}
       <RoutinesList
