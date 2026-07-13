@@ -119,7 +119,6 @@ export default function Progreso() {
 
   return (
     <div className="flex flex-col w-full animate-fade-in px-4 pt-10 pb-24">
-      
       {/* HEADER*/}
       <div className="mb-6 pl-2">
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">
