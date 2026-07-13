@@ -18,7 +18,7 @@ import { useAuth } from "../hooks/queries/useAuth";
 import { useSets } from "../hooks/queries/useSets";
 import { useSessions } from "../hooks/queries/useSessions";
 import { useSetsStore } from "../stores/setsStore";
-import { useSessionStore } from "../stores/sessionStore";
+import { useSesionStore } from "../stores/sesionStore";
 import SessionCard from "../components/calendar/SessionCard";
 import { format } from "date-fns";
 import { FiChevronDown } from "react-icons/fi";
@@ -48,7 +48,7 @@ export default function HistoryScreen() {
   const { data: sessions, isLoading: isSessionsLoading } =
     useSessions(profile_id);
   const { sets: setsFromStore } = useSetsStore();
-  const { sessions: sessionsFromStore } = useSessionStore();
+  const { sessions: sessionsFromStore } = useSesionStore();
 
   useEffect(() => {
     loadFromSupabase({ sets, sessions })

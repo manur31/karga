@@ -28,7 +28,7 @@ export default function Sets() {
   const [errorMessage, setErrorMessage] = useState("");
   const errorTimerRef = useRef(null);
 
-  const { start: startSession, isStarted } = useSessionStore();
+  const { start: startSession, isStarted } = useSesionStore();
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
