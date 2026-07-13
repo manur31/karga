@@ -27,6 +27,8 @@ export default function Login() {
     mode: "all",
   });
 
+  //hola
+
   const { mutate: login, isPending } = useLogin();
   const { mutate: authWithGoogle, isPending: authGooglePending, isError: authGoogleError } = useAuthGoogle();
 
