@@ -1,5 +1,13 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { authGoogle, login, logout, register, setProfile } from "../../service/authService"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  authGoogle,
+  login,
+  logout,
+  register,
+  setProfile,
+  updateProfileDays,
+  updateProfileRestTime,
+} from "../../service/authService";
 
 export const useRegister = () => {
   const queryClient = useQueryClient();
@@ -15,17 +23,17 @@ export const useRegister = () => {
 };
 
 export const useAuthGoogle = () => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: authGoogle,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['auth-user']
-            })
-        }
-    })
-}
+  return useMutation({
+    mutationFn: authGoogle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth-user"],
+      });
+    },
+  });
+};
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
