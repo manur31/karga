@@ -194,29 +194,3 @@ export const getProfile = async () => {
 
   return profile;
 };
-//UpdateProfileDays
-export const updateProfileDays = async ({ time_for_week, profile_id }) => {
-  const { data, error } = await supabase
-    .from("profile")
-    .update({
-      time_for_week,
-    })
-    .eq("profile_id", profile_id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-};
-//UpdateProfileRestTime
-export const updateProfileRestTime = async ({ rest_time, profile_id }) => {
-  const { data, error } = await supabase
-    .from("profile")
-    .update({
-      rest_time: rest_time,
-    })
-    .eq("profile_id", profile_id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-};
