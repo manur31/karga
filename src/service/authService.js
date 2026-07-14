@@ -1,5 +1,8 @@
 import { supabase } from "../lib/supabaseClient";
-import { clearCachedProfile, setCachedProfile } from "../storage/profile-storage";
+import {
+  clearCachedProfile,
+  setCachedProfile,
+} from "../storage/profile-storage";
 //register
 export const register = async ({ email, password, name }) => {
   const { data, error } = await supabase.auth.signUp({
@@ -22,74 +25,28 @@ export const register = async ({ email, password, name }) => {
   }
 };
 
-// export const getUser = async () => {
-//   const { data, error } = await supabase.auth.getUser();
-//   if (error) {
-//     throw error;
-//   }
-
-//   const email = data?.user?.user_metadata?.email
-//   const name = data?.user?.user_metadata?.name
-//   const id = data?.user?.id
-
-//   return { email, name, id };
-// }
-
 export const authGoogle = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
   });
 
   if (error) {
     throw error;
   }
-
-  // const { name, email, id } = await getUser();
-  // console.log(name)
-  // console.log(email)
-  // console.log(id)
-
-  // const { data: profileData } = await supabase
-  //   .from("profile")
-  //   .select('*')
-  //   .eq("profile_id", id)
-  //   .maybeSingle();
-
-  //   console.log(profileData)
-
-  // if (!profileData) {
-  //   const { error: profileError } = await supabase.from("profile").insert([
-  //     {
-  //       profile_id: id,
-  //       name,
-  //       email,
-  //     },
-  //   ])
-
-  //   if (profileError) {
-  //     throw profileError;
-  //   }
-  // };
-
 };
 
 //login
 export const login = async ({ email, password }) => {
-  try {    
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw error;
-    } 
-
-    getProfile()
-    return data;
-  } catch (error) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
     throw error;
   }
+
+  getProfile();
+  return data;
 };
 
 //logout
@@ -99,9 +56,9 @@ export const logout = async () => {
     if (error) {
       throw error.message;
     }
-    
+
     clearCachedProfile();
-    localStorage.clear()
+    localStorage.clear();
   } catch (error) {
     throw error.message;
   }
@@ -189,7 +146,6 @@ export const getProfile = async () => {
     profile = result.data;
   }
 
-  console.log('Profile:', profile)
   setCachedProfile(profile);
 
   return profile;

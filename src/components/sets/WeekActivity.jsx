@@ -25,7 +25,7 @@ export const WeekActivity = ({ weekSessions, user }) => {
   }, [weekSessions, user?.time_for_week]);
   return (
     <div className="flex flex-col mt-5 center mx-4">
-      <Card variant="default" className="p-4 flex flex-col gap-3 max-w-[350px]">
+      <Card variant="default" className="p-4 flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <div className="flex flex-col">
             <span className="text-sm font-bold text-white tracking-wide">

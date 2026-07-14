@@ -15,13 +15,11 @@ import {
 import { useRoutines } from "../hooks/queries/useRoutines";
 import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
-import { NewTrainModal } from "../components/modals/newTrainModal";
 import { ErrorModal } from "../components/modals/ErrorModal";
 
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
-  const [isNewTrainModalOpen, setIsNewTrainModalOpen] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -103,7 +101,7 @@ export default function Sets() {
   const handleDeleteRoutine = async (id) => {
     try {
       await usedeleteRoutines(id);
-    } catch (error) {
+    } catch {
       showError("No se pudo eliminar la rutina.");
     }
   };
@@ -120,7 +118,7 @@ export default function Sets() {
           orden: 1,
         });
       }
-    } catch (error) {
+    } catch {
       showError("No se pudieron agregar los ejercicios a la rutina.");
     }
   };
@@ -168,7 +166,7 @@ export default function Sets() {
       }
 
       handleCloseModal();
-    } catch (error) {
+    } catch {
       showError("No se pudo guardar la rutina.");
     }
   };
@@ -302,18 +300,6 @@ export default function Sets() {
         <WorkoutModal
           onClose={handleCloseModal}
           onSave={handleSaveWorkoutModal}
-        />
-      )}
-
-      {/* MODAL DE CREACIÓN DE TRAIN */}
-      {isNewTrainModalOpen && (
-        <NewTrainModal
-          isOpen={isNewTrainModalOpen}
-          onClose={() => setIsNewTrainModalOpen(false)}
-          onStarted={({ session, routine }) => {
-            setSelectedRoutineId(routine.routine_id);
-            setIsNewTrainModalOpen(false);
-          }}
         />
       )}
 
