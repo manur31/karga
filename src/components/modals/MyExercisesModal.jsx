@@ -2,20 +2,12 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useFavoriteExercises } from '../../hooks/queries/useExercises';
-import { useDeleteExercise, useUpdateFavorite } from '../../hooks/mutations/useExercisesMutations';
+import { useDeleteExercise } from '../../hooks/mutations/useExercisesMutations';
 import { ArrowLeft, PlusIcon } from '../icons';
 import CustomExerciseModal from './CustomExerciseModal';
 
-const HeartIcon = ({ filled, className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill={filled ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={filled ? 0 : 2} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-  </svg>
-);
-
 export default function MyExercisesModal({ onClose }) {
   const [isClosing, setIsClosing] = useState(false);
-  const [filterCustom, setFilterCustom] = useState(true);
-  const [filterFavs, setFilterFavs] = useState(false);
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
 
@@ -24,7 +16,6 @@ export default function MyExercisesModal({ onClose }) {
 
   const { data: userExercises, isLoading } = useFavoriteExercises(profile_id);
   const { mutateAsync: deleteExercise, isPending: isDeleting } = useDeleteExercise(profile_id);
-  const { mutateAsync: updateFavorite } = useUpdateFavorite(profile_id);
 
   const handleCloseWithAnimation = () => {
     setIsClosing(true);
@@ -45,17 +36,7 @@ export default function MyExercisesModal({ onClose }) {
 
   const filteredExercises = userExercises?.filter(ue => {
     const ex = ue.exercises;
-    if (!ex) return false;
-    const isCustom = !ex.is_populary;
-    const isFav = ue.is_favorite;
-
-    if (filterCustom && filterFavs) {
-      return isCustom || isFav;
-    }
-    if (filterCustom) return isCustom;
-    if (filterFavs) return isFav;
-    
-    return false;
+    return ex && !ex.is_populary;
   }) || [];
 
   return createPortal(
@@ -80,29 +61,6 @@ export default function MyExercisesModal({ onClose }) {
         </div>
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          {/* FILTROS */}
-          <div className="flex gap-2 p-4 shrink-0 bg-[var(--color-input-bg)] border-b border-white/5">
-            <button
-              onClick={() => setFilterCustom(!filterCustom)}
-              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all border ${
-                filterCustom 
-                  ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-sm' 
-                  : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
-              }`}
-            >
-              Personalizados
-            </button>
-            <button
-              onClick={() => setFilterFavs(!filterFavs)}
-              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all border ${
-                filterFavs 
-                  ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-sm' 
-                  : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
-              }`}
-            >
-              Favoritos
-            </button>
-          </div>
 
           {/* LISTA */}
           <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-3">
@@ -110,7 +68,7 @@ export default function MyExercisesModal({ onClose }) {
               <p className="text-center text-sm text-zinc-500 mt-10">Cargando...</p>
             ) : filteredExercises.length === 0 ? (
               <div className="flex flex-col items-center justify-center mt-12 text-center px-6">
-                <p className="text-zinc-400 text-sm font-medium">No hay ejercicios que coincidan con estos filtros.</p>
+                <p className="text-zinc-400 text-sm font-medium">Aún no has creado ningún ejercicio personalizado.</p>
               </div>
             ) : (
               filteredExercises.map(ue => {
@@ -123,22 +81,10 @@ export default function MyExercisesModal({ onClose }) {
                       <span className="text-[15px] font-bold text-white tracking-tight">{ex.name}</span>
                       <div className="flex items-center gap-2 mt-1">
                         {isCustom && <span className="text-[10px] font-black uppercase text-karga-orange bg-karga-orange/10 px-2 py-0.5 rounded-sm">Personalizado</span>}
-                        {ue.is_favorite && <span className="text-[10px] font-black uppercase text-red-500 bg-red-500/10 px-2 py-0.5 rounded-sm">Favorito</span>}
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
-                      {/* Botón de favoritos (para TODOS los ejercicios de esta lista) */}
-                      <button 
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          updateFavorite({ exercise_id: ex.id, is_favorite: !ue.is_favorite }).catch(console.error);
-                        }}
-                        className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors"
-                      >
-                        <HeartIcon filled={ue.is_favorite} className={`w-5 h-5 ${ue.is_favorite ? 'text-red-500' : ''}`} />
-                      </button>
-
                       {/* Botón de borrar SOLO si es personalizado */}
                       {isCustom && (
                         <button

@@ -116,7 +116,10 @@ export default function ProfileModal({ isOpen, onClose }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/5 bg-black/20 p-5">
-          <h2 className="text-lg font-bold text-white">Perfil y Ajustes</h2>
+          <div className="flex items-center gap-2">
+            <img src="/karga-logo-light.webp" className="w-6 h-6 object-contain" alt="Karga Logo" />
+            <h2 className="text-lg font-bold text-white">Perfil y Ajustes</h2>
+          </div>
 
           <button
             type="button"
