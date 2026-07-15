@@ -1,4 +1,8 @@
 import { supabase } from "../lib/supabaseClient";
+import {
+  clearCachedProfile,
+  setCachedProfile,
+} from "../storage/profile-storage";
 //register
 export const register = async ({ email, password, name }) => {
   const { data, error } = await supabase.auth.signUp({
@@ -19,27 +23,30 @@ export const register = async ({ email, password, name }) => {
   if (profileError) {
     throw profileError;
   }
-  return getProfile();
+};
+
+export const authGoogle = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+  });
+
+  if (error) {
+    throw error;
+  }
 };
 
 //login
 export const login = async ({ email, password }) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      return error.message;
-    }
-
-    if (data) {
-      const profile = await getProfile(email);
-      return profile;
-    }
-  } catch (error) {
-    return error.message;
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
+    throw error;
   }
+
+  getProfile();
+  return data;
 };
 
 //logout
@@ -49,6 +56,9 @@ export const logout = async () => {
     if (error) {
       return error.message;
     }
+
+    clearCachedProfile();
+    localStorage.clear();
   } catch (error) {
     return error.message;
   }
@@ -119,5 +129,34 @@ export const getProfile = async () => {
   if (error) {
     throw error;
   }
+
+  setCachedProfile(profile);
+
+  return profile;
+};
+//UpdateProfileDays
+export const updateProfileDays = async ({ time_for_week, profile_id }) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .update({
+      time_for_week,
+    })
+    .eq("profile_id", profile_id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+//UpdateProfileRestTime
+export const updateProfileRestTime = async ({ rest_time, profile_id }) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .update({
+      rest_time: rest_time,
+    })
+    .eq("profile_id", profile_id)
+    .select()
+    .single();
+  if (error) throw error;
   return data;
 };

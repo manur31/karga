@@ -91,13 +91,13 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   return (
     <>
-      <div className="fixed top-0 bottom-[76px] left-0 w-full sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 z-[45] flex flex-col overflow-hidden pointer-events-none">
-        <div className={`w-full h-full flex flex-col relative bg-[var(--color-dark-bg)] pointer-events-auto ${
+      <div className="fixed top-0 bottom-19 left-0 w-full sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 z-45 flex flex-col overflow-hidden pointer-events-none">
+        <div className={`w-full h-full flex flex-col relative bg-dark-bg pointer-events-auto ${
           isClosing ? 'animate-slide-out-custom' : 'animate-slide-in-custom'
         }`}>
           
           {/* HEADER */}
-          <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] shrink-0 z-20">
+          <div className="flex items-center justify-between p-5 bg-input-bg shrink-0 z-20">
             <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
               <ArrowLeft className="w-6 h-6" />
             </button>
@@ -115,7 +115,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
           </div>
 
           {/* CONTENIDO SCROLLABLE */}
-          <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:none z-10 relative">
+          <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 scrollbar-none [&::-webkit-scrollbar]:none z-10 relative">
             
             {isLoading ? (
               <div className="flex justify-center py-12">
@@ -167,7 +167,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
                             className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] ${
                               isSelected 
                                 ? 'bg-red-500/10 border-red-500/50' 
-                                : 'bg-[var(--color-input-bg)] border-white/5 hover:bg-white/5'
+                                : 'bg-input-bg border-white/5 hover:bg-white/5'
                             }`}
                           >
                             <div className="flex items-center gap-3">

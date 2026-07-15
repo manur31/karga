@@ -15,12 +15,15 @@ import {
 import { useRoutines } from "../hooks/queries/useRoutines";
 import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
+<<<<<<< HEAD
+import { ErrorModal } from "../components/modals/ErrorModal";
+=======
 import { NewTrainModal } from "../components/modals/newTrainModal";
+>>>>>>> dev
 
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
-  const [isNewTrainModalOpen, setIsNewTrainModalOpen] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -82,13 +85,35 @@ export default function Sets() {
     });
   };
 
+<<<<<<< HEAD
+  const handleDeleteRoutine = async (id) => {
+    try {
+      await usedeleteRoutines(id);
+    } catch {
+      showError("No se pudo eliminar la rutina.");
+    }
+=======
   const handleDeleteRoutine = (id) => {
     usedeleteRoutines(id);
+>>>>>>> dev
   };
 
   const handleAddExercisesToRoutine = async (selectedExerciseIds) => {
     if (!selectedRoutineId) return;
 
+<<<<<<< HEAD
+    try {
+      for (const exerciseId of selectedExerciseIds) {
+        await insertExercisesRoutine({
+          routine_id: selectedRoutineId,
+          id_exercises: exerciseId,
+          rest_time: 60,
+          orden: 1,
+        });
+      }
+    } catch {
+      showError("No se pudieron agregar los ejercicios a la rutina.");
+=======
     console.log("Agregando ejercicios a la rutina:", selectedExerciseIds);
     for (const exerciseId of selectedExerciseIds) {
       await insertExercisesRoutine({
@@ -97,6 +122,7 @@ export default function Sets() {
         rest_time: 60,
         orden: 1,
       });
+>>>>>>> dev
     }
   };
 
@@ -144,8 +170,13 @@ export default function Sets() {
         }
       }
       handleCloseModal();
+<<<<<<< HEAD
+    } catch {
+      showError("No se pudo guardar la rutina.");
+=======
     } catch (error) {
       console.error("Error al guardar rutina:", error);
+>>>>>>> dev
     }
   };
 
@@ -266,6 +297,8 @@ export default function Sets() {
           onSave={handleSaveWorkoutModal}
         />
       )}
+<<<<<<< HEAD
+=======
       {/* MODAL DE CREACIÓN DE TRAIN */}
       {isNewTrainModalOpen && (
         <NewTrainModal
@@ -280,6 +313,7 @@ export default function Sets() {
           }}
         />
       )}
+>>>>>>> dev
 
       {/* MODAL DE DETALLE DE RUTINA */}
       {activeRoutine && (
@@ -320,6 +354,42 @@ export default function Sets() {
             {/* Tooltip triangle pointing up */}
             <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-[#2A2424]" />
 
+<<<<<<< HEAD
+      {showOnboarding &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 z-99 flex flex-col items-center justify-start px-4 pt-55 animate-fade-in">
+            <div className="w-full max-w-85 bg-[#2A2424] rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in">
+              <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-10 border-l-transparent border-r-10 border-r-transparent border-b-10 border-b-[#2A2424]" />
+
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <h4 className="text-white font-bold text-sm tracking-wide">
+                    ¡Tu primera rutina está lista!
+                  </h4>
+
+                  <p className="text-zinc-400 text-xs leading-relaxed font-medium">
+                    Ahora que ya tienes tu primera rutina, podrás empezar tus
+                    entrenamientos rápidamente desde aquí o desde la pestaña de{" "}
+                    <strong>Sesiones</strong>.
+                  </p>
+                </div>
+=======
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -331,6 +401,7 @@ export default function Sets() {
                 <p className="text-zinc-400 text-xs leading-relaxed font-medium">
                   Ahora que ya tienes tu primera rutina, podrás empezar tus entrenamientos rápidamente desde aquí o desde la pestaña de <strong>Sesiones</strong>.
                 </p>
+>>>>>>> dev
               </div>
             </div>
 

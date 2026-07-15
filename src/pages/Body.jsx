@@ -8,11 +8,13 @@ import { useRegisterWeight } from "../hooks/mutations/useBodyMutations";
 import { useWeight } from "../hooks/queries/useBody";
 import WeightChart from "../components/WeightChart";
 export default function Body() {
-  const { data: user, isLoading: isAuthLoading } = useAuth();
+
+  const profile = getCachedProfile()
+  const profile_id = profile?.profile_id;
+
   const { data: weight, isLoading: isWeightLoading } = useWeight(
-    user?.profile_id,
+    profile_id
   );
-  const profile_id = user?.profile_id;
 
   const { data: sets = [], isLoading: isSetsLoading } = useSets(profile_id);
 
@@ -22,7 +24,7 @@ export default function Body() {
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [newWeight, setNewWeight] = useState("");
 
-  const isLoading = isAuthLoading || isSetsLoading || isWeightLoading;
+  const isLoading = isSetsLoading || isWeightLoading;
 
   const muscleActivity = useMemo(() => {
     const muscleCounter = {};

@@ -69,7 +69,7 @@ export default function SessionDetailModal({ session, onClose }) {
 
   return createPortal(
     <div 
-      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-100 p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={handleClose}
     >
       <div 

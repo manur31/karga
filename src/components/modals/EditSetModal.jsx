@@ -106,7 +106,7 @@ export default function EditSetModal({ setToEdit, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col justify-end pointer-events-auto">
+    <div className="fixed inset-0 z-70 flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
@@ -115,7 +115,7 @@ export default function EditSetModal({ setToEdit, onClose }) {
       
       {/* Contenedor Bottom Sheet */}
       <div 
-        className={`relative w-full sm:max-w-md sm:mx-auto bg-[var(--color-dark-bg)] rounded-t-3xl shadow-2xl flex flex-col overflow-hidden pb-8 h-auto ${
+        className={`relative w-full sm:max-w-md sm:mx-auto bg-dark-bg rounded-t-3xl shadow-2xl flex flex-col overflow-hidden pb-8 h-auto ${
           isClosing ? 'animate-slide-out-down' : 'animate-slide-in-up'
         }`}
       >
@@ -243,7 +243,7 @@ export default function EditSetModal({ setToEdit, onClose }) {
             <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-karga-orange hover:bg-orange-500 disabled:bg-karga-orange/50 p-4 rounded-2xl flex-shrink-0 transition-all active:scale-[0.95] shadow-lg shadow-karga-orange/20 flex items-center justify-center z-10"
+              className="bg-karga-orange hover:bg-orange-500 disabled:bg-karga-orange/50 p-4 rounded-2xl shrink-0 transition-all active:scale-[0.95] shadow-lg shadow-karga-orange/20 flex items-center justify-center z-10"
             >
               {isSaving ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

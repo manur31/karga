@@ -16,8 +16,13 @@ export default function ProfileModal({ isOpen, onClose }) {
   };
 
   return createPortal(
+<<<<<<< HEAD
+    <div
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
+=======
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in"
+>>>>>>> dev
       onClick={onClose}
     >
       <div 
@@ -69,6 +74,83 @@ export default function ProfileModal({ isOpen, onClose }) {
                 </button>
               </div>
             </div>
+<<<<<<< HEAD
+
+            {/* Tiempo de descanso */}
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4">
+              <div className="flex items-center gap-2.5">
+                <FiClock className="text-karga-orange" size={18} />
+
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-white">
+                    Tiempo de descanso
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 rounded-xl border border-white/5 bg-black/30 p-1">
+                <button
+                  type="button"
+                  onClick={() => changeRestTime(-15)}
+                  disabled={restTime <= 15 || isUpdatingRestTime}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+                >
+                  <FiChevronLeft size={18} />
+                </button>
+
+                <span className="min-w-13.5 text-center text-xs font-bold text-white">
+                  {formatRestTime(restTime)}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => changeRestTime(15)}
+                  disabled={restTime >= 300 || isUpdatingRestTime}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+                >
+                  <FiChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Días de entrenamiento */}
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4">
+              <div className="flex items-center gap-2.5">
+                <FiCalendar className="text-karga-orange" size={18} />
+
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-white">
+                    Días de entrenamiento
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-white/5 bg-black/30 p-1">
+                <button
+                  type="button"
+                  onClick={() => changeTrainingDays(-1)}
+                  disabled={trainingDays <= 1 || isUpdatingDays}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+                >
+                  <FiChevronLeft size={18} />
+                </button>
+
+                <span className="min-w-9.5 text-center text-xs font-bold text-white">
+                  {trainingDays} {trainingDays === 1 ? "día" : "días"}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => changeTrainingDays(1)}
+                  disabled={trainingDays >= 7 || isUpdatingDays}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+                >
+                  <FiChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+=======
+>>>>>>> dev
           </div>
 
           {/* Logout Button */}

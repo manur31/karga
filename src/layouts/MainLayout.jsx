@@ -5,8 +5,14 @@ import RestTimer from '../components/RestTimer';
 import { useAuth } from '../hooks/queries/useAuth';
 
 export default function MainLayout() {
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const { profile_id } = getCachedProfile();
+
+  const { isStandalone, isInstallable, install } = usePWA();
+  const { shouldShow, dismiss, markInstalled } = useInstallBanner({
+    isStandalone,
+    isInstallable,
+  });
+
   return (
     <div className="min-h-screen bg-dark-bg flex flex-col text-white overflow-x-hidden">
       
