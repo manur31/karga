@@ -11,7 +11,7 @@ import { getCachedProfile } from "../storage/profile-storage";
 export default function Body() {
 
   const profile = getCachedProfile()
-  const profile_id = profile?.id;
+  const profile_id = profile?.profile_id;
 
   const { data: weight, isLoading: isWeightLoading } = useWeight(
     profile_id

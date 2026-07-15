@@ -196,14 +196,14 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
 
   return createPortal(
     <>
-      <div className="fixed top-0 bottom-[76px] left-0 w-full sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 z-40 flex flex-col overflow-hidden pointer-events-none">
+      <div className="fixed top-0 bottom-19 left-0 w-full sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 z-40 flex flex-col overflow-hidden pointer-events-none">
       
-      <div className={`w-full h-full flex flex-col relative bg-[var(--color-dark-bg)] pointer-events-auto ${
+      <div className={`w-full h-full flex flex-col relative bg-dark-bg pointer-events-auto ${
         isClosing ? 'animate-slide-out-custom' : 'animate-slide-in-custom'
       }`}>
         
         {/* HEADER */}
-        <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] shrink-0 z-30">
+        <div className="flex items-center justify-between p-5 bg-input-bg shrink-0 z-30">
           <button 
             onClick={() => isAddingExercises ? handleCloseAddingExercises() : handleCloseWithAnimation()} 
             className="p-1.5 text-zinc-400 hover:text-white transition-colors"
@@ -265,7 +265,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
         <div className="flex-1 relative overflow-hidden flex flex-col z-10">
           
           {/* VISTA DE DETALLE (SCROLLABLE) */}
-          <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:none">
+          <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 scrollbar-none [&::-webkit-scrollbar]:none">
             
             {routine.description && (
               <p className="text-sm font-medium text-zinc-400 text-center -mt-2 animate-fade-in leading-relaxed">
@@ -313,7 +313,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                           className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
                             isEditMode && selectedExercisesForDelete.includes(exercise.id)
                               ? 'bg-red-500/10 border border-red-500/50'
-                              : 'bg-[var(--color-input-bg)] border border-transparent hover:bg-white/5'
+                              : 'bg-input-bg border border-transparent hover:bg-white/5'
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -348,7 +348,7 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                                     setSelectedExerciseToLog(exercise);
                                     setIsSetModalOpen(true);
                                   }}
-                                  className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
                                 >
                                   <PlusIcon className="w-5 h-5 text-white" />
                                 </div>
@@ -365,8 +365,8 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
 
           {/* VISTA DE SELECCIÓN DE EJERCICIOS (OVERLAY SCROLLABLE) */}
           {isAddingExercises && (
-            <div className={`absolute inset-0 bg-[var(--color-dark-bg)] z-20 flex flex-col ${isAddingClosing ? 'animate-slide-out-custom' : 'animate-slide-in-custom'}`}>
-              <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:none">
+            <div className={`absolute inset-0 bg-dark-bg z-20 flex flex-col ${isAddingClosing ? 'animate-slide-out-custom' : 'animate-slide-in-custom'}`}>
+              <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-3 scrollbar-none [&::-webkit-scrollbar]:none">
                 <div className="flex justify-between items-end mb-1 pl-1">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
                     Ejercicios disponibles
@@ -400,8 +400,8 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                       alreadyInRoutine
                         ? 'opacity-40 cursor-not-allowed bg-black/20 border-transparent'
                         : isSelected 
-                          ? 'bg-[var(--color-karga-gray)] border-green-500/50 shadow-lg shadow-green-500/5 cursor-pointer' 
-                          : 'bg-[var(--color-karga-gray)] border-transparent hover:bg-white/[0.02] cursor-pointer'
+                          ? 'bg-karga-gray border-green-500/50 shadow-lg shadow-green-500/5 cursor-pointer' 
+                          : 'bg-karga-gray border-transparent hover:bg-white/2 cursor-pointer'
                     }`}
                   >
                     <div className="flex flex-col flex-1 pr-4">
@@ -440,11 +440,11 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
               </div>
 
               {/* BOTÓN CREAR EJERCICIO PERSONALIZADO */}
-              <div className="absolute bottom-[-0.1px] inset-x-0 p-5 pb-0 pt-12 bg-linear-to-t from-[var(--color-dark-bg)] via-[var(--color-dark-bg)] to-transparent z-30">
+              <div className="absolute bottom-[-0.1px] inset-x-0 p-5 pb-0 pt-12 bg-linear-to-t from-dark-bg via-dark-bg to-transparent z-30">
                 <button
                   type="button"
                   onClick={handleCreateCustomExercise}
-                  className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl border-2 border-dashed border-white/10 text-zinc-400 font-bold text-sm hover:border-karga-orange/40 hover:text-karga-orange hover:bg-karga-orange/5 transition-all active:scale-[0.99] bg-[var(--color-dark-bg)] shadow-2xl"
+                  className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl border-2 border-dashed border-white/10 text-zinc-400 font-bold text-sm hover:border-karga-orange/40 hover:text-karga-orange hover:bg-karga-orange/5 transition-all active:scale-[0.99] bg-dark-bg shadow-2xl"
                 >
                   <PlusIcon className="w-4 h-4" />
                   Crear ejercicio personalizado

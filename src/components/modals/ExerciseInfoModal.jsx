@@ -16,15 +16,15 @@ export default function ExerciseInfoModal({ exercise, onClose }) {
 
   return createPortal(
     <div 
-      className={`fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[70] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-70 p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={(e) => { if (e.target === e.currentTarget) handleCloseWithAnimation(); }}
     >
       <div 
-        className={`bg-[var(--color-dark-bg)] w-full max-w-md max-h-[90vh] rounded-3xl flex flex-col shadow-2xl overflow-hidden ${isClosing ? 'animate-slide-out-down' : 'animate-slide-in-up'}`}
+        className={`bg-dark-bg w-full max-w-md max-h-[90vh] rounded-3xl flex flex-col shadow-2xl overflow-hidden ${isClosing ? 'animate-slide-out-down' : 'animate-slide-in-up'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] border-b border-white/5 shrink-0 z-20">
+        <div className="flex items-center justify-between p-5 bg-input-bg border-b border-white/5 shrink-0 z-20">
           <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -34,7 +34,7 @@ export default function ExerciseInfoModal({ exercise, onClose }) {
         </div>
 
         {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto p-5 pb-8 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:none z-10">
+        <div className="flex-1 overflow-y-auto p-5 pb-8 flex flex-col gap-6 scrollbar-none [&::-webkit-scrollbar]:none z-10">
           
           {/* GIF PLACEHOLDER */}
           <div className="flex flex-col gap-2">
@@ -50,7 +50,7 @@ export default function ExerciseInfoModal({ exercise, onClose }) {
           {/* DESCRIPTION */}
           <div className="flex flex-col gap-2">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1">Descripción</h3>
-            <div className="bg-[var(--color-input-bg)] p-5 rounded-3xl flex flex-col gap-3 text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+            <div className="bg-input-bg p-5 rounded-3xl flex flex-col gap-3 text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
               {exercise.description ? (
                 <p>{exercise.description}</p>
               ) : (

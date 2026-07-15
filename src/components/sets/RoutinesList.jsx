@@ -27,7 +27,7 @@ export default function RoutinesList({ routines, onOpenRoutine, onCreateRoutine 
         <div className="flex items-center gap-3 mb-5 mt-4">
           <div className="h-5 w-1 bg-karga-orange rounded-full" />
           <h2 className="text-lg font-black text-white tracking-wide">Mis Rutinas</h2>
-          <div className="flex-1 h-[1px] bg-white/5" />
+          <div className="flex-1 h-px bg-white/5" />
         </div>
         <div className="flex flex-col items-center justify-center p-8 bg-white/5 rounded-3xl border border-dashed border-white/10 text-center gap-3">
           <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/5 text-zinc-500">
@@ -37,7 +37,7 @@ export default function RoutinesList({ routines, onOpenRoutine, onCreateRoutine 
           </div>
           <div className="flex flex-col gap-1">
             <p className="text-sm font-bold text-zinc-400">Sin rutinas creadas</p>
-            <p className="text-xs text-zinc-600 max-w-[240px]">Diseña una rutina personalizada arriba para verla listada en esta sección.</p>
+            <p className="text-xs text-zinc-600 max-w-60">Diseña una rutina personalizada arriba para verla listada en esta sección.</p>
           </div>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function RoutinesList({ routines, onOpenRoutine, onCreateRoutine 
       <div className="flex items-center gap-3 mb-5 mt-4">
         <div className="h-5 w-1 bg-karga-orange rounded-full" />
         <h2 className="text-lg font-black text-white tracking-wide">Mis Rutinas</h2>
-        <div className="flex-1 h-[1px] bg-white/5" />
+        <div className="flex-1 h-px bg-white/5" />
       </div>
       <div className="flex flex-col gap-3">
         {sortedRoutines.map((data) => {
@@ -123,7 +123,7 @@ export default function RoutinesList({ routines, onOpenRoutine, onCreateRoutine 
         {/* Ghost card to create a new routine */}
         <button
           onClick={onCreateRoutine}
-          className="p-4 flex flex-row items-center justify-center gap-3 bg-white/[0.02] hover:bg-white/5 border border-dashed border-white/10 rounded-2xl cursor-pointer active:scale-[0.98] transition-all text-zinc-500 hover:text-zinc-300"
+          className="p-4 flex flex-row items-center justify-center gap-3 bg-white/2 hover:bg-white/5 border border-dashed border-white/10 rounded-2xl cursor-pointer active:scale-[0.98] transition-all text-zinc-500 hover:text-zinc-300"
         >
           <FiPlus className="w-5 h-5" />
           <span className="text-sm font-bold">Crear nueva rutina</span>

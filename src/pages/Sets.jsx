@@ -335,9 +335,9 @@ export default function Sets() {
 
       {showOnboarding &&
         createPortal(
-          <div className="fixed inset-0 bg-black/50 z-[99] flex flex-col items-center justify-start px-4 pt-[220px] animate-fade-in">
-            <div className="w-full max-w-[340px] bg-[#2A2424] rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in">
-              <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-[#2A2424]" />
+          <div className="fixed inset-0 bg-black/50 z-99 flex flex-col items-center justify-start px-4 pt-55 animate-fade-in">
+            <div className="w-full max-w-85 bg-[#2A2424] rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in">
+              <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-10 border-l-transparent border-r-10 border-r-transparent border-b-10 border-b-[#2A2424]" />
 
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">

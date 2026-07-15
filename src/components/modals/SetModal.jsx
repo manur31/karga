@@ -119,7 +119,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col justify-end pointer-events-auto">
+    <div className="fixed inset-0 z-60 flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
@@ -128,7 +128,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
       
       {/* Contenedor Bottom Sheet */}
       <div 
-        className={`relative w-full sm:max-w-md sm:mx-auto bg-[var(--color-dark-bg)] rounded-t-3xl shadow-2xl flex flex-col overflow-hidden pb-8 h-auto ${
+        className={`relative w-full sm:max-w-md sm:mx-auto bg-dark-bg rounded-t-3xl shadow-2xl flex flex-col overflow-hidden pb-8 h-auto ${
           isClosing ? 'animate-slide-out-down' : 'animate-slide-in-up'
         }`}
       >
@@ -257,7 +257,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
             <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-green-500 hover:bg-green-400 disabled:bg-green-500/50 p-4 rounded-2xl flex-shrink-0 transition-all active:scale-[0.95] shadow-lg shadow-green-500/20 flex items-center justify-center z-10"
+              className="bg-green-500 hover:bg-green-400 disabled:bg-green-500/50 p-4 rounded-2xl shrink-0 transition-all active:scale-[0.95] shadow-lg shadow-green-500/20 flex items-center justify-center z-10"
             >
               {isSaving ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

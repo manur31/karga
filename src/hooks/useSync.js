@@ -48,22 +48,24 @@ export const useSyncSessions = (profile_id) => {
     if (pendingSessions.length === 0) return;
 
     const sessionsToSync = pendingSessions.map((session) => {
+      const {id, synced, ...rest} = session;
       const created_at =
-        session.created_at ||
-        session.createAt ||
-        session.startedAt ||
+        rest.created_at ||
+        rest.createAt ||
+        rest.startedAt ||
         new Date();
-      const startedAt = session.startedAt || new Date();
-      const finishedAt = session.finishedAt || new Date();
+      const startedAt = rest.startedAt || new Date();
+      const finishedAt = rest.finishedAt || new Date();
 
       return {
         startedAt: new Date(startedAt).toISOString(),
         finishedAt: new Date(finishedAt).toISOString(),
         created_at: new Date(created_at).toISOString(),
-        profile_id: session.profile_id || profile_id,
-        note: session.note || null,
+        profile_id: rest.profile_id || profile_id,
+        note: rest.note || null,
       };
     });
+
 
     try {
       await createSession(sessionsToSync);

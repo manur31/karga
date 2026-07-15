@@ -8,8 +8,7 @@ import useInstallBanner from '../hooks/useInstallBanner';
 import { getCachedProfile } from '../storage/profile-storage';
 
 export default function MainLayout() {
-  const profile = getCachedProfile();
-  const profile_id = profile?.id;
+  const { profile_id } = getCachedProfile();
 
   const { isStandalone, isInstallable, install } = usePWA();
   const { shouldShow, dismiss, markInstalled } = useInstallBanner({

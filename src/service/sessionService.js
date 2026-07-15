@@ -30,10 +30,7 @@ export const getWeekActivity = async (profile_id) => {
 export const insertSession = async (sessions) => {
   const payload = Array.isArray(sessions) ? sessions : [sessions];
 
-  const { data, error } = await supabase
-    .from("sessions")
-    .insert(payload)
-    .select();
+  const { data, error } = await supabase.from("sessions").insert(payload).select();
 
   if (error) throw error;
 

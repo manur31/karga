@@ -107,7 +107,7 @@ export default function ProfileModal({ isOpen, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -211,7 +211,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                   <FiChevronLeft size={18} />
                 </button>
 
-                <span className="min-w-[54px] text-center text-xs font-bold text-white">
+                <span className="min-w-13.5 text-center text-xs font-bold text-white">
                   {formatRestTime(restTime)}
                 </span>
 
@@ -248,7 +248,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                   <FiChevronLeft size={18} />
                 </button>
 
-                <span className="min-w-[38px] text-center text-xs font-bold text-white">
+                <span className="min-w-9.5 text-center text-xs font-bold text-white">
                   {trainingDays} {trainingDays === 1 ? "día" : "días"}
                 </span>
 
