@@ -1,76 +1,90 @@
-// Rest Store — Timestamp-based architecture
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const useRestStore = create(
   persist(
     (set, get) => ({
-      // ─── Estado del timer (basado en timestamps) ───────────────
-      endAt: null,
+      restTime: 0,
+      intervalId: null,
       isRunning: false,
-      _pausedMs: null,
 
-      // ─── Acciones ──────────────────────────────────────────────
+      startRest: (minute) => {
+        if (get().isRunning) {
+          set({
+            restTime: 0,
+            intervalId: null,
+            isRunning: false,
+          });
+        }
+        const { intervalId } = get();
+        const seconds = minute * 60;
 
-      // Inicia un descanso de X minutos
-      startRest: (minutes) => {
-        set({
-          endAt: Date.now() + minutes * 60 * 1000,
-          isRunning: true,
-          _pausedMs: null,
-        });
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+
+        set({ restTime: seconds });
+
+        const id = setInterval(() => {
+          const currentTime = get().restTime;
+
+          if (currentTime <= 0) {
+            clearInterval(id);
+            set({ intervalId: null, isRunning: false });
+            return;
+          }
+
+          set({
+            restTime: currentTime - 1,
+          });
+        }, 1000);
+
+        set({ intervalId: id, isRunning: true });
       },
 
-      // Pausa el descanso, guardando el tiempo restante
-      pauseRest: () => {
-        const { endAt } = get();
-        if (!endAt) return;
-
-        const remainingMs = Math.max(0, endAt - Date.now());
-        set({
-          endAt: null,
-          isRunning: false,
-          _pausedMs: remainingMs,
-        });
-      },
-
-      // Continúa el descanso desde donde quedó
       continueRest: () => {
-        const { _pausedMs } = get();
-        if (!_pausedMs || _pausedMs <= 0) return;
+        const { intervalId, restTime, isRunning } = get();
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+        
+        if (restTime > 0) {
+          const id = setInterval(() => {
+            const currentTime = get().restTime;
 
-        set({
-          endAt: Date.now() + _pausedMs,
-          isRunning: true,
-          _pausedMs: null,
-        });
+            if (currentTime <= 0) {
+              clearInterval(id);
+              set({ intervalId: null, isRunning: false });
+              return;
+            }
+
+            set({
+              restTime: currentTime - 1,
+            });
+          }, 1000);
+
+          set({ intervalId: id, isRunning: true });
+        } else {
+          set({ intervalId: null, isRunning: false });
+        }
       },
 
-      // Marca el descanso como completado ( reached 0 )
-      completeRest: () => {
-        set({
-          endAt: null,
-          isRunning: false,
-          _pausedMs: null,
-        });
-      },
-
-      // Cancela/elimina el descanso
       deleteRest: () => {
+        const { intervalId } = get();
+
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+
         set({
-          endAt: null,
+          restTime: 0,
+          intervalId: null,
           isRunning: false,
-          _pausedMs: null,
         });
       },
     }),
     {
       name: "rest-storage",
-      partialize: (state) => ({
-        endAt: state.endAt,
-        isRunning: state.isRunning,
-        _pausedMs: state._pausedMs,
-      }),
     },
   ),
 );

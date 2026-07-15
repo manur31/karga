@@ -36,65 +36,40 @@ export const useAuthGoogle = () => {
 };
 
 export const useLogin = () => {
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: login,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["auth-user"],
-      });
-    },
-  });
-};
+    return useMutation({
+        mutationFn: login,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['auth-user']
+            })
+        }
+    })
+}
 
 export const useLogout = () => {
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: logout,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["auth-user"],
-      });
-    },
-  });
-};
-
+    return useMutation({
+        mutationFn: logout,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['auth-user']
+            })
+        }
+    })
+}
+ 
 export const useOnboarding = () => {
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: setProfile,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["auth-user"],
-      });
-    },
-  });
-};
-export const useUpdateProfileDays = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateProfileDays,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["auth-user"],
-      });
-    },
-  });
-};
-
-export const useUpdateProfileRestTime = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateProfileRestTime,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["auth-user"],
-      });
-    },
-  });
-};
+    return useMutation({
+        mutationFn: setProfile,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['auth-user']
+            })
+        }
+    })
+}
