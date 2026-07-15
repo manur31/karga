@@ -6,7 +6,7 @@ export default function ForgotPassword() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen w-full bg-[#272121] flex flex-col items-center justify-center px-6 py-12 select-none animate-fade-in">
+    <div className="min-h-screen w-full bg-dark-bg flex flex-col items-center justify-center px-6 py-12 select-none animate-fade-in">
       <div className="flex flex-col items-center max-w-sm text-center">
         {/* ILUSTRACIÓN CARICATURESCA */}
         <div className="relative mb-8">

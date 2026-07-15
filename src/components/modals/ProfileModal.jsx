@@ -16,13 +16,8 @@ export default function ProfileModal({ isOpen, onClose }) {
   };
 
   return createPortal(
-<<<<<<< HEAD
     <div
       className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
-=======
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in"
->>>>>>> dev
       onClick={onClose}
     >
       <div 
@@ -30,7 +25,6 @@ export default function ProfileModal({ isOpen, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-<<<<<<< HEAD
         <div className="flex items-center justify-between border-b border-white/5 bg-black/20 p-5">
           <div className="flex items-center gap-2">
             <img src="/karga-logo-light.webp" className="w-6 h-6 object-contain" alt="Karga Logo" />
@@ -42,11 +36,6 @@ export default function ProfileModal({ isOpen, onClose }) {
             onClick={onClose}
             className="p-1 text-white/50 transition-colors hover:text-white"
           >
-=======
-        <div className="flex items-center justify-between p-5 border-b border-white/5 bg-black/20">
-          <h2 className="text-white text-lg font-bold">Perfil y Ajustes</h2>
-          <button onClick={onClose} className="p-1 text-white/50 hover:text-white transition-colors">
->>>>>>> dev
             <FiX size={20} />
           </button>
         </div>
@@ -88,7 +77,6 @@ export default function ProfileModal({ isOpen, onClose }) {
                 </button>
               </div>
             </div>
-<<<<<<< HEAD
 
             {/* Tiempo de descanso */}
             <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4">
@@ -163,8 +151,6 @@ export default function ProfileModal({ isOpen, onClose }) {
                 </button>
               </div>
             </div>
-=======
->>>>>>> dev
           </div>
 
           {/* Logout Button */}
