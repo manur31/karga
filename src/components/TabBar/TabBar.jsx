@@ -7,10 +7,10 @@ import TodayIcon from "../icons/TodayIcon";
 import Mancuerna from "../icons/Mancuerna";
 
 const navItems = [
-  { path: "/sets", label: "Sets", icon: SetsIcon },
+  { path: "/rutinas", label: "Rutinas", icon: SetsIcon },
   { path: "/sessions", label: "Sesiones", icon: Mancuerna },
-  { path: "/body", label: "Body", icon: BodyIcon },
-  { path: "/today", label: "Hoy", icon: TodayIcon },
+  { path: "/progreso", label: "Progreso", icon: BodyIcon },
+  { path: "/hoy", label: "Hoy", icon: TodayIcon },
 ];
 
 export default function TabBar() {

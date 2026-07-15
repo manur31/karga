@@ -6,7 +6,6 @@ import {
   EyeIcon,
   EyeOffIcon,
   GoogleIcon,
-  Mancuerna,
 } from "../components/icons";
 import { useLogin } from "../hooks/mutations/useAuthMutations";
 import { useForm } from "react-hook-form";
@@ -33,23 +32,33 @@ export default function Login() {
   const onSubmit = (data) => {
     login(data, {
       onSuccess: () => {
-        navigate("/sets");
-        console.log("Login exitoso, redirigiendo a sets...");
+        setTimeout(() => {
+          navigate("/rutinas");
+        }, 1000)
+      },
+      onError: (error) => {
+        if (error.message === "Invalid login credentials") {
+            setError("root", {message: 'Email o contraseña invalidos'})
+          }
       },
     });
   };
-  const handleGoogleLogin = () => {
-    // reemplazar al auth con google
-    setTimeout(() => {
-      navigate("/onboarding");
-    }, 2000);
+  const handleGoogleLogin = async () => {
+    authWithGoogle({
+      onSuccess: () => {
+        navigate("/rutinas");
+      },
+      onError: () => {
+        setError("root", {message: 'Error al iniciar sesión con Google'})
+      },      
+    });
   };
 
   return (
     <div className="flex flex-col w-full max-w-sm mx-auto px-4 py-8 mt-4">
       {/* LOGO */}
       <div className="flex flex-col items-center mb-13 text-center">
-        <Mancuerna className="w-16 h-16 text-karga-orange mb-4" />
+        <img src="/karga-logo-light.webp" className="w-16 h-16 object-contain mb-4" alt="Karga Logo" />
         <h1 className="text-7xl font-black tracking-tight text-karga-lightorange drop-shadow-[0_0_16px_rgba(255,168,130,0.1)]">
           Karga
         </h1>

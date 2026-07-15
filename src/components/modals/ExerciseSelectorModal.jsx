@@ -32,11 +32,7 @@ export default function ExerciseSelectorModal({ onClose, onSelect }) {
   }
 
   const exercises = Array.from(exercisesMap.values());
-  exercises.sort((a, b) => {
-    if (a.is_favorite && !b.is_favorite) return -1;
-    if (!a.is_favorite && b.is_favorite) return 1;
-    return a.name.localeCompare(b.name);
-  });
+  exercises.sort((a, b) => a.name.localeCompare(b.name));
 
   const filteredExercises = exercises.filter(ex => 
     ex.name.toLowerCase().includes(search.toLowerCase()) || 

@@ -8,10 +8,10 @@ import { useAuth } from '../hooks/queries/useAuth.js';
 export default function Welcome() {
   const navigate = useNavigate();
 
-  const { data: profile, isLoading } = useAuth()
-  
-  if (isLoading) return <div>Loading...</div>
-  if (profile) return <Navigate to={"/sets"} />;
+  const { data: profile, isLoading } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (profile) return <Navigate to={"/rutinas"} />;
 
   return (
     <div className="relative flex flex-col justify-between items-center min-h-[85vh] w-full text-center px-4 py-8 overflow-hidden">
@@ -28,7 +28,7 @@ export default function Welcome() {
 
       {/* logo */}
       <div className="relative z-10 flex flex-col items-center mt-12 w-full ">
-        <Mancuerna className="w-16 h-16 text-karga-orange mb-4" />
+        <img src="/karga-logo-light.webp" className="w-16 h-16 object-contain mb-4" alt="Karga Logo" />
 
         <h1 className="text-7xl font-black tracking-tight text-karga-lightorange drop-shadow-[0_0_16px_rgba(255,168,130,0.25)]">
           Karga
