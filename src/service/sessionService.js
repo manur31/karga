@@ -1,5 +1,4 @@
 import { supabase } from "../lib/supabaseClient";
-import { startOfWeek, endOfWeek } from "date-fns";
 export const getSession = async (profile_id) => {
   const { data, error } = await supabase
     .from("sessions")
@@ -8,32 +7,10 @@ export const getSession = async (profile_id) => {
   if (error) throw error;
   return data;
 };
-
-export const getWeekActivity = async (profile_id) => {
-  const start = startOfWeek(new Date(), { weekStartsOn: 1 }).toISOString();
-  const end = endOfWeek(new Date(), { weekStartsOn: 1 }).toISOString();
-
-  const { data, error } = await supabase
-    .from("sessions")
-    .select("*")
-    .eq("profile_id", profile_id)
-    .gte("startedAt", start)
-    .lte("startedAt", end)
-    .order("startedAt", { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-};
 export const insertSession = async (sessions) => {
   const payload = Array.isArray(sessions) ? sessions : [sessions];
 
-  const { data, error } = await supabase
-    .from("sessions")
-    .insert(payload)
-    .select();
+  const { data, error } = await supabase.from("sessions").insert(payload).select();
 
   if (error) throw error;
 

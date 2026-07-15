@@ -87,12 +87,10 @@ export const useSessionStore = create(
       finish: (profile_id) => {
         const state = get();
         const now = Date.now();
-        const duration = now - state.startedAt - state.totalPausedMs;
 
         get().addSession({
           startedAt: state.startedAt,
           finishedAt: now,
-          duration,
           profile_id,
           note: state.note,
         });

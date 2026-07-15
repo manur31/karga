@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { FiX, FiPlus, FiClock, FiCalendar, FiFileText } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { useAuth } from '../../hooks/queries/useAuth';
-import { useSessionStore } from '../../stores/sessionStore';
+import { useSesionStore } from '../../stores/sesionStore';
 import { useSetsStore } from '../../stores/setsStore';
 import { useSyncSessions, useSyncSets } from '../../hooks/useSync';
 import ExerciseSelectorModal from './ExerciseSelectorModal';
@@ -69,7 +69,7 @@ export default function ManualSessionModal({ onClose }) {
     }
 
     // Insert Session
-    useSessionStore.getState().addSession({
+    useSesionStore.getState().addSession({
       startedAt,
       finishedAt,
       created_at: finishedAt,
@@ -115,7 +115,7 @@ export default function ManualSessionModal({ onClose }) {
 
   return createPortal(
     <div 
-      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-[50] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div 
@@ -144,7 +144,7 @@ export default function ManualSessionModal({ onClose }) {
                 type="date" 
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="bg-white/5 border border-white/10 text-white rounded-xl p-3 outline-none focus:border-karga-orange transition-colors [color-scheme:dark]"
+                className="bg-white/5 border border-white/10 text-white rounded-xl p-3 outline-none focus:border-karga-orange transition-colors scheme-dark"
               />
             </div>
 
@@ -158,7 +158,7 @@ export default function ManualSessionModal({ onClose }) {
                   type="time" 
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="bg-white/5 border border-white/10 text-white rounded-xl p-3 outline-none focus:border-karga-orange transition-colors [color-scheme:dark]"
+                  className="bg-white/5 border border-white/10 text-white rounded-xl p-3 outline-none focus:border-karga-orange transition-colors scheme-dark"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -170,7 +170,7 @@ export default function ManualSessionModal({ onClose }) {
                   type="time" 
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="bg-white/5 border border-white/10 text-white rounded-xl p-3 outline-none focus:border-karga-orange transition-colors [color-scheme:dark]"
+                  className="bg-white/5 border border-white/10 text-white rounded-xl p-3 outline-none focus:border-karga-orange transition-colors scheme-dark"
                 />
               </div>
             </div>

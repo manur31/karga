@@ -51,7 +51,7 @@ export default function ExerciseSelectorModal({ onClose, onSelect }) {
 
   return (
     <div 
-      className={`fixed inset-0 bg-black/80 flex flex-col justify-end z-[70] ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/80 flex flex-col justify-end z-70 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={handleClose}
     >
       <div 

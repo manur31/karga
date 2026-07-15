@@ -21,7 +21,7 @@ export const ErrorModal = ({ message }) => {
         `}
       </style>
 
-      <div className="fixed inset-x-0 bottom-24 z-[9999] flex justify-center px-4">
+      <div className="fixed inset-x-0 bottom-24 z-9999 flex justify-center px-4">
         <div
           className="flex w-full max-w-md items-start gap-3 rounded-2xl border border-red-500/60 bg-[#2A1717]/95 px-4 py-3 text-red-400 shadow-2xl backdrop-blur-md"
           style={{

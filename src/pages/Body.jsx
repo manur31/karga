@@ -7,11 +7,10 @@ import { useSets } from "../hooks/queries/useSets";
 import { useRegisterWeight } from "../hooks/mutations/useBodyMutations";
 import { useWeight } from "../hooks/queries/useBody";
 import WeightChart from "../components/WeightChart";
-import { getCachedProfile } from "../storage/profile-storage";
 export default function Body() {
 
   const profile = getCachedProfile()
-  const profile_id = profile?.id;
+  const profile_id = profile?.profile_id;
 
   const { data: weight, isLoading: isWeightLoading } = useWeight(
     profile_id
@@ -25,7 +24,7 @@ export default function Body() {
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [newWeight, setNewWeight] = useState("");
 
-  const isLoading =  isSetsLoading || isWeightLoading;
+  const isLoading = isSetsLoading || isWeightLoading;
 
   const muscleActivity = useMemo(() => {
     const muscleCounter = {};
@@ -60,7 +59,7 @@ export default function Body() {
   const weightData = useMemo(() => {
     if (!weight || weight.length === 0) {
       return {
-        current: profile?.weight || 0,
+        current: user?.weight || 0,
         trend: "Primer registro",
         type: "neutral",
       };
@@ -73,7 +72,7 @@ export default function Body() {
     const lastWeight = orderedWeights[orderedWeights.length - 1];
     const previousWeight = orderedWeights[orderedWeights.length - 2];
 
-    const current = Number(lastWeight?.weight || profile?.weight || 0);
+    const current = Number(lastWeight?.weight || user?.weight || 0);
 
     if (!previousWeight) {
       return {
@@ -99,10 +98,10 @@ export default function Body() {
       trend: `${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg`,
       type: diff > 0 ? "up" : "down",
     };
-  }, [weight, profile?.weight]);
+  }, [weight, user?.weight]);
 
   const handleRegisterWeight = () => {
-    setNewWeight(profile?.weight || "");
+    setNewWeight(user?.weight || "");
     setIsWeightModalOpen(true);
   };
 
@@ -119,7 +118,8 @@ export default function Body() {
   };
 
   return (
-    <div className="flex flex-col w-full animate-fade-in px-4 pt-10 pb-22">
+    <div className="flex flex-col w-full animate-fade-in px-4">
+      
       {/* HEADER*/}
       <div className="mb-6 pl-2">
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">

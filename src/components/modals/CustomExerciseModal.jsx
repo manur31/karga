@@ -60,7 +60,7 @@ export default function CustomExerciseModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col justify-end pointer-events-auto">
+    <div className="fixed inset-0 z-60 flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
@@ -69,12 +69,12 @@ export default function CustomExerciseModal({ onClose }) {
       
       {/* Contenedor Bottom Sheet */}
       <div 
-        className={`relative w-full h-auto max-h-[85vh] sm:max-w-md sm:mx-auto bg-[var(--color-dark-bg)] rounded-t-3xl shadow-2xl flex flex-col overflow-hidden pb-8 ${
+        className={`relative w-full h-auto max-h-[85vh] sm:max-w-md sm:mx-auto bg-dark-bg rounded-t-3xl shadow-2xl flex flex-col overflow-hidden pb-8 ${
           isClosing ? 'animate-slide-out-down' : 'animate-slide-in-up'
         }`}
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] shrink-0 z-20">
+        <div className="flex items-center justify-between p-5 bg-input-bg shrink-0 z-20">
           <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -89,7 +89,7 @@ export default function CustomExerciseModal({ onClose }) {
         </div>
 
         {/* CONTENIDO SCROLLABLE */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8 [scrollbar-width:none] [&::-webkit-scrollbar]:none">
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8 scrollbar-none [&::-webkit-scrollbar]:none">
           
           {/* INPUT NOMBRE */}
           <div className="flex flex-col gap-2">
@@ -104,7 +104,7 @@ export default function CustomExerciseModal({ onClose }) {
                 setName(e.target.value);
                 setErrorMsg("");
               }}
-              className="bg-[var(--color-input-bg)] border border-transparent rounded-2xl p-4 text-white placeholder:text-zinc-500 focus:outline-none focus:border-karga-orange transition-colors font-medium shadow-inner"
+              className="bg-input-bg border border-transparent rounded-2xl p-4 text-white placeholder:text-zinc-500 focus:outline-none focus:border-karga-orange transition-colors font-medium shadow-inner"
             />
             {errorMsg && (
               <span className="text-[11px] font-medium text-red-400 pl-1 mt-1">

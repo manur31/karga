@@ -40,19 +40,19 @@ export default function MyExercisesModal({ onClose }) {
   }) || [];
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex flex-col justify-end pointer-events-auto">
+    <div className="fixed inset-0 z-60 flex flex-col justify-end pointer-events-auto">
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
         onClick={handleCloseWithAnimation}
       />
       
       <div 
-        className={`relative w-full h-[85vh] sm:max-w-md sm:mx-auto bg-[var(--color-dark-bg)] rounded-t-3xl shadow-2xl flex flex-col overflow-hidden ${
+        className={`relative w-full h-[85vh] sm:max-w-md sm:mx-auto bg-dark-bg rounded-t-3xl shadow-2xl flex flex-col overflow-hidden ${
           isClosing ? 'animate-slide-out-down' : 'animate-slide-in-up'
         }`}
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between p-5 bg-[var(--color-input-bg)] shrink-0 z-20">
+        <div className="flex items-center justify-between p-5 bg-input-bg shrink-0 z-20">
           <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -61,6 +61,32 @@ export default function MyExercisesModal({ onClose }) {
         </div>
 
         <div className="flex flex-col flex-1 overflow-hidden">
+<<<<<<< HEAD
+=======
+          {/* FILTROS */}
+          <div className="flex gap-2 p-4 shrink-0 bg-input-bg border-b border-white/5">
+            <button
+              onClick={() => setFilterCustom(!filterCustom)}
+              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all border ${
+                filterCustom 
+                  ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-sm' 
+                  : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
+              }`}
+            >
+              Personalizados
+            </button>
+            <button
+              onClick={() => setFilterFavs(!filterFavs)}
+              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all border ${
+                filterFavs 
+                  ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-sm' 
+                  : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
+              }`}
+            >
+              Favoritos
+            </button>
+          </div>
+>>>>>>> dev
 
           {/* LISTA */}
           <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-3">
@@ -76,7 +102,7 @@ export default function MyExercisesModal({ onClose }) {
                 const isCustom = !ex.is_populary;
                 
                 return (
-                  <div key={ex.id} className="flex items-center justify-between p-4 bg-[var(--color-karga-gray)] rounded-2xl">
+                  <div key={ex.id} className="flex items-center justify-between p-4 bg-karga-gray rounded-2xl">
                     <div className="flex flex-col pr-4">
                       <span className="text-[15px] font-bold text-white tracking-tight">{ex.name}</span>
                       <div className="flex items-center gap-2 mt-1">
@@ -119,7 +145,7 @@ export default function MyExercisesModal({ onClose }) {
 
       {/* MODAL CONFIRMACION DE BORRADO */}
       {exerciseToDelete && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setExerciseToDelete(null)} />
           <div className="relative bg-[#2A2424] p-6 rounded-3xl max-w-sm w-full shadow-2xl border border-white/10 animate-fade-in text-center">
             <h3 className="text-xl font-black text-white mb-2">¿Eliminar ejercicio?</h3>

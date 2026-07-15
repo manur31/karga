@@ -16,6 +16,9 @@ export const useCreateSession = (profile_id) => {
       queryClient.invalidateQueries({
         queryKey: ["sessions", profile_id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["weekActivity", profile_id],
+      });
     },
   });
 };
@@ -33,6 +36,9 @@ export const useDeleteSession = (profile_id) => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["sessions", profile_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["weekActivity", profile_id],
       });
     },
   });

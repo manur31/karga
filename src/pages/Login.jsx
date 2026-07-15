@@ -7,7 +7,7 @@ import {
   EyeOffIcon,
   GoogleIcon,
 } from "../components/icons";
-import { useAuthGoogle, useLogin } from "../hooks/mutations/useAuthMutations";
+import { useLogin } from "../hooks/mutations/useAuthMutations";
 import { useForm } from "react-hook-form";
 import { loginSchema } from "../lib/schemas/authSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,15 +19,15 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors },
-    } = useForm({
+  } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: "all",
+    mode: "onTouched",
   });
 
+  //hola
+
   const { mutate: login, isPending } = useLogin();
-  const { mutate: authWithGoogle, isPending: authGooglePending, isError: authGoogleError } = useAuthGoogle();
 
   const onSubmit = (data) => {
     login(data, {
@@ -73,7 +73,7 @@ export default function Login() {
         <Input
           type="email"
           placeholder="Email"
-          disabled={isPending || authGooglePending}
+          disabled={isPending}
           required
           {...register("email")}
           className="
@@ -98,7 +98,7 @@ export default function Login() {
             <Input 
             type={showPassword ? "text" : "password"} 
             placeholder="Contraseña" 
-            disabled={isPending || authGooglePending}
+            disabled={isPending}
             {...register("password")}
             required
             className="pr-12 w-full 
@@ -130,7 +130,7 @@ export default function Login() {
 
         <button
             type="button"
-            disabled={isPending || authGooglePending}
+            disabled={isPending}
             onClick={() => navigate('/forgot-password')} // hay q crear la ruta y manejarlo
             className="self-end mr-3 pt-0.75 pb-1 text-xs text-karga-lightorange/80 hover:text-karga-lightorange font-medium tracking-wide transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none hover:drop-shadow-[0_0_0.67px_var(--color-karga-lightorange)]"
           >
@@ -139,17 +139,11 @@ export default function Login() {
         </div>
 
         {/* botón login*/}
-
-        {errors.root && (
-          <span className="text-red-500 text-sm pl-3 font-semibold">
-            {errors.root.message}
-          </span>
-        )}
         <Button 
           type="submit" 
           variant="primary" 
           size="lg" 
-          disabled={isPending || authGooglePending}
+          disabled={isPending}
           className={`
             mt-2
             relative
@@ -166,10 +160,10 @@ export default function Login() {
             hover:drop-shadow-[0_0_1px_var(--color-karga-lightorange)]
             hover:shadow-karga-lightorange/10
           
-            ${isPending || authGooglePending ? 'opacity-70 cursor-not-allowed' : ''}
+            ${isPending ? 'opacity-70 cursor-not-allowed' : ''}
           `}
         >
-          {isPending || authGooglePending ? "Iniciando..." : "Iniciar sesión"}
+          {isPending ? "Iniciando..." : "Iniciar sesión"}
         </Button>
       </form>
 
@@ -186,7 +180,7 @@ export default function Login() {
         type="button"
         variant="secondary"
         size="lg"
-        disabled={isPending || authGooglePending}
+        disabled={isPending}
         onClick={handleGoogleLogin}
         className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10"
       >
@@ -200,7 +194,7 @@ export default function Login() {
         <button
           type="button"
           onClick={() => navigate("/register")}
-          disabled={isPending || authGooglePending}
+          disabled={isPending}
           className="text-karga-orange hover:text-karga-lightorange transition-colors font-bold"
         >
           Regístrate

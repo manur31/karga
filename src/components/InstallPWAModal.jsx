@@ -52,7 +52,7 @@ export default function InstallPWAModal({
 
   return (
     <div
-      className={`fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-auto ${
+      className={`fixed inset-0 z-70 flex items-center justify-center p-4 pointer-events-auto ${
         closing ? "animate-fade-out" : "animate-fade-in"
       }`}
     >

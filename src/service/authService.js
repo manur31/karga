@@ -54,13 +54,13 @@ export const logout = async () => {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      throw error.message;
+      return error.message;
     }
 
     clearCachedProfile();
     localStorage.clear();
   } catch (error) {
-    throw error.message;
+    return error.message;
   }
 };
 //setProfile
@@ -77,7 +77,7 @@ export const setProfile = async ({
 
   if (userError) throw userError;
 
-  const { data: profile, error } = await supabase
+  const { data, error } = await supabase
     .from("profile")
     .update({
       size,
@@ -106,44 +106,28 @@ export const setProfile = async ({
     throw profileError;
   }
 
-  setCachedProfile(profile);
-
   return {
-    profile,
+    profile: data,
     progress: progressData,
   };
 };
-
 //getProfile
 export const getProfile = async () => {
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
-
-  let { data: profile } = await supabase
+  if (userError) {
+    throw userError;
+  }
+  const { data, error } = await supabase
     .from("profile")
     .select("*")
     .eq("profile_id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    const { error } = await supabase.from("profile").insert({
-      profile_id: user.id,
-      email: user.email,
-      name: user.user_metadata.name,
-    });
-
-    if (error) throw error;
-
-    const result = await supabase
-      .from("profile")
-      .select("*")
-      .eq("profile_id", user.id)
-      .single();
-
-    profile = result.data;
+    .single();
+  if (error) {
+    throw error;
   }
 
   setCachedProfile(profile);
