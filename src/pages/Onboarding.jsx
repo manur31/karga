@@ -16,10 +16,10 @@ export default function Onboarding() {
   const {
     register,
     handleSubmit,
-    setValue, //inyectar valores a mano sin usar <input>
-    getValues, //obtener valores para convertirlos manualmente
-    watch,    //mirar en tiempo real cuánto vale una variable
-    trigger,  //forzar la validación de un paso antes de avanzar
+    setValue, 
+    getValues, 
+    watch,    
+    trigger,  
     formState: { errors },
   } = useForm({
     resolver: zodResolver(onboardingSchema),
@@ -58,7 +58,7 @@ export default function Onboarding() {
     };
   
     onboardingMutate(onboardingData, {
-      onSuccess: () => navigate('/sets')
+      onSuccess: () => navigate('/rutinas')
     });
   };
 
