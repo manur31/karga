@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import Card from "../components/Card/Card";
 import Button from "../components/Button/Button";
 import ExpandArrowIcon from "../components/icons/ExpandArrowIcon";
-import { useAuth } from "../hooks/queries/useAuth";
 import { useSets } from "../hooks/queries/useSets";
 import { useRegisterWeight } from "../hooks/mutations/useBodyMutations";
 import { useWeight } from "../hooks/queries/useBody";
 import WeightChart from "../components/WeightChart";
+import { getCachedProfile } from "../storage/profile-storage";
 export default function Body() {
 
   const profile = getCachedProfile()
@@ -59,7 +59,7 @@ export default function Body() {
   const weightData = useMemo(() => {
     if (!weight || weight.length === 0) {
       return {
-        current: user?.weight || 0,
+        current: profile?.weight || 0,
         trend: "Primer registro",
         type: "neutral",
       };
@@ -72,7 +72,7 @@ export default function Body() {
     const lastWeight = orderedWeights[orderedWeights.length - 1];
     const previousWeight = orderedWeights[orderedWeights.length - 2];
 
-    const current = Number(lastWeight?.weight || user?.weight || 0);
+    const current = Number(lastWeight?.weight || profile?.weight || 0);
 
     if (!previousWeight) {
       return {
@@ -98,10 +98,10 @@ export default function Body() {
       trend: `${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg`,
       type: diff > 0 ? "up" : "down",
     };
-  }, [weight, user?.weight]);
+  }, [weight, profile?.weight]);
 
   const handleRegisterWeight = () => {
-    setNewWeight(user?.weight || "");
+    setNewWeight(profile?.weight || "");
     setIsWeightModalOpen(true);
   };
 

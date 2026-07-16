@@ -1,14 +1,12 @@
-// Session Store — Timestamp-based architecture
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const useSessionStore = create(
   persist(
     (set, get) => ({
-      // ─── Sesiones guardadas ────────────────────────────────────
       sessions: [],
+      isLoading: false,
 
-      // ─── Estado del timer activo (basado en timestamps) ────────
       startedAt: null,
       pausedAt: null,
       totalPausedMs: 0,
@@ -17,10 +15,32 @@ export const useSessionStore = create(
       finishedAt: null,
       note: "",
 
-      // ─── Helpers de sesiones ───────────────────────────────────
       setNote: (note) => set({ note }),
 
+      addSyncedSessions: (sessions = []) => {
+        set({ isLoading: true })
+        if (!sessions) return;
+        const syncedSessions = sessions?.map((session) => (
+          {
+            ...session, 
+            synced: true 
+          } 
+        )) || [];
+
+        const addedSessions = get().sessions
+
+        const newSyncedSession = syncedSessions?.filter((session) => !addedSessions?.some((addedSession) => addedSession.sessionId === session.sessionId))
+
+        if (newSyncedSession.length > 0) {
+          set((state) => ({
+            sessions: [...state.sessions, ...newSyncedSession]
+          })) 
+        }
+        set({ isLoading: false })
+      },
+
       addSession: (newSession) => {
+        set({ isLoading: true })
         set((state) => ({
           sessions: [
             ...state.sessions,
@@ -32,6 +52,7 @@ export const useSessionStore = create(
             },
           ],
         }));
+        set({ isLoading: false })
       },
 
       markAsSynced: (sessionId) => {
@@ -45,7 +66,6 @@ export const useSessionStore = create(
       getPendingSessions: () =>
         get().sessions.filter((session) => !session.synced),
 
-      // ─── Acciones del timer ────────────────────────────────────
 
       start: () => {
         if (get().isStarted) return;

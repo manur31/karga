@@ -5,17 +5,16 @@ import { FiPlus, FiSettings, FiPlay } from "react-icons/fi";
 import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
-import ProfileModal from "../components/modals/ProfileModal";
-import { useSesionStore } from "../stores/sesionStore";
+import ProfileModal from "../components/modals/ProfileModal"
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
   useDeleteRoutines,
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
-import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
-import { ErrorModal } from "../components/modals/ErrorModal";
+import { useSessionStore } from "../stores/sessionStore";
+import { getCachedProfile } from "../storage/profile-storage";
 
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
@@ -24,13 +23,9 @@ export default function Sets() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  const [errorMessage, setErrorMessage] = useState("");
-  const errorTimerRef = useRef(null);
-
   const { start: startSession, isStarted } = useSessionStore();
 
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const { profile_id } = getCachedProfile()
 
   const { data: routines, isLoading: isRoutinesLoading } =
     useRoutines(profile_id);

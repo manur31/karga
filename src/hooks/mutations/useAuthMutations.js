@@ -73,3 +73,29 @@ export const useOnboarding = () => {
         }
     })
 }
+
+export const useUpdateProfileDays = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProfileDays,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth-user"],
+      });
+    },
+  });
+};
+
+export const useUpdateProfileRestTime = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProfileRestTime,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth-user"],
+      });
+    },
+  });
+};

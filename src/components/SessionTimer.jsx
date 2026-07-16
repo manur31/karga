@@ -1,39 +1,35 @@
-import { FiMoreVertical, FiPause, FiPlay, FiX, FiEdit3 } from "react-icons/fi";
-import { useSesionStore } from "../stores/sesionStore";
+import { FiPlay, FiX, FiEdit3 } from "react-icons/fi";
+import { useSessionStore } from "../stores/sessionStore";
 import { useState, useRef, useEffect } from "react";
-import formatSeconds from "../lib/formatSeconds";
-import { useCalendarStore } from "../stores/calendarStore";
+import useCurrentTime from "../hooks/useCurrentTime";
+import formatMs from "../lib/formatMs";
 import { useSyncSessions, useSyncSets } from "../hooks/useSync";
-import { useAuth } from "../hooks/queries/useAuth";
-import { useNavigate, useLocation } from "react-router";
+import { useLocation } from "react-router";
 import ConfirmModal from "./modals/ConfirmModal";
 import ManualSessionModal from "./modals/ManualSessionModal";
 import SessionNoteModal from "./modals/SessionNoteModal";
 
 function SessionTimer({profile_id}) {
-  const navigate = useNavigate();
   const {
     start,
-    pause,
     discard,
     finish,
-    seconds,
-    continue: continueTimer,
     isStarted,
+    isPaused,
     startedAt,
-    finishedAt,
-    sessions,
+    pausedAt,
+    totalPausedMs,
     note,
     setNote
-  } = useSesionStore();
+  } = useSessionStore();
 
+  // Tick cada segundo para reactividad — Date.now() actualizado
+  const now = useCurrentTime();
 
-  const { addLocalSessions } = useCalendarStore();
   const { sync: syncSessions } = useSyncSessions(profile_id);
   const { sync: syncSets } = useSyncSets(profile_id);
 
   const location = useLocation();
-  const [isRunning, setIsRunning] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [showConfirmDiscard, setShowConfirmDiscard] = useState(false);
@@ -41,6 +37,13 @@ function SessionTimer({profile_id}) {
   const [showNoteModal, setShowNoteModal] = useState(false);
   
   const menuRef = useRef(null);
+
+  // ─── Cálculo del elapsed basado en timestamps ───────────────
+  // Si está pausada: el tiempo se congela en pausedAt
+  // Si está corriendo: se calcula contra now
+  const elapsedMs = isPaused
+    ? pausedAt - startedAt - totalPausedMs
+    : now - startedAt - totalPausedMs;
 
   const closeMenu = () => {
     setIsClosing(true);
@@ -77,7 +80,6 @@ function SessionTimer({profile_id}) {
 
   const handleDiscard = () => {
     discard();
-    setIsRunning(false);
     setShowMenu(false);
     setIsClosing(false);
     setShowConfirmDiscard(false);
@@ -85,7 +87,6 @@ function SessionTimer({profile_id}) {
 
   const handleFinish = () => {
     finish(profile_id);
-    setIsRunning(false);
     setShowMenu(false);
     setIsClosing(false);
     syncSessions(profile_id);
@@ -105,7 +106,7 @@ function SessionTimer({profile_id}) {
               <div className={`absolute bottom-full right-0 mb-4 bg-[#2A2424] py-3 px-4 rounded-2xl flex flex-col gap-3 min-w-48 border border-white/5 shadow-2xl text-left ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
                 <button 
                   className="text-white text-sm font-bold text-left hover:text-karga-orange transition-colors"
-                  onClick={() => { start(); setIsRunning(true); setShowMenu(false); setIsClosing(false); }}
+                  onClick={() => { start(); setShowMenu(false); setIsClosing(false); }}
                 >
                   Empezar sesión
                 </button>
@@ -141,7 +142,7 @@ function SessionTimer({profile_id}) {
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-karga-orange animate-pulse" />
             <span className="font-bold text-sm text-zinc-300 tracking-wide">
-              Sesión activa: <span className="text-white tabular-nums ml-1">{formatSeconds(seconds)}</span>
+              Sesión activa: <span className="text-white tabular-nums ml-1">{formatMs(elapsedMs, true)}</span>
             </span>
           </div>
           <div className="flex items-center gap-2">

@@ -61,32 +61,6 @@ export default function MyExercisesModal({ onClose }) {
         </div>
 
         <div className="flex flex-col flex-1 overflow-hidden">
-<<<<<<< HEAD
-=======
-          {/* FILTROS */}
-          <div className="flex gap-2 p-4 shrink-0 bg-input-bg border-b border-white/5">
-            <button
-              onClick={() => setFilterCustom(!filterCustom)}
-              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all border ${
-                filterCustom 
-                  ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-sm' 
-                  : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
-              }`}
-            >
-              Personalizados
-            </button>
-            <button
-              onClick={() => setFilterFavs(!filterFavs)}
-              className={`flex-1 py-2 rounded-xl text-[13px] font-bold transition-all border ${
-                filterFavs 
-                  ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-sm' 
-                  : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
-              }`}
-            >
-              Favoritos
-            </button>
-          </div>
->>>>>>> dev
 
           {/* LISTA */}
           <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-3">

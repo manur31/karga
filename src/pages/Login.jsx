@@ -24,9 +24,7 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
     mode: "onTouched",
   });
-
-  //hola
-
+  
   const { mutate: login, isPending } = useLogin();
 
   const onSubmit = (data) => {

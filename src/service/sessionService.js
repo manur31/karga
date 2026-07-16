@@ -1,4 +1,25 @@
 import { supabase } from "../lib/supabaseClient";
+import { endOfWeek, startOfWeek } from "date-fns";
+
+export const getWeekActivity = async (profile_id) => {
+  const start = startOfWeek(new Date(), { weekStartsOn: 1 }).toISOString();
+  const end = endOfWeek(new Date(), { weekStartsOn: 1 }).toISOString();
+
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("profile_id", profile_id)
+    .gte("startedAt", start)
+    .lte("startedAt", end)
+    .order("startedAt", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
 export const getSession = async (profile_id) => {
   const { data, error } = await supabase
     .from("sessions")

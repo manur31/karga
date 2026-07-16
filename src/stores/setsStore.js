@@ -5,13 +5,24 @@ export const useSetsStore = create(
     persist(
         (set, get) => ({
             sets: [],
-            syncedSets: [],
-            setsToUpdate: [],
 
-            addSyncedSets: (newSets) => set((state) => ({
-                newSets: newSets.filter((set) => !state.syncedSets.some((s) => s.id === set.set_id)),
-                syncedSets: [...state.syncedSets, ...newSets]
-            })),
+            addSyncedSets: (sets = []) => {
+                const sycnedSets = sets?.map((set) => ({
+                    ...set,
+                    synced: true,
+                })) || [];
+
+                const addedSets = get().sets
+
+                const newSyncSets = sycnedSets?.filter((set) => !addedSets?.some((addedSet) => addedSet.set_id === set.set_id))
+
+                if (newSyncSets.length > 0) {
+                    set((state) => ({
+                        sets: [...state.sets, ...newSyncSets],
+                    }))
+                }
+
+            },
 
             addSet: (newSet) => set((state) => ({
                 sets: [...state.sets, { 
