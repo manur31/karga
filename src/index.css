@@ -1,33 +1,125 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
 @import "tailwindcss";
 
+@custom-variant hover (&:hover);
+
 @theme {
     --color-karga-orange: #FF4D00;
-    --color-karga-lightorange: #ffb0a1;
+    --color-karga-lightorange: #ffbfb3;
     --color-karga-gray: #332A2A;
     --color-input-bg: #443737;
     --color-dark-bg: #272121;
 }
-/* 
-  Nota: El editor marcaba falso error en '@theme' porque el linter nativo de vscode aún no reconoce sintaxis de tailwind v4. 
-  Temporalmente se solucionó el error (solo visual, por cierto) creando la carpeta de config .vscode
-  Alternativamente se podría descartar este fix e instalar Stylelint en el proyecto, que sí cubre estas cuestiones.
-*/
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html,
 body,
 #root {
-  min-height: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    scroll-behavior: smooth;
+}
+
+/* Chrome, Safari, Edge, Opera */
+::-webkit-scrollbar {
+    display: none;
 }
 
 body {
-  font-family: "Plus Jakarta Sans", sans-serif;
+    font-family: "Plus Jakarta Sans", sans-serif;
 }
+
+.glowy-placeholder::placeholder {
+  transition:
+      color 0.4s ease,
+      text-shadow 1s ease;
+}
+
+.glowy-placeholder:hover::placeholder,
+.glowy-placeholder:focus::placeholder {
+  color: var(--color-karga-lightorange);
+  text-shadow: 0 0 4px var(--color-karga-lightorange);
+}
+
+/* Animación de entrada */
+@keyframes slideInRight {
+    from {
+      transform: translate(100%, 0);
+      opacity: 0.7;
+    }
+    to {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+  }
+  
+  /* Animación de salida  */
+  @keyframes slideOutLeft {
+    from {
+      transform: translate(0, 0);
+    }
+    to {
+      transform: translate(150%, 0);
+    }
+  }
+
+  @keyframes slideInUp {
+    from {
+      transform: translate(0, 70%);
+      opacity: 0.7;
+    }
+    to {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutDown {
+    from {
+      transform: translate(0, 0);
+    }
+    to {
+      transform: translate(0, 110%);
+    }
+  }
+  
+  .animate-slide-in-custom {
+    animation: slideInRight 300ms ease-out forwards;
+  }
+  
+  .animate-slide-out-custom {
+    animation: slideOutLeft 550ms ease-in-out forwards;
+  }
+
+  .animate-slide-in-up {
+    animation: slideInUp 300ms ease-in-out forwards;
+  }
+  
+  .animate-slide-out-down {
+    animation: slideOutDown 300ms ease-in-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 200ms ease-out forwards;
+  }
+
+  .animate-fade-out {
+    animation: fadeOut 200ms ease-in forwards;
+  }
+

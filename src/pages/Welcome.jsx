@@ -1,11 +1,17 @@
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import Button from '../components/Button/Button';
 import bgGym from '../assets/istockphoto-1069260156-612x612.jpg';
 import { Mancuerna } from '../components/icons';
 import ArrowRight from '../components/icons/ArrowRight.jsx';
+import { useAuth } from '../hooks/queries/useAuth.js';
 
 export default function Welcome() {
   const navigate = useNavigate();
+
+  const { data: profile, isLoading } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (profile) return <Navigate to={"/rutinas"} />;
 
   return (
     <div className="relative flex flex-col justify-between items-center min-h-[85vh] w-full text-center px-4 py-8 overflow-hidden">
@@ -16,13 +22,13 @@ export default function Welcome() {
           alt="Background" 
           className="w-full h-full object-cover opacity-[0.15] filter grayscale"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-dark-bg/50 to-dark-bg" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-dark-bg/50 to-dark-bg" />
 
       </div>
 
       {/* logo */}
       <div className="relative z-10 flex flex-col items-center mt-12 w-full ">
-        <Mancuerna className="w-16 h-16 text-karga-orange mb-4" />
+        <img src="/karga-logo-light.webp" className="w-16 h-16 object-contain mb-4" alt="Karga Logo" />
 
         <h1 className="text-7xl font-black tracking-tight text-karga-lightorange drop-shadow-[0_0_16px_rgba(255,168,130,0.25)]">
           Karga
@@ -38,7 +44,7 @@ export default function Welcome() {
         <p className="text-lg font-medium text-zinc-200">
           Define tus límites. Supéralos todos.
         </p>
-        <div className="w-12 h-[3px] bg-[#FF5C00] rounded-full" />
+        <div className="w-12 h-0.75 bg-[#FF5C00] rounded-full" />
       </div>
 
       {/* botones y footer */}

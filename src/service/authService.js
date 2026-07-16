@@ -1,14 +1,15 @@
 import { supabase } from "../lib/supabaseClient";
+import {
+  clearCachedProfile,
+  setCachedProfile,
+} from "../storage/profile-storage";
 //register
 export const register = async ({ email, password, name }) => {
-  console.log(email, password, name);
-
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
   });
   if (error) {
-    console.log(error);
     throw error;
   }
   const { error: profileError } = await supabase.from("profile").insert([
@@ -20,32 +21,32 @@ export const register = async ({ email, password, name }) => {
   ]);
 
   if (profileError) {
-    console.log(profileError);
     throw profileError;
   }
-  return getProfile();
+};
+
+export const authGoogle = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+  });
+
+  if (error) {
+    throw error;
+  }
 };
 
 //login
 export const login = async ({ email, password }) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-    if (error) {
-      console.log("Ocurrio un error al Inciar Sesion: ", error);
-      return error.message;
-    }
-
-    console.log("login data", data);
-    if (data) {
-      const profile = getProfile(email);
-      return profile;
-    }
-  } catch (error) {
-    return error.message;
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
+    throw error;
   }
+
+  getProfile();
+  return data;
 };
 
 //logout
@@ -55,6 +56,9 @@ export const logout = async () => {
     if (error) {
       return error.message;
     }
+
+    clearCachedProfile();
+    localStorage.clear();
   } catch (error) {
     return error.message;
   }
@@ -65,23 +69,47 @@ export const setProfile = async ({
   weight,
   time_for_week,
   rest_time,
-  id,
 }) => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) throw userError;
+
   const { data, error } = await supabase
     .from("profile")
-    .update([
+    .update({
+      size,
+      time_for_week,
+      weight,
+      rest_time,
+    })
+    .eq("profile_id", user.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  const { data: progressData, error: profileError } = await supabase
+    .from("users_proge")
+    .insert([
       {
-        size: size,
-        time_for_week: time_for_week,
-        weight: weight,
-        rest_time: rest_time,
+        profile_id: user.id,
+        weight,
+        sets_id: null,
       },
-    ])
-    .eq("id", id);
-  if (error) {
-    return error.message;
+    ]);
+
+  if (profileError) {
+    console.log("Error users_proge:", profileError);
+    throw profileError;
   }
-  return data;
+
+  return {
+    profile: data,
+    progress: progressData,
+  };
 };
 //getProfile
 export const getProfile = async () => {
@@ -93,7 +121,7 @@ export const getProfile = async () => {
   if (userError) {
     throw userError;
   }
-  const { data, error } = await supabase
+  const { data: profile, error } = await supabase
     .from("profile")
     .select("*")
     .eq("profile_id", user.id)
@@ -101,5 +129,34 @@ export const getProfile = async () => {
   if (error) {
     throw error;
   }
+
+  setCachedProfile(profile);
+
+  return profile;
+};
+//UpdateProfileDays
+export const updateProfileDays = async ({ time_for_week, profile_id }) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .update({
+      time_for_week,
+    })
+    .eq("profile_id", profile_id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+//UpdateProfileRestTime
+export const updateProfileRestTime = async ({ rest_time, profile_id }) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .update({
+      rest_time: rest_time,
+    })
+    .eq("profile_id", profile_id)
+    .select()
+    .single();
+  if (error) throw error;
   return data;
 };

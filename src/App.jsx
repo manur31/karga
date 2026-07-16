@@ -1,31 +1,36 @@
-import { BrowserRouter, Routes, Route } from "react-router"
-import ProtectedRoutes from "./ProtectedRoutes"
-import MainLayout from "./layouts/MainLayout"
+import { BrowserRouter, Routes, Route } from "react-router";
+import ProtectedRoutes from "./ProtectedRoutes";
+import MainLayout from "./layouts/MainLayout";
 import PublicLayout from "./layouts/PublicLayout";
-import Welcome from './pages/Welcome';
-import Login from "./pages/Login";    
-import Register from './pages/Register';
+import Welcome from "./pages/Welcome";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Onboarding from "./pages/Onboarding";
-import SetsPage from "./pages/SetsPage";
+import Sets from "./pages/Sets";
+import Sessions from "./pages/Sessions";
+import Body from "./pages/Body";
+import Today from "./pages/Today";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
   return (
     <>
       <BrowserRouter>
         <Routes>
-          <Route element={<PublicLayout/>}>
-            <Route path={'/'} element={<Welcome/>}/> 
-            <Route path={'/welcome'} element={<Welcome/>}/> 
-            <Route path={'/login'} element={<Login/>}/>  
-            <Route path={'/register'} element={<Register/>}/> 
-            <Route path={'/onboarding'} element={<Onboarding/>}/>
+          <Route element={<PublicLayout />}>
+            <Route path={"/"} element={<Welcome />} />
+            <Route path={"/welcome"} element={<Welcome />} />
+            <Route path={"/login"} element={<Login />} />
+            <Route path={"/register"} element={<Register />} />
+            <Route path={"/onboarding"} element={<Onboarding />} />
+            <Route path={"/forgot-password"} element={<ForgotPassword />} />
           </Route>
-          <Route element={<ProtectedRoutes/>}>
+          <Route element={<ProtectedRoutes />}>
             <Route element={<MainLayout />}>
-              <Route path={"/sets"} element={<SetsPage/>} />
-              <Route path={"/sessions"} element={<div>Sessions</div>} />
-              <Route path={"/body"} element={<div>Body</div>} />
-              <Route path={"/today"} element={<div>Today</div>} />
+              <Route path={"/rutinas"} element={<Sets />} />
+              <Route path={"/sessions"} element={<Sessions />} />
+              <Route path={"/progreso"} element={<Body />} />
+              <Route path={"/hoy"} element={<Today />} />
             </Route>
           </Route>
         </Routes>

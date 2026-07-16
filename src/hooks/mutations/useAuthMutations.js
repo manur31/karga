@@ -1,18 +1,39 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { login, logout, register, setProfile } from "../../service/authService"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  authGoogle,
+  login,
+  logout,
+  register,
+  setProfile,
+  updateProfileDays,
+  updateProfileRestTime,
+} from "../../service/authService";
 
 export const useRegister = () => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: (data) => register(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['auth-user']
-            })
-        }
-    })
-}
+  return useMutation({
+    mutationFn: (data) => register(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth-user"],
+      });
+    },
+  });
+};
+
+export const useAuthGoogle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authGoogle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth-user"],
+      });
+    },
+  });
+};
 
 export const useLogin = () => {
     const queryClient = useQueryClient()
@@ -39,7 +60,7 @@ export const useLogout = () => {
         }
     })
 }
-
+ 
 export const useOnboarding = () => {
     const queryClient = useQueryClient()
 
@@ -52,3 +73,29 @@ export const useOnboarding = () => {
         }
     })
 }
+
+export const useUpdateProfileDays = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProfileDays,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth-user"],
+      });
+    },
+  });
+};
+
+export const useUpdateProfileRestTime = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProfileRestTime,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth-user"],
+      });
+    },
+  });
+};
