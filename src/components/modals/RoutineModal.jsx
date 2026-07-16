@@ -307,7 +307,6 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                             </div>
                           </div>
 
-<<<<<<< HEAD
                           {!isEditMode && (
                             <div 
                               onClick={(e) => {
@@ -315,33 +314,11 @@ export default function RoutineModal({ routine, onClose, onAddExercises, onDelet
                                 setSelectedExerciseToLog(exercise);
                                 setIsSetModalOpen(true);
                               }}
-                              className="w-8 h-8 rounded-full bg-[var(--color-dark-bg)] hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                              className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
                             >
                               <PlusIcon className="w-5 h-5 text-white" />
                             </div>
                           )}
-=======
-                          <div className="flex items-center gap-3">
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleToggleFavorite(exercise); }}
-                                className="p-2 -mr-1 text-zinc-500 hover:text-red-500 transition-colors cursor-pointer pointer-events-auto"
-                              >
-                                <HeartIcon filled={isFav} className={`w-5 h-5 ${isFav ? 'text-red-500' : ''}`} />
-                              </button>
-                              {!isEditMode && (
-                                <div 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedExerciseToLog(exercise);
-                                    setIsSetModalOpen(true);
-                                  }}
-                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                                >
-                                  <PlusIcon className="w-5 h-5 text-white" />
-                                </div>
-                              )}
-                          </div>
->>>>>>> dev
                         </div>
                       );
                     })}

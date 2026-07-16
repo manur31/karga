@@ -121,7 +121,7 @@ export const getProfile = async () => {
   if (userError) {
     throw userError;
   }
-  const { data, error } = await supabase
+  const { data: profile, error } = await supabase
     .from("profile")
     .select("*")
     .eq("profile_id", user.id)

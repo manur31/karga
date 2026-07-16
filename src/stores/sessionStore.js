@@ -20,6 +20,27 @@ export const useSessionStore = create(
       // ─── Helpers de sesiones ───────────────────────────────────
       setNote: (note) => set({ note }),
 
+      addSyncedSessions: (sessions = []) => {
+        if (!sessions) return;
+        const syncedSessions = sessions?.map((session) => (
+          {
+            ...session, 
+            synced: true 
+          } 
+        )) || [];
+
+        const addedSessions = get().sessions
+
+        const newSyncedSession = syncedSessions?.filter((session) => !addedSessions?.includes(session))
+        console.log("newSyncedSession", newSyncedSession)
+
+        if (newSyncedSession.length > 0) {
+          set((state) => ({
+            sessions: [...state.sessions, ...newSyncedSession]
+          })) 
+        }
+      },
+
       addSession: (newSession) => {
         set((state) => ({
           sessions: [

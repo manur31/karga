@@ -2,7 +2,9 @@ import { Outlet } from 'react-router';
 import TabBar from '../components/TabBar/TabBar';
 import SessionTimer from '../components/SessionTimer';
 import RestTimer from '../components/RestTimer';
-import { useAuth } from '../hooks/queries/useAuth';
+import { getCachedProfile } from '../storage/profile-storage';
+import usePWA from '../hooks/usePWA';
+import useInstallBanner from '../hooks/useInstallBanner';
 
 export default function MainLayout() {
   const { profile_id } = getCachedProfile();

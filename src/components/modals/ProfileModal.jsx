@@ -1,27 +1,117 @@
-import { createPortal } from 'react-dom';
-import { FiX, FiLogOut, FiSettings, FiUser } from 'react-icons/fi';
-import { useAuth } from '../../hooks/queries/useAuth';
-import { useSettingsStore } from '../../stores/settingsStore';
-import { logout } from '../../service/authService';
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  FiX,
+  FiLogOut,
+  FiSettings,
+  FiUser,
+  FiClock,
+  FiCalendar,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
+
+import { useAuth } from "../../hooks/queries/useAuth";
+import {
+  useUpdateProfileDays,
+  useUpdateProfileRestTime,
+} from "../../hooks/mutations/useAuthMutations";
+import { useSettingsStore } from "../../stores/settingsStore";
+import { logout } from "../../service/authService";
 
 export default function ProfileModal({ isOpen, onClose }) {
   const { data: user } = useAuth();
   const { weightUnit, setWeightUnit } = useSettingsStore();
 
+  const [trainingDays, setTrainingDays] = useState(1);
+  const [restTime, setRestTime] = useState(60);
+
+  const { mutate: updateProfileDays, isPending: isUpdatingDays } =
+    useUpdateProfileDays();
+
+  const { mutate: updateProfileRestTime, isPending: isUpdatingRestTime } =
+    useUpdateProfileRestTime();
+
+  useEffect(() => {
+    if (!user || !isOpen) return;
+
+    setTrainingDays(Number(user.time_for_week) || 1);
+    setRestTime(Number(user.rest_time) || 60);
+  }, [user, isOpen]);
+
   if (!isOpen) return null;
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = '/welcome';
+    window.location.href = "/welcome";
+  };
+
+  const changeTrainingDays = (amount) => {
+    if (!user?.profile_id || isUpdatingDays) return;
+
+    const newValue = Math.min(Math.max(trainingDays + amount, 1), 7);
+
+    if (newValue === trainingDays) return;
+
+    setTrainingDays(newValue);
+
+    updateProfileDays(
+      {
+        profile_id: user.profile_id,
+        time_for_week: newValue,
+      },
+      {
+        onError: () => {
+          setTrainingDays(trainingDays);
+        },
+      },
+    );
+  };
+
+  const changeRestTime = (amount) => {
+    if (!user?.profile_id || isUpdatingRestTime) return;
+
+    const newValue = Math.min(Math.max(restTime + amount, 15), 300);
+
+    if (newValue === restTime) return;
+
+    setRestTime(newValue);
+
+    updateProfileRestTime(
+      {
+        profile_id: user.profile_id,
+        rest_time: newValue,
+      },
+      {
+        onError: () => {
+          setRestTime(restTime);
+        },
+      },
+    );
+  };
+
+  const formatRestTime = (seconds) => {
+    if (seconds < 60) {
+      return `${seconds} s`;
+    }
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (remainingSeconds === 0) {
+      return `${minutes} min`;
+    }
+
+    return `${minutes}m ${remainingSeconds}s`;
   };
 
   return createPortal(
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
-      <div 
-        className="bg-[#2A2424] w-full max-w-sm rounded-3xl flex flex-col shadow-2xl border border-white/5 overflow-hidden animate-slide-in-up"
+      <div
+        className="flex w-full max-w-sm flex-col overflow-hidden rounded-3xl border border-white/5 bg-[#2A2424] shadow-2xl animate-slide-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -41,37 +131,61 @@ export default function ProfileModal({ isOpen, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="space-y-6 p-6">
           {/* User Info */}
           <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/5">
               <FiUser size={28} className="text-white/20" />
             </div>
+
             <div className="text-center">
-              <h3 className="text-white font-bold text-base">{user?.name || "Usuario Karga"}</h3>
-              <p className="text-white/40 text-xs">{user?.email || "usuario@ejemplo.com"}</p>
+              <h3 className="text-base font-bold text-white">
+                {user?.name || "Usuario Karga"}
+              </h3>
+
+              <p className="text-xs text-white/40">
+                {user?.email || "usuario@ejemplo.com"}
+              </p>
             </div>
           </div>
 
           {/* Preferences */}
           <div className="flex flex-col gap-2">
-            <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-wider pl-1">Preferencias</h4>
-            
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+            <h4 className="pl-1 text-[10px] font-bold uppercase tracking-wider text-white/40">
+              Preferencias
+            </h4>
+
+            {/* Unidad de peso */}
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4">
               <div className="flex items-center gap-2.5">
                 <FiSettings className="text-karga-orange" size={18} />
-                <span className="text-white text-sm font-medium">Unidad de Peso</span>
+
+                <span className="text-sm font-medium text-white">
+                  Unidad de peso
+                </span>
               </div>
-              <div className="flex bg-black/30 rounded-xl p-0.5 border border-white/5">
-                <button 
-                  onClick={() => setWeightUnit('kg')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${weightUnit === 'kg' ? 'bg-karga-orange text-white shadow-md' : 'text-white/40'}`}
+
+              <div className="flex rounded-xl border border-white/5 bg-black/30 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setWeightUnit("kg")}
+                  className={`rounded-lg px-3 py-1 text-xs font-bold transition-all ${
+                    weightUnit === "kg"
+                      ? "bg-karga-orange text-white shadow-md"
+                      : "text-white/40"
+                  }`}
                 >
                   KG
                 </button>
-                <button 
-                  onClick={() => setWeightUnit('lb')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${weightUnit === 'lb' ? 'bg-karga-orange text-white shadow-md' : 'text-white/40'}`}
+
+                <button
+                  type="button"
+                  onClick={() => setWeightUnit("lb")}
+                  className={`rounded-lg px-3 py-1 text-xs font-bold transition-all ${
+                    weightUnit === "lb"
+                      ? "bg-karga-orange text-white shadow-md"
+                      : "text-white/40"
+                  }`}
                 >
                   LB
                 </button>
@@ -100,7 +214,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                   <FiChevronLeft size={18} />
                 </button>
 
-                <span className="min-w-13.5 text-center text-xs font-bold text-white">
+                <span className="min-w-[54px] text-center text-xs font-bold text-white">
                   {formatRestTime(restTime)}
                 </span>
 
@@ -137,7 +251,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                   <FiChevronLeft size={18} />
                 </button>
 
-                <span className="min-w-9.5 text-center text-xs font-bold text-white">
+                <span className="min-w-[38px] text-center text-xs font-bold text-white">
                   {trainingDays} {trainingDays === 1 ? "día" : "días"}
                 </span>
 
@@ -153,11 +267,12 @@ export default function ProfileModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Logout Button */}
+          {/* Logout */}
           <div className="pt-2">
-            <button 
+            <button
+              type="button"
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl font-bold text-sm transition-colors border border-red-500/5"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/5 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-500 transition-colors hover:bg-red-500/20"
             >
               <FiLogOut size={16} />
               Cerrar Sesión
@@ -166,6 +281,6 @@ export default function ProfileModal({ isOpen, onClose }) {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
