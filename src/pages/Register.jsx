@@ -2,13 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import Button from "../components/Button/Button";
 import Input from "../components/Input/Input";
-import {
-  EyeIcon,
-  EyeOffIcon,
-  GoogleIcon,
-} from "../components/icons";
+import { EyeIcon, EyeOffIcon, GoogleIcon } from "../components/icons";
 import { useForm } from "react-hook-form";
-import { useRegister } from "../hooks/mutations/useAuthMutations";
+import {
+  useAuthGoogle,
+  useRegister,
+} from "../hooks/mutations/useAuthMutations";
 import { registerSchema } from "../lib/schemas/authSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -25,7 +24,7 @@ export default function Register() {
   } = useForm({
     resolver: zodResolver(registerSchema),
     mode: "onTouched",
-  }); 
+  });
 
   const { mutate: registerUser, isPending } = useRegister();
   const { mutate: authWithGoogle } = useAuthGoogle();
@@ -39,8 +38,8 @@ export default function Register() {
 
     registerUser(formData, {
       onSuccess: () => {
-        reset(); 
-        navigate("/onboarding"); 
+        reset();
+        navigate("/onboarding");
       },
     });
   };
@@ -51,8 +50,8 @@ export default function Register() {
         navigate("/rutinas");
       },
       onError: () => {
-        setError("root", {message: 'Error al iniciar sesión con Google'})
-      },      
+        setError("root", { message: "Error al iniciar sesión con Google" });
+      },
     });
   };
 
@@ -60,7 +59,11 @@ export default function Register() {
     <div className="flex flex-col h-full w-full max-w-sm mx-auto px-4 py-2">
       {/* LOGO */}
       <div className="flex flex-col items-center mb-10 text-center">
-        <img src="/karga-logo-light.webp" className="w-12 h-12 object-contain mb-2" alt="Karga Logo" />
+        <img
+          src="/karga-logo-light.webp"
+          className="w-12 h-12 object-contain mb-2"
+          alt="Karga Logo"
+        />
         <h1 className="text-7xl font-black tracking-tight text-karga-lightorange drop-shadow-[0_0_16px_rgba(255,168,130,0.1)]">
           Karga
         </h1>
@@ -71,7 +74,6 @@ export default function Register() {
 
       {/* FORM DE REGISTRO */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        
         {/* INPUT  NOMBRE */}
         <div className="flex flex-col gap-1 w-full">
           <Input
@@ -89,9 +91,9 @@ export default function Register() {
 
         {/* INPUT  EMAIL */}
         <div className="flex flex-col gap-1 w-full">
-          <Input 
-            type="email" 
-            placeholder="Email" 
+          <Input
+            type="email"
+            placeholder="Email"
             disabled={isPending}
             {...register("email")}
           />
@@ -165,10 +167,12 @@ export default function Register() {
           {isPending ? "Creando cuenta..." : "Registrarse"}
         </Button>
       </form>
- 
+
       <div className="flex items-center gap-4 my-8">
         <div className="h-px bg-white/5 flex-1" />
-        <span className="text-zinc-500 text-sm font-medium">o registrarse con</span>
+        <span className="text-zinc-500 text-sm font-medium">
+          o registrarse con
+        </span>
         <div className="h-px bg-white/5 flex-1" />
       </div>
 
