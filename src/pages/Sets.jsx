@@ -12,9 +12,9 @@ import {
   useDeleteRoutines,
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
-import { useAuth } from "../hooks/queries/useAuth";
 import RoutinesList from "../components/sets/RoutinesList";
 import { useSessionStore } from "../stores/sessionStore";
+import { getCachedProfile } from "../storage/profile-storage";
 
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
@@ -25,8 +25,7 @@ export default function Sets() {
 
   const { start: startSession, isStarted } = useSessionStore();
 
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const { profile_id } = getCachedProfile()
 
   const { data: routines, isLoading: isRoutinesLoading } =
     useRoutines(profile_id);

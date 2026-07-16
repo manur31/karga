@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSessions } from "../hooks/queries/useSessions";
 import { useSets } from "../hooks/queries/useSets";
-import { useAuth } from "../hooks/queries/useAuth";
-
 import Mancuerna from "../components/icons/Mancuerna";
 import { FiChevronRight } from "react-icons/fi";
 import SessionDetailModal from "../components/modals/SessionDetailModal";
@@ -10,10 +8,10 @@ import Card from "../components/Card/Card";
 import { formatRelativeTime } from "../utils/timeFormatter";
 import { useSessionStore } from "../stores/sessionStore";
 import { useSetsStore } from "../stores/setsStore";
+import { getCachedProfile } from "../storage/profile-storage";
 
 export default function Sessions() {
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const { profile_id } = getCachedProfile();
   const {addSyncedSessions, sessions} = useSessionStore();
   const {addSyncedSets, sets } = useSetsStore()
 

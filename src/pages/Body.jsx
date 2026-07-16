@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import Card from "../components/Card/Card";
 import Button from "../components/Button/Button";
 import ExpandArrowIcon from "../components/icons/ExpandArrowIcon";
-import { useAuth } from "../hooks/queries/useAuth";
 import { useSets } from "../hooks/queries/useSets";
 import { useRegisterWeight } from "../hooks/mutations/useBodyMutations";
 import { useWeight } from "../hooks/queries/useBody";

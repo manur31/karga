@@ -26,7 +26,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   const profile_id = user?.profile_id;
   const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
-  const { syncedSets, sets: allSetsFromStore } = useSetsStore();
+  const { sets: allSetsFromStore } = useSetsStore();
 
   if (!exercise) return null;
 
@@ -39,7 +39,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   const filteredSetsFromStore = allSetsFromStore.filter(set => set.exercise_id === exercise.id)
 
-  const allSets = [...filteredSetsFromStore, ...sets, ...syncedSets.filter(set => set.exercise_id === exercise.id)];
+  const allSets = [...filteredSetsFromStore, ...sets];
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);

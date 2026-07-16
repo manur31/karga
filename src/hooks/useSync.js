@@ -2,7 +2,6 @@ import { useSetsStore } from "../stores/setsStore";
 import { useCreateSet } from "../hooks/mutations/useSetsMutations";
 import { useSessionStore } from "../stores/sessionStore";
 import { useCreateSession } from "./mutations/useSesionsMutation";
-import { se } from "date-fns/locale";
 
 function unFormatData(data, session = false) {
   if (session) {
@@ -48,7 +47,7 @@ export const useSyncSessions = (profile_id) => {
     if (pendingSessions.length === 0) return;
 
     const sessionsToSync = pendingSessions.map((session) => {
-      const {id, synced, ...rest} = session;
+      const rest = unFormatData(session, true);
       const created_at =
         rest.created_at ||
         rest.createAt ||
