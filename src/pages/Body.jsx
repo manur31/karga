@@ -24,6 +24,14 @@ export default function Body() {
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [newWeight, setNewWeight] = useState("");
 
+  if (isWeightModalOpen) {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.overflow = "auto";
+  }
+
   const isLoading = isSetsLoading || isWeightLoading;
 
   const muscleActivity = useMemo(() => {
@@ -118,7 +126,7 @@ export default function Body() {
   };
 
   return (
-    <div className="flex flex-col w-full animate-fade-in px-4">
+    <div className="flex flex-col w-full animate-fade-in px-4 pt-10 pb-24">
       
       {/* HEADER*/}
       <div className="mb-6 pl-2">
@@ -226,7 +234,7 @@ export default function Body() {
       )}
 
       {isWeightModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+        <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 px-4 pt-30 h-dvh">
           <div className="bg-karga-gray text-white rounded-2xl p-5 w-full max-w-sm border border-white/10 space-y-4">
             <h2 className="text-2xl font-black">Registrar peso</h2>
 

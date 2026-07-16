@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "karga-install-prompt";
 
@@ -27,12 +27,8 @@ function saveState(state) {
 
 export default function useInstallBanner({ isStandalone, isInstallable }) {
   const [shouldShow, setShouldShow] = useState(false);
-  const mountedRef = useRef(false);
 
   useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
-
     const state = loadState();
 
     if (isStandalone || state.installed) {
