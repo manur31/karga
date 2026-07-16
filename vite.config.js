@@ -16,7 +16,7 @@ export default defineConfig({
         name: "Karga",
         short_name: "Karga",
         description: "Tu app de entrenamiento",
-        theme_color: "#FF4D00",
+        theme_color: "#272121",
         background_color: "#272121",
         display: "standalone",
         orientation: "portrait",
@@ -40,9 +40,6 @@ export default defineConfig({
             purpose: "maskable",
           },
         ],
-      },
-      workbox: {
-        navigateFallback: "/index.html",
       },
     }),
   ],
