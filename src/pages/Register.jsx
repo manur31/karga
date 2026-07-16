@@ -28,6 +28,7 @@ export default function Register() {
   }); 
 
   const { mutate: registerUser, isPending } = useRegister();
+  const { mutate: authWithGoogle } = useAuthGoogle();
 
   const onSubmit = (data) => {
     const formData = {
@@ -44,15 +45,16 @@ export default function Register() {
     });
   };
 
-  // const handleGoogleRegister = () => {
-  //   setIsLoading(true);
-
-  //   // registro con Google (reempklazar)
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //     navigate("/onboarding");
-  //   }, 2000);
-  // };
+  const handleGoogleRegister = async () => {
+    authWithGoogle({
+      onSuccess: () => {
+        navigate("/rutinas");
+      },
+      onError: () => {
+        setError("root", {message: 'Error al iniciar sesión con Google'})
+      },      
+    });
+  };
 
   return (
     <div className="flex flex-col h-full w-full max-w-sm mx-auto px-4 py-2">
@@ -175,7 +177,7 @@ export default function Register() {
         variant="secondary"
         size="lg"
         disabled={isPending}
-        onClick={""}
+        onClick={handleGoogleRegister}
         className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10"
       >
         <GoogleIcon />

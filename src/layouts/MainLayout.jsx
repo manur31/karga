@@ -5,6 +5,7 @@ import RestTimer from '../components/RestTimer';
 import { getCachedProfile } from '../storage/profile-storage';
 import usePWA from '../hooks/usePWA';
 import useInstallBanner from '../hooks/useInstallBanner';
+import InstallPWAModal from '../components/InstallPWAModal';
 
 export default function MainLayout() {
   const { profile_id } = getCachedProfile();
@@ -25,6 +26,15 @@ export default function MainLayout() {
       <SessionTimer profile_id={profile_id} />
       <RestTimer />
       <TabBar />
+
+      <InstallPWAModal
+        shouldShow={shouldShow}
+        isStandalone={isStandalone}
+        isInstallable={isInstallable}
+        install={install}
+        onDismiss={dismiss}
+        onInstall={markInstalled}
+      />
       
     </div>
   );

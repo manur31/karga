@@ -7,7 +7,7 @@ import {
   EyeOffIcon,
   GoogleIcon,
 } from "../components/icons";
-import { useLogin } from "../hooks/mutations/useAuthMutations";
+import { useLogin, useAuthGoogle } from "../hooks/mutations/useAuthMutations";
 import { useForm } from "react-hook-form";
 import { loginSchema } from "../lib/schemas/authSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +26,7 @@ export default function Login() {
   });
   
   const { mutate: login, isPending } = useLogin();
+  const { mutate: authWithGoogle } = useAuthGoogle();
 
   const onSubmit = (data) => {
     login(data, {

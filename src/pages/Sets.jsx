@@ -297,24 +297,10 @@ export default function Sets() {
         onClose={() => setIsProfileModalOpen(false)}
       />
 
-      {showOnboarding && createPortal(
-        <div 
-          className="fixed inset-0 bg-black/50 z-99 flex flex-col items-center justify-start px-4 pt-55 animate-fade-in"
-        >
-          <div 
-            className="w-full max-w-85 bg-dark-bg rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in"
-          >
-            {/* Tooltip triangle pointing up */}
-            <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-10 border-l-transparent border-r-10 border-r-transparent border-b-10 border-b-dark-bg" />
-
-          </div>
-        </div>
-      )}
-
       {showOnboarding &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 z-99 flex flex-col items-center justify-start px-4 pt-55 animate-fade-in">
-            <div className="w-full max-w-85 bg-[#2A2424] rounded-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in">
+            <div className="w-full max-w-95 bg-[#2A2424] rounded-t-3xl p-5 border border-white/5 shadow-2xl flex flex-col gap-4 relative animate-fade-in">
               <div className="absolute -top-2.5 left-12 w-0 h-0 border-l-10 border-l-transparent border-r-10 border-r-transparent border-b-10 border-b-[#2A2424]" />
 
               <div className="flex items-start gap-3">
@@ -335,11 +321,11 @@ export default function Sets() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <h4 className="text-white font-bold text-sm tracking-wide">
+                  <h4 className="text-white font-bold text-xl tracking-wide">
                     ¡Tu primera rutina está lista!
                   </h4>
 
-                  <p className="text-zinc-400 text-xs leading-relaxed font-medium">
+                  <p className="text-zinc-400 text-sm leading-relaxed font-medium">
                     Ahora que ya tienes tu primera rutina, podrás empezar tus
                     entrenamientos rápidamente desde aquí o desde la pestaña de{" "}
                     <strong>Sesiones</strong>.
@@ -350,11 +336,12 @@ export default function Sets() {
 
             <button 
               onClick={handleCloseOnboarding}
-              className="w-full py-2.5 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-xl font-bold text-xs transition-colors shadow-lg shadow-karga-orange/10"
+              className="w-full max-w-95 py-2 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-b-3xl font-bold text-lg transition-colors shadow-lg shadow-karga-orange/10"
             >
               ¡Entendido!
             </button>
-          </div>
+          </div>,
+        document.body
       )}
     </div>
   );
