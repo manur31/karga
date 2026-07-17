@@ -5,11 +5,14 @@ import { FiPlus, FiSettings, FiPlay } from "react-icons/fi";
 import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
-import ProfileModal from "../components/modals/ProfileModal"
+import ProfileModal from "../components/modals/ProfileModal";
+import EditRoutineModal from "../components/modals/EditRoutineModal";
+import ConfirmModal from "../components/modals/ConfirmModal";
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
   useDeleteRoutines,
+  useEditRoutines,
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
 import RoutinesList from "../components/sets/RoutinesList";
@@ -22,6 +25,8 @@ export default function Sets() {
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [routineToEdit, setRoutineToEdit] = useState(null);
+  const [routineToDeleteId, setRoutineToDeleteId] = useState(null);
 
   const { start: startSession, isStarted } = useSessionStore();
 
@@ -53,6 +58,7 @@ export default function Sets() {
   const { mutateAsync: insertExercisesRoutine } =
     useInsertExercisesRoutine(profile_id);
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
+  const { mutateAsync: editRoutine } = useEditRoutines(profile_id);
 
   if (isRoutinesLoading) {
     return (
@@ -81,6 +87,19 @@ export default function Sets() {
       await usedeleteRoutines(id);
     } catch {
       showError("No se pudo eliminar la rutina.");
+    }
+  };
+
+  const handleSaveEditRoutine = async (data) => {
+    if (!routineToEdit) return;
+    try {
+      await editRoutine({
+        routine_id: routineToEdit.routine_id,
+        name: data.name,
+        description: data.description,
+      });
+    } catch {
+      showError("No se pudo actualizar la rutina.");
     }
   };
 
@@ -258,6 +277,8 @@ export default function Sets() {
         routines={routines || []}
         onOpenRoutine={handleOpenRoutine}
         onCreateRoutine={handleCreateWorkout}
+        onEditRoutine={setRoutineToEdit}
+        onDeleteRoutine={setRoutineToDeleteId}
       />
 
       {/* MODAL DE CREACIÓN DE WORKOUT */}
@@ -295,6 +316,28 @@ export default function Sets() {
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
+      />
+
+      <EditRoutineModal
+        isOpen={!!routineToEdit}
+        initialName={routineToEdit?.name || ""}
+        initialDescription={routineToEdit?.description || ""}
+        onClose={() => setRoutineToEdit(null)}
+        onSave={handleSaveEditRoutine}
+      />
+
+      <ConfirmModal
+        isOpen={!!routineToDeleteId}
+        title="¿Eliminar rutina?"
+        description="Esta acción no se puede deshacer. Se eliminará la rutina de tu listado."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        danger={true}
+        onConfirm={() => {
+          handleDeleteRoutine(routineToDeleteId);
+          setRoutineToDeleteId(null);
+        }}
+        onClose={() => setRoutineToDeleteId(null)}
       />
 
       {showOnboarding &&
