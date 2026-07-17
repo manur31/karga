@@ -10,7 +10,7 @@ import Sets from "./pages/Sets";
 import Sessions from "./pages/Sessions";
 import Body from "./pages/Body";
 import Today from "./pages/Today";
-import ForgotPassword from "./pages/ForgotPassword";
+import ErrorPage from "./pages/ErrorPage";
 
 function App() {
   return (
@@ -23,7 +23,8 @@ function App() {
             <Route path={"/login"} element={<Login />} />
             <Route path={"/register"} element={<Register />} />
             <Route path={"/onboarding"} element={<Onboarding />} />
-            <Route path={"/forgot-password"} element={<ForgotPassword />} />
+            <Route path={"/forgot-password"} element={<ErrorPage title="Recuperar contraseña" redirectTo="/login" suffix=" al Login" />} />
+            <Route path={"*"} element={<ErrorPage />} />
           </Route>
           <Route element={<ProtectedRoutes />}>
             <Route element={<MainLayout />}>
