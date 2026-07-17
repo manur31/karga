@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Card from "../../components/Card/Card";
 import Avatar from "../../components/Avatar/Avatar";
-import ChevronIcon from "../../components/icons/ChevronIcon";
 import { formatRelativeTime } from "../../utils/timeFormatter";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiMoreVertical } from "react-icons/fi";
 
 const PinIcon = ({ filled, className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth={filled ? 0 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -15,11 +14,26 @@ const PinIcon = ({ filled, className }) => (
   </svg>
 );
 
-export default function RoutinesList({ routines, onOpenRoutine, onCreateRoutine }) {
+export default function RoutinesList({ 
+  routines, 
+  onOpenRoutine, 
+  onCreateRoutine,
+  onEditRoutine,
+  onDeleteRoutine 
+}) {
   const [pinnedRoutines, setPinnedRoutines] = useState(() => {
     const saved = localStorage.getItem('pinnedRoutines');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [activeMenuId, setActiveMenuId] = useState(null);
+
+  useEffect(() => {
+    if (activeMenuId === null) return;
+    const handleCloseMenus = () => setActiveMenuId(null);
+    document.addEventListener("click", handleCloseMenus);
+    return () => document.removeEventListener("click", handleCloseMenus);
+  }, [activeMenuId]);
 
   if (routines.length === 0) {
     return (
@@ -108,13 +122,54 @@ export default function RoutinesList({ routines, onOpenRoutine, onCreateRoutine 
               <div className="flex items-center gap-3">
                 <button 
                   onClick={(e) => togglePin(e, data.routine_id)}
-                  className={`p-2 -mr-2 transition-colors rounded-full flex items-center justify-center ${
-                    isPinned ? 'text-karga-orange bg-karga-orange/10' : 'text-zinc-500 bg-transparent'
+                  className={`p-2 -mr-1 transition-colors rounded-full flex items-center justify-center ${
+                    isPinned ? 'text-karga-orange bg-karga-orange/10' : 'text-zinc-500 bg-transparent hover:bg-white/5'
                   }`}
                 >
                   <PinIcon filled={isPinned} className="w-4 h-4" />
                 </button>
-                <ChevronIcon className="w-5 h-5 text-zinc-600" direction="right" />
+                
+                <div className="relative">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setActiveMenuId(activeMenuId === data.routine_id ? null : data.routine_id);
+                    }}
+                    className={`p-2 -mr-2 transition-colors rounded-full flex items-center justify-center ${
+                      activeMenuId === data.routine_id ? 'text-white bg-white/10' : 'text-zinc-500 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <FiMoreVertical className="w-4.5 h-4.5" />
+                  </button>
+
+                  {activeMenuId === data.routine_id && (
+                    <div className="absolute right-0 mt-2 w-36 bg-[#2A2424] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onEditRoutine(data);
+                          setActiveMenuId(null);
+                        }}
+                        className="w-full text-left px-4 py-3 text-xs font-bold text-zinc-300 hover:bg-white/5 transition-colors border-b border-white/5 cursor-pointer"
+                      >
+                        Editar rutina
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onDeleteRoutine(data.routine_id);
+                          setActiveMenuId(null);
+                        }}
+                        className="w-full text-left px-4 py-3 text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </Card>
           );
