@@ -154,3 +154,16 @@ export const getExerciseForID = async ({ id, profile_id }) => {
 
   return data;
 };
+
+export const updateExercise = async ({ id, name, muscle }) => {
+  const { data, error } = await supabase
+    .from("exercises")
+    .update({ name, muscle })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+};

@@ -4,11 +4,13 @@ import { useAuth } from '../../hooks/queries/useAuth';
 import { useFavoriteExercises } from '../../hooks/queries/useExercises';
 import { useDeleteExercise } from '../../hooks/mutations/useExercisesMutations';
 import { ArrowLeft, PlusIcon } from '../icons';
+import { FiEdit2 } from 'react-icons/fi';
 import CustomExerciseModal from './CustomExerciseModal';
 
 export default function MyExercisesModal({ onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
+  const [exerciseToEdit, setExerciseToEdit] = useState(null);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
 
   const { data: user } = useAuth();
@@ -85,6 +87,18 @@ export default function MyExercisesModal({ onClose }) {
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
+                      {/* Botón de editar SOLO si es personalizado */}
+                      {isCustom && (
+                        <button
+                          onClick={() => {
+                            setExerciseToEdit(ex);
+                            setIsCustomExerciseModalOpen(true);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center bg-white/5 text-zinc-400 rounded-full hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <FiEdit2 className="w-4 h-4" />
+                        </button>
+                      )}
                       {/* Botón de borrar SOLO si es personalizado */}
                       {isCustom && (
                         <button
@@ -146,7 +160,13 @@ export default function MyExercisesModal({ onClose }) {
       )}
 
       {isCustomExerciseModalOpen && (
-        <CustomExerciseModal onClose={() => setIsCustomExerciseModalOpen(false)} />
+        <CustomExerciseModal 
+          onClose={() => {
+            setIsCustomExerciseModalOpen(false);
+            setExerciseToEdit(null);
+          }} 
+          exerciseToEdit={exerciseToEdit}
+        />
       )}
 
     </div>
