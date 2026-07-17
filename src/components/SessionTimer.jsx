@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import useCurrentTime from "../hooks/useCurrentTime";
 import formatMs from "../lib/formatMs";
 import { useSyncSessions, useSyncSets } from "../hooks/useSync";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import ConfirmModal from "./modals/ConfirmModal";
 import ManualSessionModal from "./modals/ManualSessionModal";
 import SessionNoteModal from "./modals/SessionNoteModal";
@@ -22,6 +22,8 @@ function SessionTimer({profile_id}) {
     note,
     setNote
   } = useSessionStore();
+
+  const navigate = useNavigate();
 
   // Tick cada segundo para reactividad — Date.now() actualizado
   const now = useCurrentTime();
@@ -91,6 +93,8 @@ function SessionTimer({profile_id}) {
     setIsClosing(false);
     syncSessions(profile_id);
     syncSets(profile_id);
+
+    navigate('/hoy')
   };
 
   const isSessionsPage = location.pathname.toLowerCase().includes('/sessions');
