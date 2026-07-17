@@ -143,7 +143,6 @@ export const getProfile = async () => {
     profile = result.data;
   }
 
-  console.log('Profile:', profile)
   setCachedProfile(profile);
 
   return profile;
