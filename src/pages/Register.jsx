@@ -47,7 +47,7 @@ export default function Register() {
   const handleGoogleRegister = async () => {
     authWithGoogle({
       onSuccess: () => {
-        navigate("/rutinas");
+        navigate("/onboarding");
       },
       onError: () => {
         setError("root", { message: "Error al iniciar sesión con Google" });
