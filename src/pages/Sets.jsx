@@ -1,38 +1,58 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Button from "../components/Button/Button";
 import { FiPlus, FiSettings, FiPlay } from "react-icons/fi";
 import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
-import ProfileModal from "../components/modals/ProfileModal"
+import ProfileModal from "../components/modals/ProfileModal";
+import EditRoutineModal from "../components/modals/EditRoutineModal";
+import ConfirmModal from "../components/modals/ConfirmModal";
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
   useDeleteRoutines,
+  useEditRoutines,
 } from "../hooks/mutations/useRoutinesMutation";
 import { useRoutines } from "../hooks/queries/useRoutines";
 import RoutinesList from "../components/sets/RoutinesList";
 import { useSessionStore } from "../stores/sessionStore";
 import { getCachedProfile } from "../storage/profile-storage";
-
+import { ErrorModal } from "../components/modals/ErrorModal";
 export default function Sets() {
   const [selectedRoutineId, setSelectedRoutineId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-
+  const [routineToEdit, setRoutineToEdit] = useState(null);
+  const [routineToDeleteId, setRoutineToDeleteId] = useState(null);
   const { start: startSession, isStarted } = useSessionStore();
+  const [errorMessage, setErrorMessage] = useState("");
+  const errorTimerRef = useRef(null);
 
-  const { profile_id } = getCachedProfile()
+  const { profile_id } = getCachedProfile();
 
   const { data: routines, isLoading: isRoutinesLoading } =
     useRoutines(profile_id);
 
+  const showError = (message) => {
+    setErrorMessage(message);
+
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+    }
+
+    errorTimerRef.current = setTimeout(() => {
+      setErrorMessage("");
+    }, 3000);
+  };
+
   useEffect(() => {
     if (profile_id && routines && routines.length === 1) {
-      const seen = localStorage.getItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`);
+      const seen = localStorage.getItem(
+        `hasSeenWorkoutStartWalkthrough_${profile_id}`,
+      );
       if (!seen) {
         const id = setTimeout(() => {
           setShowOnboarding(true);
@@ -44,7 +64,10 @@ export default function Sets() {
 
   const handleCloseOnboarding = () => {
     if (profile_id) {
-      localStorage.setItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`, 'true');
+      localStorage.setItem(
+        `hasSeenWorkoutStartWalkthrough_${profile_id}`,
+        "true",
+      );
     }
     setShowOnboarding(false);
   };
@@ -53,6 +76,7 @@ export default function Sets() {
   const { mutateAsync: insertExercisesRoutine } =
     useInsertExercisesRoutine(profile_id);
   const { mutateAsync: usedeleteRoutines } = useDeleteRoutines(profile_id);
+  const { mutateAsync: editRoutine } = useEditRoutines(profile_id);
 
   if (isRoutinesLoading) {
     return (
@@ -64,9 +88,6 @@ export default function Sets() {
 
   const handleCreateWorkout = () => {
     setOpenModal(true);
-  };
-  const handleCreateNewTrain = () => {
-    setIsNewTrainModalOpen(true);
   };
 
   const createroutine = async (name, description = "descripcion de prueba") => {
@@ -81,6 +102,19 @@ export default function Sets() {
       await usedeleteRoutines(id);
     } catch {
       showError("No se pudo eliminar la rutina.");
+    }
+  };
+
+  const handleSaveEditRoutine = async (data) => {
+    if (!routineToEdit) return;
+    try {
+      await editRoutine({
+        routine_id: routineToEdit.routine_id,
+        name: data.name,
+        description: data.description,
+      });
+    } catch {
+      showError("No se pudo actualizar la rutina.");
     }
   };
 
@@ -103,7 +137,9 @@ export default function Sets() {
 
   const handleStartWorkoutClick = () => {
     if (isStarted) {
-      alert("Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.");
+      alert(
+        "Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.",
+      );
       return;
     }
     startSession();
@@ -122,11 +158,6 @@ export default function Sets() {
     description,
     selectedExerciseIds,
   ) => {
-    console.log("Guardando rutina desde modal:", {
-      name,
-      description,
-      selectedExerciseIds,
-    });
     try {
       const newRoutine = await createroutine(name, description);
 
@@ -188,7 +219,9 @@ export default function Sets() {
               <FiPlay className="w-6 h-6 text-white ml-0.5" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="text-xl font-black text-white">Empezar entrenamiento</span>
+              <span className="text-xl font-black text-white">
+                Empezar entrenamiento
+              </span>
               <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
                 Iniciar una sesión vacía de ejercicio
               </span>
@@ -204,7 +237,9 @@ export default function Sets() {
               <FiPlus className="w-6 h-6 text-white" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="text-xl font-black text-white">Nueva Rutina</span>
+              <span className="text-xl font-black text-white">
+                Nueva Rutina
+              </span>
               <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
                 Crear rutina personalizada
               </span>
@@ -258,6 +293,8 @@ export default function Sets() {
         routines={routines || []}
         onOpenRoutine={handleOpenRoutine}
         onCreateRoutine={handleCreateWorkout}
+        onEditRoutine={setRoutineToEdit}
+        onDeleteRoutine={setRoutineToDeleteId}
       />
 
       {/* MODAL DE CREACIÓN DE WORKOUT */}
@@ -297,6 +334,28 @@ export default function Sets() {
         onClose={() => setIsProfileModalOpen(false)}
       />
 
+      <EditRoutineModal
+        isOpen={!!routineToEdit}
+        initialName={routineToEdit?.name || ""}
+        initialDescription={routineToEdit?.description || ""}
+        onClose={() => setRoutineToEdit(null)}
+        onSave={handleSaveEditRoutine}
+      />
+
+      <ConfirmModal
+        isOpen={!!routineToDeleteId}
+        title="¿Eliminar rutina?"
+        description="Esta acción no se puede deshacer. Se eliminará la rutina de tu listado."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        danger={true}
+        onConfirm={() => {
+          handleDeleteRoutine(routineToDeleteId);
+          setRoutineToDeleteId(null);
+        }}
+        onClose={() => setRoutineToDeleteId(null)}
+      />
+      <ErrorModal message={errorMessage} />
       {showOnboarding &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 z-99 flex flex-col items-center justify-start px-4 pt-55 animate-fade-in">
@@ -334,15 +393,15 @@ export default function Sets() {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={handleCloseOnboarding}
               className="w-full max-w-95 py-2 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-b-3xl font-bold text-lg transition-colors shadow-lg shadow-karga-orange/10"
             >
               ¡Entendido!
             </button>
           </div>,
-        document.body
-      )}
+          document.body,
+        )}
     </div>
   );
 }

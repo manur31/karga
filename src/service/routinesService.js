@@ -110,10 +110,10 @@ export const getRoutineforID = async ({ profile_id, routine_id }) => {
   return data;
 };
 
-export const updateRoutines = async ({ profile_id, routine_id, name }) => {
+export const updateRoutines = async ({ profile_id, routine_id, name, description }) => {
   const { data, error } = await supabase
     .from("routines")
-    .update({ name })
+    .update({ name, description })
     .eq("routine_id", routine_id)
     .eq("profile_id", profile_id)
     .select()

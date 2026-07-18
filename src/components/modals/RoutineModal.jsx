@@ -5,12 +5,13 @@ import {
   useExercises,
   useFavoriteExercises,
 } from "../../hooks/queries/useExercises";
-import { useDeleteExercisesRoutine } from "../../hooks/mutations/useRoutinesMutation";
+import { useDeleteExercisesRoutine, useEditRoutines } from "../../hooks/mutations/useRoutinesMutation";
 import { ArrowLeft, CheckIcon, PlusIcon } from "../icons";
 import SetModal from "./SetModal";
 import ExerciseHistoryModal from "./ExerciseHistoryModal";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ConfirmModal from "./ConfirmModal";
+import EditRoutineModal from "./EditRoutineModal";
 
 const ThreeDotsIcon = ({ className }) => (
   <svg
@@ -100,8 +101,22 @@ export default function RoutineModal({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showDeleteRoutineConfirmDialog, setShowDeleteRoutineConfirmDialog] =
     useState(false);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const { mutateAsync: editRoutine } = useEditRoutines(profile_id);
   const { mutateAsync: deleteExercisesRoutine } =
     useDeleteExercisesRoutine(profile_id);
+
+  const handleSaveDetails = async (data) => {
+    try {
+      await editRoutine({
+        routine_id: routine.routine_id,
+        name: data.name,
+        description: data.description,
+      });
+    } catch (err) {
+      console.error("Error al actualizar la rutina:", err);
+    }
+  };
 
   const toggleEditMode = () => {
     setIsEditMode(!isEditMode);
@@ -262,14 +277,23 @@ export default function RoutineModal({
                 {isMenuOpen && (
                   <div className="absolute top-full right-0 mt-2 w-48 bg-[#2A2424] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
                     <button
+                      onClick={() => {
+                        setIsEditingDetails(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm font-bold text-zinc-300 hover:bg-white/5 transition-colors border-b border-white/5 cursor-pointer"
+                    >
+                      Editar información
+                    </button>
+                    <button
                       onClick={toggleEditMode}
-                      className="w-full text-left px-4 py-3 text-sm font-bold text-zinc-300 hover:bg-white/5 transition-colors border-b border-white/5"
+                      className="w-full text-left px-4 py-3 text-sm font-bold text-zinc-300 hover:bg-white/5 transition-colors border-b border-white/5 cursor-pointer"
                     >
                       Editar ejercicios
                     </button>
                     <button
                       onClick={handleDeleteClick}
-                      className="w-full text-left px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors"
+                      className="w-full text-left px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                     >
                       Borrar rutina
                     </button>
@@ -572,6 +596,14 @@ export default function RoutineModal({
         confirmText="Eliminar"
         cancelText="Cancelar"
         danger={true}
+      />
+
+      <EditRoutineModal
+        isOpen={isEditingDetails}
+        initialName={routine.name || ""}
+        initialDescription={routine.description || ""}
+        onClose={() => setIsEditingDetails(false)}
+        onSave={handleSaveDetails}
       />
     </>,
     document.body,
