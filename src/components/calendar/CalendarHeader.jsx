@@ -1,5 +1,5 @@
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md'
-import { toMonthYearLabel } from '../../lib/calendarUtils'
+import { toMonthYearLabel, toRelativeDayLabel } from '../../lib/calendarUtils'
 
 /**
  * CalendarHeader
