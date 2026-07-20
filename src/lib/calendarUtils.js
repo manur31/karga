@@ -92,6 +92,25 @@ export function toTimeLabel(dateOrString) {
   return format(d, 'HH:mm')
 }
 
+/**
+ * Returns a friendly label for a date string.
+ * "2026-07-09" → "Hoy", "Mañana", "Ayer", or the day name (e.g. "lunes").
+ */
+export function toRelativeDayLabel(dateStr) {
+  const date = parseISO(dateStr)
+  const today = new Date()
+
+  if (isToday(date)) return 'Hoy'
+
+  const tomorrow = addDays(today, 1)
+  if (isSameDay(date, tomorrow)) return 'Mañana'
+
+  const yesterday = addDays(today, -1)
+  if (isSameDay(date, yesterday)) return 'Ayer'
+
+  return format(date, 'EEEE', { locale: es })
+}
+
 // ─── Comparison helpers ───────────────────────────────────────────────────────
 
 export { isSameDay, isSameMonth, isToday }
