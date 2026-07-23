@@ -28,6 +28,9 @@ export const register = async ({ email, password, name }) => {
 export const authGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
+    options: {
+      redirectTo: window.location.origin,
+    },
   });
 
   if (error) {
@@ -105,6 +108,8 @@ export const setProfile = async ({
     console.log("Error users_proge:", profileError);
     throw profileError;
   }
+
+  setCachedProfile(data);
 
   return {
     profile: data,

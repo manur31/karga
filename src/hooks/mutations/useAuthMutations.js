@@ -66,7 +66,8 @@ export const useOnboarding = () => {
 
     return useMutation({
         mutationFn: setProfile,
-        onSuccess: () => {
+        onSuccess: (data) => {
+            queryClient.setQueryData(['auth-user'], data.profile)
             queryClient.invalidateQueries({
                 queryKey: ['auth-user']
             })
