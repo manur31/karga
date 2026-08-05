@@ -12,6 +12,9 @@ import ExerciseHistoryModal from "./ExerciseHistoryModal";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
+import ExerciseListSelector from "./ExerciseListSelector";
+import { useSessionStore } from "../../stores/sessionStore";
+import { FiPlay } from "react-icons/fi";
 
 const ThreeDotsIcon = ({ className }) => (
   <svg
@@ -38,6 +41,7 @@ export default function RoutineModal({
 }) {
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
+  const { start: startSession, isStarted } = useSessionStore();
 
   const {
     data: popularExercises,
@@ -145,6 +149,14 @@ export default function RoutineModal({
     } catch (error) {
       console.error("Error al borrar ejercicios de la rutina:", error);
     }
+  };
+
+  const handleStartWorkout = () => {
+    if (isStarted) {
+      alert("Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.");
+      return;
+    }
+    startSession();
   };
 
   const menuRef = useRef(null);
@@ -314,13 +326,23 @@ export default function RoutineModal({
               )}
 
               {!isEditMode && (
-                <button
-                  onClick={() => setIsAddingExercises(true)}
-                  className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-full font-bold shadow-lg transition-all active:scale-[0.98]"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  Agregar ejercicios
-                </button>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleStartWorkout}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-2xl font-black text-[16px] shadow-lg shadow-karga-orange/20 transition-transform active:scale-[0.98]"
+                  >
+                    <FiPlay className="w-5 h-5 ml-1" />
+                    Empezar entrenamiento
+                  </button>
+
+                  <button
+                    onClick={() => setIsAddingExercises(true)}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
+                  >
+                    <PlusIcon className="w-5 h-5 text-zinc-400" />
+                    Agregar ejercicios
+                  </button>
+                </div>
               )}
 
               <div className="flex flex-col gap-3">
@@ -429,80 +451,15 @@ export default function RoutineModal({
                 className={`absolute inset-0 bg-dark-bg z-20 flex flex-col ${isAddingClosing ? "animate-slide-out-custom" : "animate-slide-in-custom"}`}
               >
                 <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-3 scrollbar-none [&::-webkit-scrollbar]:none">
-                  <div className="flex justify-between items-end mb-1 pl-1">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                      Ejercicios disponibles
-                    </label>
-                    <span className="text-xs text-karga-orange font-bold">
-                      {selectedExercises.length} seleccionados
-                    </span>
-                  </div>
-
-                  {isLoading && allExercises.length === 0 ? (
-                    <div className="p-8 flex justify-center">
-                      <div className="w-8 h-8 border-4 border-karga-orange border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : isError ? (
-                    <div className="text-red-400 text-sm text-center p-4 bg-red-500/10 rounded-2xl border border-red-500/10 font-medium">
-                      Error al cargar los ejercicios.
-                    </div>
-                  ) : (
-                    allExercises &&
-                    allExercises.map((exercise) => {
-                      const alreadyInRoutine = routine.routines_exercises?.some(
-                        (re) => re.id_exercises === exercise.id,
-                      );
-                      const isSelected = selectedExercises.includes(
-                        exercise.id,
-                      );
-
-                      return (
-                        <div
-                          key={exercise.id}
-                          onClick={() => {
-                            if (alreadyInRoutine) return;
-                            handleExerciseClick(exercise);
-                          }}
-                          className={`flex items-center justify-between p-4 rounded-2xl transition-all border ${
-                            alreadyInRoutine
-                              ? "opacity-40 cursor-not-allowed bg-black/20 border-transparent"
-                              : isSelected
-                                ? "bg-karga-gray border-green-500/50 shadow-lg shadow-green-500/5 cursor-pointer"
-                                : "bg-karga-gray border-transparent hover:bg-white/2 cursor-pointer"
-                          }`}
-                        >
-                          <div className="flex flex-col flex-1 pr-4">
-                            <span className="text-[15px] text-zinc-100 font-bold tracking-tight">
-                              {exercise.name}
-                            </span>
-                            <span className="text-[11px] text-zinc-500 font-semibold mt-0.5 capitalize">
-                              {alreadyInRoutine
-                                ? "Ya está en la rutina"
-                                : Array.isArray(exercise.muscle)
-                                  ? exercise.muscle.join(" - ")
-                                  : exercise.muscle}
-                            </span>
-                          </div>
-
-                          <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 shrink-0 ${
-                              alreadyInRoutine
-                                ? "border-transparent"
-                                : isSelected
-                                  ? "border-green-500 bg-green-500/10 scale-105"
-                                  : "border-zinc-600 bg-transparent"
-                            }`}
-                          >
-                            {alreadyInRoutine ? (
-                              <CheckIcon className="w-4 h-4 text-zinc-500" />
-                            ) : isSelected ? (
-                              <CheckIcon className="w-4 h-4 text-green-500" />
-                            ) : null}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                  <ExerciseListSelector
+                    exercises={allExercises}
+                    selectedExercises={selectedExercises}
+                    routineExercises={routine.routines_exercises || []}
+                    isLoading={isLoading}
+                    isError={isError}
+                    onToggleExercise={handleToggleExercise}
+                    onExerciseClick={handleExerciseClick}
+                  />
                 </div>
 
                 {/* BOTÓN CREAR EJERCICIO PERSONALIZADO */}

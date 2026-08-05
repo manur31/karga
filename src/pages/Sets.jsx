@@ -8,6 +8,7 @@ import MyExercisesModal from "../components/modals/MyExercisesModal";
 import ProfileModal from "../components/modals/ProfileModal";
 import EditRoutineModal from "../components/modals/EditRoutineModal";
 import ConfirmModal from "../components/modals/ConfirmModal";
+import StartWorkoutModal from "../components/modals/StartWorkoutModal";
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
@@ -24,6 +25,7 @@ export default function Sets() {
   const [openModal, setOpenModal] = useState(false);
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isStartWorkoutModalOpen, setIsStartWorkoutModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [routineToEdit, setRoutineToEdit] = useState(null);
   const [routineToDeleteId, setRoutineToDeleteId] = useState(null);
@@ -142,7 +144,7 @@ export default function Sets() {
       );
       return;
     }
-    startSession();
+    setIsStartWorkoutModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -223,7 +225,7 @@ export default function Sets() {
                 Empezar entrenamiento
               </span>
               <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
-                Iniciar una sesión vacía de ejercicio
+                Elige una rutina o sesión libre
               </span>
             </div>
           </Button>
@@ -355,6 +357,20 @@ export default function Sets() {
         }}
         onClose={() => setRoutineToDeleteId(null)}
       />
+
+      <StartWorkoutModal
+        isOpen={isStartWorkoutModalOpen}
+        onClose={() => setIsStartWorkoutModalOpen(false)}
+        routines={routines || []}
+        onSelectRoutine={(routineId) => {
+          startSession();
+          setSelectedRoutineId(routineId);
+        }}
+        onStartFree={() => {
+          startSession();
+        }}
+      />
+
       <ErrorModal message={errorMessage} />
       {showOnboarding &&
         createPortal(

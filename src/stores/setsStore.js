@@ -10,19 +10,14 @@ export const useSetsStore = create(
                 const sycnedSets = sets?.map((set) => ({
                     ...set,
                     synced: true,
-                })) || [];
+                }))
 
-                const addedSets = get().sets
-
-                const newSyncSets = sycnedSets?.filter((set) => !addedSets?.some((addedSet) => addedSet.set_id === set.set_id))
-
-                if (newSyncSets.length > 0) {
-                    set((state) => ({
-                        sets: [...state.sets, ...newSyncSets],
-                    }))
-                }
-
+                set((state) => ({
+                    sets: [...state.sets, ...sycnedSets],
+                }))
             },
+
+                
 
             addSet: (newSet) => set((state) => ({
                 sets: [...state.sets, { 

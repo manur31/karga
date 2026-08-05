@@ -1,22 +1,31 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiClock, FiFileText, FiTrash2 } from 'react-icons/fi';
+import { FiX, FiClock, FiCalendar, FiFileText, FiTrash2 } from 'react-icons/fi';
 import { useSets } from '../../hooks/queries/useSets';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import ConfirmModal from './ConfirmModal';
 import { useDeleteSession } from '../../hooks/mutations/useSesionsMutation';
+import { useSessionStore } from '../../stores/sessionStore';
 
 export default function SessionDetailModal({ session, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [localSession, setLocalSession] = useState(null);
   
   const { data: user } = useAuth();
   const { data: sets } = useSets(user?.profile_id);
   const { displayWeight, unit } = useWeightUnit();
   const { mutate: deleteSession } = useDeleteSession(user?.profile_id);
+  const { removeSession } = useSessionStore();
 
-  if (!session) return null;
+  useEffect(() => {
+    if (session) {
+      setLocalSession(session);
+      setIsClosing(false);
+      setShowConfirmDelete(false);
+    }
+  }, [session]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -27,18 +36,33 @@ export default function SessionDetailModal({ session, onClose }) {
   };
 
   const handleDelete = () => {
-    if (session?.session_id) {
-      deleteSession(session.session_id);
+    if (activeSession) {
+      const id = activeSession.session_id || activeSession.id || activeSession.sessionId;
+      const isLocal = !activeSession.synced && (!activeSession.session_id);
+
+      if (isLocal) {
+        removeSession(id);
+      } else {
+        deleteSession(activeSession.session_id);
+        removeSession(id);
+      }
     }
     handleClose();
   };
+
+  const activeSession = session || localSession;
+  if (!session && !isClosing) {
+    if (localSession) setLocalSession(null);
+    return null;
+  }
+  if (!activeSession) return null;
 
   // Filtrar los sets
   const sessionSets = sets?.filter(set => {
     if (!set.created_at) return false;
     const setTime = new Date(set.created_at).getTime();
-    const initTime = new Date(session.startedAt).getTime();
-    const endTime = session.finishedAt ? new Date(session.finishedAt).getTime() : new Date().getTime();
+    const initTime = new Date(activeSession.startedAt).getTime();
+    const endTime = activeSession.finishedAt ? new Date(activeSession.finishedAt).getTime() : new Date().getTime();
     return setTime >= initTime && setTime <= endTime;
   }) || [];
 
@@ -54,22 +78,22 @@ export default function SessionDetailModal({ session, onClose }) {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const rawDate = new Date(session.startedAt).toLocaleDateString('es-ES', {
+  const rawDate = new Date(activeSession.startedAt).toLocaleDateString('es-ES', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
   const formattedDate = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
   
-  const formattedInitTime = new Date(session.startedAt).toLocaleTimeString('es-ES', {
+  const formattedInitTime = new Date(activeSession.startedAt).toLocaleTimeString('es-ES', {
     hour: '2-digit', minute: '2-digit'
   });
 
-  const formattedEndTime = session.finishedAt ? new Date(session.finishedAt).toLocaleTimeString('es-ES', {
+  const formattedEndTime = activeSession.finishedAt ? new Date(activeSession.finishedAt).toLocaleTimeString('es-ES', {
     hour: '2-digit', minute: '2-digit'
   }) : 'En curso';
 
   return createPortal(
     <div 
-      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-100 p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={handleClose}
     >
       <div 
@@ -107,7 +131,7 @@ export default function SessionDetailModal({ session, onClose }) {
                 <span className="text-sm font-medium">Duración Total</span>
               </div>
               <span className="text-2xl font-black text-[#facc15] tabular-nums tracking-wide">
-                {calculateDuration(session.startedAt, session.finishedAt)}
+                {calculateDuration(activeSession.startedAt, activeSession.finishedAt)}
               </span>
             </div>
             
@@ -124,14 +148,14 @@ export default function SessionDetailModal({ session, onClose }) {
           </div>
 
           {/* Notas */}
-          {session.note && (
+          {activeSession.note && (
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-zinc-400">
                 <FiFileText className="w-4 h-4" />
                 <span className="text-sm font-medium">Nota</span>
               </div>
               <p className="text-zinc-300 text-sm bg-black/20 p-3 rounded-xl border border-white/5">
-                {session.note}
+                {activeSession.note}
               </p>
             </div>
           )}
@@ -149,7 +173,7 @@ export default function SessionDetailModal({ session, onClose }) {
               </div>
             ) : (
               <div className="space-y-3">
-                {sessionSets.map((set) => (
+                {sessionSets.map((set, i) => (
                   <div key={set.set_id} className="bg-black/20 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
                     <div className="flex flex-col">
                       <span className="text-white font-semibold">{set.exercises?.name || 'Ejercicio Desconocido'}</span>

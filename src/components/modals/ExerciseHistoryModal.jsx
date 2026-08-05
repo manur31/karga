@@ -26,7 +26,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   const profile_id = user?.profile_id;
   const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
-  const { sets: allSetsFromStore } = useSetsStore();
+  const { sets: allSetsFromStore, removeSet } = useSetsStore();
 
   if (!exercise) return null;
 
@@ -57,7 +57,15 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   const handleDeleteSelected = async () => {
     if (!profile_id || selectedSets.length === 0) return;
     try {
-      await Promise.all(selectedSets.map(setId => deleteSet(setId)));
+      await Promise.all(selectedSets.map(setId => {
+        const isLocal = filteredSetsFromStore.some(s => s.id === setId || s.set_id === setId);
+        if (isLocal) {
+          removeSet(setId);
+          return Promise.resolve();
+        } else {
+          return deleteSet(setId);
+        }
+      }));
       setIsSelectMode(false);
       setSelectedSets([]);
       setShowConfirmDialog(false);
@@ -129,13 +137,31 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
                   </svg>
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">Sin historial</h3>
-                <p className="text-sm text-zinc-500 font-medium">
-                  Aún no has registrado ningún set para este ejercicio. Toca el botón + para comenzar.
+                <p className="text-sm text-zinc-500 font-medium mb-6">
+                  Aún no has registrado ningún set para este ejercicio. Toca el botón para comenzar.
                 </p>
+                <button
+                  onClick={() => setIsSetModalOpen(true)}
+                  className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl bg-karga-orange text-white font-bold text-sm shadow-lg shadow-karga-orange/20 transition-all active:scale-[0.98]"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  Grabar primer set
+                </button>
               </div>
             ) : (
               <div className="flex flex-col gap-8">
-                <h2 className="text-lg font-bold text-zinc-400 tracking-tight -mb-3">Historial de sets</h2>
+                <div className="flex flex-col gap-5">
+                  <h2 className="text-lg font-bold text-zinc-400 tracking-tight -mb-2">Historial de sets</h2>
+                  {!isSelectMode && (
+                    <button
+                      onClick={() => setIsSetModalOpen(true)}
+                      className="flex items-center justify-center gap-2 p-4 w-full rounded-2xl border-2 border-dashed border-white/10 text-zinc-400 font-bold text-sm hover:border-karga-orange/40 hover:text-karga-orange hover:bg-karga-orange/5 transition-all active:scale-[0.99] bg-dark-bg shadow-sm"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                      Grabar nuevo set
+                    </button>
+                  )}
+                </div>
                 {sortedDates.map(dateStr => (
                   <div key={dateStr} className="flex flex-col gap-3">
                     <h3 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest pl-1">
@@ -207,27 +233,16 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
           </div>
 
           {/* FABs */}
-          {isSelectMode ? (
-            selectedSets.length > 0 && (
-              <div className="absolute bottom-8 left-6 z-30 animate-slide-in-up">
-                <button
-                  onClick={() => setShowConfirmDialog(true)}
-                  className="h-14 px-6 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center transition-all active:scale-95 gap-2"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                  </svg>
-                  Eliminar {selectedSets.length} set{selectedSets.length !== 1 ? 's' : ''}
-                </button>
-              </div>
-            )
-          ) : (
-            <div className="absolute bottom-8 right-5 z-30">
+          {isSelectMode && selectedSets.length > 0 && (
+            <div className="absolute bottom-8 left-6 z-30 animate-slide-in-up">
               <button
-                onClick={() => setIsSetModalOpen(true)}
-                className="w-16 h-16 bg-karga-orange hover:bg-orange-500 text-white rounded-[22px] shadow-lg shadow-karga-orange/30 flex items-center justify-center transition-all active:scale-95"
+                onClick={() => setShowConfirmDialog(true)}
+                className="h-14 px-6 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center transition-all active:scale-95 gap-2"
               >
-                <PlusIcon className="w-8 h-8" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+                Eliminar {selectedSets.length} set{selectedSets.length !== 1 ? 's' : ''}
               </button>
             </div>
           )}

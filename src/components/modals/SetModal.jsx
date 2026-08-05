@@ -42,7 +42,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
-  const restTime = rest_time || 1;
+  const restTime = rest_time !== undefined ? rest_time : (user?.rest_time ?? 60);
   const { addSet } = useSetsStore();
 
   if (!exercise) return null;
