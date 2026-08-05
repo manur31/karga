@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSessions } from "../hooks/queries/useSessions";
 import { useSets } from "../hooks/queries/useSets";
 import Mancuerna from "../components/icons/Mancuerna";
@@ -6,31 +6,20 @@ import { FiChevronRight } from "react-icons/fi";
 import SessionDetailModal from "../components/modals/SessionDetailModal";
 import Card from "../components/Card/Card";
 import { formatRelativeTime } from "../utils/timeFormatter";
-import { useSessionStore } from "../stores/sessionStore";
-import { useSetsStore } from "../stores/setsStore";
 import { getCachedProfile } from "../storage/profile-storage";
 
 export default function Sessions() {
   const { profile_id } = getCachedProfile();
-  const {addSyncedSessions, sessions} = useSessionStore();
-  const {addSyncedSets, sets } = useSetsStore()
 
-  const { data: syncSessions, isLoading } = useSessions(profile_id);
-  const { data: syncSets } = useSets(profile_id);
-
-  useEffect(() => {
-    addSyncedSessions(syncSessions)
-    addSyncedSets(syncSets)
-  }, [syncSessions, syncSets])
+  const { data: sessions = [], isLoading } = useSessions(profile_id);
+  const { data: sets = [] } = useSets(profile_id);
 
   const [sortOrder, setSortOrder] = useState("recent");
   const [selectedSession, setSelectedSession] = useState(null);
 
-  // Helper para agrupar sesiones por mes/año
   const getGroupedSessions = (sessionsList, order) => {
     if (!sessionsList) return {};
 
-    // Sort based on selected order
     const sorted = [...sessionsList].sort((a, b) => {
       return order === "recent"
         ? new Date(b.startedAt) - new Date(a.startedAt)
@@ -44,7 +33,6 @@ export default function Sessions() {
         month: "long",
         year: "numeric",
       });
-      // Capitalize first letter
       monthYear = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
 
       if (!groups[monthYear]) {
@@ -99,7 +87,6 @@ export default function Sessions() {
 
   return (
     <div className="flex flex-col w-full animate-fade-in pb-30 pt-10 px-4">
-      {/* HEADER */}
       <div className="mb-6 pl-2">
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">
           Mis Sesiones
@@ -109,7 +96,6 @@ export default function Sessions() {
         </p>
       </div>
 
-      {/* ORDENAMIENTO */}
       <div className="flex items-center gap-2 mb-6 pl-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setSortOrder("recent")}
@@ -125,7 +111,6 @@ export default function Sessions() {
         </button>
       </div>
 
-      {/* LISTADO DE SESIONES */}
       <div className="flex flex-col gap-6">
         {isLoading ? (
           <div className="flex justify-center py-10">
@@ -145,18 +130,16 @@ export default function Sessions() {
               <div className="flex flex-col gap-3">
                 {monthSessions.map((session) => (
                   <Card
-                    key={session.session_id}
+                    key={session.session_id || session.id}
                     variant="default"
                     onClick={() => setSelectedSession(session)}
                     className="p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all min-w-0 flex-1 hover:bg-white/5 border-transparent"
                   >
                     <div className="flex items-center gap-4">
-                      {/* Icon Container */}
                       <div className="w-12 h-12 rounded-[10px] bg-karga-orange/10 flex items-center justify-center shrink-0">
                         <Mancuerna className="w-6 h-6 text-karga-orange" />
                       </div>
 
-                      {/* Text details */}
                       <div className="flex flex-col gap-0.5 justify-center">
                         <span className="text-[15px] font-bold text-zinc-100 mb-0.5">
                           {getSessionTitle(session, sets)}

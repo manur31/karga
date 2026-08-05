@@ -565,7 +565,7 @@ export default function RoutineModal({
           exercise={selectedExerciseToLog}
           onClose={() => setIsSetModalOpen(false)}
         />
-      )}
+      )} 
 
       {/* CUSTOM EXERCISE MODAL */}
       {isCustomExerciseModalOpen && (

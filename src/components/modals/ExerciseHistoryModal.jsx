@@ -7,7 +7,6 @@ import { ArrowLeft, PlusIcon } from '../icons';
 import SetModal from './SetModal';
 import EditSetModal from './EditSetModal';
 import ConfirmModal from './ConfirmModal';
-import { useSetsStore } from '../../stores/setsStore';
 
 export default function ExerciseHistoryModal({ exercise, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
@@ -26,7 +25,6 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   const profile_id = user?.profile_id;
   const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
-  const { sets: allSetsFromStore } = useSetsStore();
 
   if (!exercise) return null;
 
@@ -37,9 +35,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
     }, 300);
   };
 
-  const filteredSetsFromStore = allSetsFromStore.filter(set => set.exercise_id === exercise.id)
-
-  const allSets = [...filteredSetsFromStore, ...sets];
+  const allSets = sets;
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);

@@ -3,39 +3,68 @@ import { scheduleSync } from './sync/syncScheduler';
 
 export const db = new Dexie('KargaDB');
 
-db.version(1).stores({
-  sets: 'id, synced, deleted, createdAt',
-  sessions: 'id, synced, deleted, createdAt',
-  bodyEntries: 'id, synced, deleted, createdAt',
-  routines: 'id, synced, deleted, createdAt',
-  exercises: 'id, synced, deleted, createdAt',
-  favoriteExercises: 'id, synced, deleted, createdAt',
-  setsForExercise: 'id, synced, deleted, createdAt',
+// Flag set by the sync layer so hooks do not re-schedule during pull/push writes
+export let isSyncWrite = false;
+
+export function setSyncWrite(value) {
+  isSyncWrite = value;
+}
+
+db.version(2).stores({
+  sets: 'id, synced, deleted, createdAt, profileId, exerciseId',
+  sessions: 'id, synced, deleted, createdAt, profileId, startedAt',
+  bodyProgress: 'id, synced, deleted, createdAt, profileId',
+  routines: 'id, synced, deleted, createdAt, profileId',
+  routinesExercises: 'id, synced, deleted, createdAt, routineId, exerciseId',
+  userExercises: 'id, synced, deleted, createdAt, profileId, exerciseId',
+  profile: 'id, synced, deleted, createdAt',
+  exercises: 'id, isPopulary, name',
 });
 
-// Hook genérico de creación — se aplica igual a cada tabla
+const SYNCABLE_TABLES = [
+  'sets',
+  'sessions',
+  'bodyProgress',
+  'routines',
+  'routinesExercises',
+  'userExercises',
+  'profile',
+];
+
 function attachCreatingHook(table) {
-  db[table].hook('creating', (primKey, obj) => {
+  db[table].hook('creating', (_primKey, obj) => {
     obj.synced = obj.synced ?? false;
     obj.deleted = obj.deleted ?? false;
     obj.createdAt = obj.createdAt ?? new Date().toISOString();
-    obj.updatedAt = new Date().toISOString();
+    obj.updatedAt = obj.updatedAt ?? new Date().toISOString();
+    obj.syncError = obj.syncError ?? null;
 
-    scheduleSync()
-  });
-}
-
-// Hook genérico de actualización
-function attachUpdatingHook(table) {
-  db[table].hook('updating', (modifications) => {
-    if (modifications.synced === undefined) {
-        scheduleSync()
-      return { synced: false, updatedAt: new Date().toISOString() };
+    if (!isSyncWrite) {
+      scheduleSync();
     }
   });
 }
 
-['sets', 'sessions', 'bodyEntries', 'routines', 'exercises', 'favoriteExercises', 'setsForExercise'].forEach(table => {
+function attachUpdatingHook(table) {
+  db[table].hook('updating', (modifications) => {
+    // Explicit sync status writes come from the sync layer — do not reschedule
+    if (modifications.synced !== undefined) {
+      return;
+    }
+
+    if (!isSyncWrite) {
+      scheduleSync();
+    }
+
+    return {
+      synced: false,
+      updatedAt: new Date().toISOString(),
+      syncError: null,
+    };
+  });
+}
+
+SYNCABLE_TABLES.forEach((table) => {
   attachCreatingHook(table);
   attachUpdatingHook(table);
 });

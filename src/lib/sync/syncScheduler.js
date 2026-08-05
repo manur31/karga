@@ -1,7 +1,7 @@
 import { pushPendingData } from './pushPendingData';
 
-const SYNC_DELAY = 45 * 60 * 1000; // 45 minutos
-const RETRY_DELAY = 2 * 60 * 1000;  // 2 minutos
+const SYNC_DELAY = 45 * 60 * 1000; // 45 minutes
+const RETRY_DELAY = 2 * 60 * 1000; // 2 minutes on network failure
 
 let scheduledTimeoutId = null;
 
@@ -17,7 +17,7 @@ async function executeSync() {
 }
 
 export function scheduleSync() {
-  if (scheduledTimeoutId !== null) return; // ya hay uno corriendo, no reiniciar
+  if (scheduledTimeoutId !== null) return;
   scheduledTimeoutId = setTimeout(executeSync, SYNC_DELAY);
 }
 

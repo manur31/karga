@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
 import { useRestStore } from '../../stores/restStore';
-import { useSetsStore } from '../../stores/setsStore';
+import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -43,7 +43,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const restTime = rest_time || 1;
-  const { addSet } = useSetsStore();
+  const { mutateAsync: createSet } = useCreateSet(profile_id);
 
   if (!exercise) return null;
 
@@ -80,7 +80,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
       if (onSaveOverride) {
         onSaveOverride(setData);
       } else {
-        addSet(setData);
+        await createSet(setData);
       }
  
       startRest(restTime);
