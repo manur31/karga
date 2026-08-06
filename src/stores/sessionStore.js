@@ -33,18 +33,24 @@ export const useSessionStore = create(
 
       clearSessionSetIds: () => set({ sessionSetIds: [] }),
 
-      start: () => {
+      start: (options = {}) => {
         if (get().isStarted) return;
 
+        const startedAt =
+          typeof options.startedAt === 'number' ? options.startedAt : Date.now();
+        const sessionSetIds = Array.isArray(options.sessionSetIds)
+          ? options.sessionSetIds
+          : [];
+
         set({
-          startedAt: Date.now(),
+          startedAt,
           pausedAt: null,
           totalPausedMs: 0,
           isStarted: true,
           isPaused: false,
           finishedAt: null,
           note: '',
-          sessionSetIds: [],
+          sessionSetIds,
         });
       },
 

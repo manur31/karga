@@ -245,7 +245,9 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       {/* SetModal */}
       {isSetModalOpen && (
         <SetModal 
-          exercise={exercise} 
+          exercise={exercise}
+          rest_time={exercise?.rest_time}
+          profile_id={profile_id}
           onClose={() => setIsSetModalOpen(false)} 
         />
       )}

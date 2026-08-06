@@ -268,6 +268,7 @@ export default function ManualSessionModal({ onClose }) {
       {activeExerciseForSet && (
         <SetModal 
           exercise={activeExerciseForSet} 
+          profile_id={profile_id}
           onClose={() => setActiveExerciseForSet(null)} 
           onSaveOverride={handleSaveSetOverride}
         />

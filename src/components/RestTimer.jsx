@@ -4,12 +4,22 @@ import { FiX } from 'react-icons/fi';
 import { useEffect } from 'react';
 
 function RestTimer() {
-    const { restTime, deleteRest, continueRest, isRunning } = useRestStore();
+    const { restTime, deleteRest, isRunning } = useRestStore();
 
     useEffect(() => {
-      if (isRunning) {
+      const { isRunning: running, endsAt, continueRest } = useRestStore.getState();
+      if (running || endsAt) {
         continueRest();
       }
+
+      const onVisibility = () => {
+        if (document.visibilityState === 'visible') {
+          useRestStore.getState().continueRest();
+        }
+      };
+
+      document.addEventListener('visibilitychange', onVisibility);
+      return () => document.removeEventListener('visibilitychange', onVisibility);
     }, []);
 
   if (restTime === 0 && !isRunning) return null;

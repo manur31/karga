@@ -12,6 +12,7 @@ import ExerciseHistoryModal from "./ExerciseHistoryModal";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
+import { getCachedProfile } from "../../storage/profile-storage";
 
 const ThreeDotsIcon = ({ className }) => (
   <svg
@@ -36,8 +37,7 @@ export default function RoutineModal({
   onAddExercises,
   onDeleteRoutine,
 }) {
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const { profile_id, rest_time } = getCachedProfile()
 
   const {
     data: popularExercises,
@@ -331,7 +331,11 @@ export default function RoutineModal({
                 {(() => {
                   const exercisesToRender =
                     routine.routines_exercises
-                      ?.map((re) => re.exercises)
+                      ?.map((re) =>
+                        re.exercises
+                          ? { ...re.exercises, rest_time: re.rest_time }
+                          : null,
+                      )
                       .filter(Boolean) || [];
 
                   if (exercisesToRender.length === 0) {
@@ -563,7 +567,9 @@ export default function RoutineModal({
       {isSetModalOpen && selectedExerciseToLog && (
         <SetModal
           exercise={selectedExerciseToLog}
+          rest_time={rest_time}
           onClose={() => setIsSetModalOpen(false)}
+          profile_id={profile_id}
         />
       )} 
 
