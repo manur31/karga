@@ -15,6 +15,170 @@ import EditRoutineModal from "./EditRoutineModal";
 import ExerciseListSelector from "./ExerciseListSelector";
 import { useSessionStore } from "../../stores/sessionStore";
 import { FiPlay } from "react-icons/fi";
+import { MdHistory } from "react-icons/md";
+import { usePrototypeStore } from "../../stores/prototypeStore";
+import { useSetsStore } from "../../stores/setsStore";
+import { useWeightUnit } from "../../hooks/useWeightUnit";
+
+const MinusIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+  </svg>
+);
+
+const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
+  const { unit, toggleUnit, convertToKg } = useWeightUnit();
+  const { addSet, getLastSetForExercise } = useSetsStore();
+  const [reps, setReps] = useState(0);
+  const [weight, setWeight] = useState(0);
+  const [cards, setCards] = useState([
+    { id: 1, reps: 0, weight: 0 },
+    { id: 2, reps: 0, weight: 0 },
+    { id: 3, reps: 0, weight: 0 },
+  ]);
+
+  useEffect(() => {
+    const lastSet = getLastSetForExercise(exercise.id);
+    if (lastSet) {
+      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
+      setReps(lastSet.rep || 0);
+      setWeight(displayWeight || 0);
+      setCards(prev => prev.map(c => ({ ...c, reps: lastSet.rep || 0, weight: displayWeight || 0 })));
+    }
+  }, [exercise, unit, getLastSetForExercise]);
+
+  useEffect(() => {
+    setCards(prev => prev.map(c => ({ ...c, reps, weight })));
+  }, [reps, weight]);
+
+  const handleToggleUnit = () => {
+    if (unit === 'kg') {
+      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(2)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) * 2.20462).toFixed(2)) })));
+    } else {
+      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(2)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) / 2.20462).toFixed(2)) })));
+    }
+    toggleUnit();
+  };
+
+  const handleSave = () => {
+    for (const card of cards) {
+      const cardWeightKg = unit === 'kg' ? Number(card.weight) : Number((Number(card.weight) / 2.20462).toFixed(2));
+      addSet({
+        profile_id: 'mock_profile',
+        exercise_id: exercise.id,
+        rep: Number(card.reps || 0),
+        weight: Number(cardWeightKg.toFixed(2))
+      });
+    }
+    onSaveDone();
+  };
+
+  return (
+    <div className="w-full bg-[#1A1616] rounded-xl mt-2 p-4 flex flex-col gap-4 animate-fade-in origin-top">
+      {/* Global Controls Row */}
+      <div className="flex gap-2 items-center bg-white/5 p-3 rounded-xl">
+        <div className="flex-1 flex flex-col items-center">
+          <span className="text-[9px] font-bold text-zinc-500 mb-1">REPS GLOBALES</span>
+          <div className="flex items-center gap-1 w-full justify-between px-1">
+            <button onClick={() => setReps(r => Math.max(0, Number(r) - 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><MinusIcon className="w-3 h-3" /></button>
+            <input 
+              type="number" 
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+              className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <button onClick={() => setReps(r => Number(r) + 1)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+          </div>
+        </div>
+        <div className="w-px h-8 bg-white/10 mx-1"></div>
+        <div className="flex-1 flex flex-col items-center">
+          <span className="text-[9px] font-bold text-zinc-500 mb-1">PESO GLOBAL</span>
+          <div className="flex items-center gap-1 w-full justify-between px-1">
+            <button onClick={() => setWeight(w => Math.max(0, Number(w) - (unit === 'kg' ? 1 : 2.5)))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><MinusIcon className="w-3 h-3" /></button>
+            <input 
+              type="number" 
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <button onClick={() => setWeight(w => Number(w) + (unit === 'kg' ? 1 : 2.5))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+          </div>
+        </div>
+        <button 
+          onClick={handleToggleUnit}
+          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white uppercase ml-1 shrink-0"
+        >
+          {unit}
+        </button>
+      </div>
+
+      {/* Cards List */}
+      <div className="flex flex-col gap-2">
+        {cards.map((card, idx) => (
+          <div key={card.id} className="bg-[#2A2424] rounded-xl p-3 flex items-center gap-2 animate-fade-in" style={{ animationDelay: `${idx * 120}ms`, animationFillMode: 'both' }}>
+            <span className="text-zinc-500 font-black text-sm w-4 shrink-0">{idx + 1}°</span>
+            <div className="flex-1 flex gap-2">
+              <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Math.max(0, Number(c.reps) - 1) } : c))} className="text-white/50 hover:text-white p-1"><MinusIcon className="w-3 h-3" /></button>
+                <input 
+                  type="number" 
+                  value={card.reps}
+                  onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: e.target.value } : c))}
+                  className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Number(c.reps) + 1 } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+              </div>
+              <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Math.max(0, Number(c.weight) - (unit === 'kg' ? 1 : 2.5)) } : c))} className="text-white/50 hover:text-white p-1"><MinusIcon className="w-3 h-3" /></button>
+                <input 
+                  type="number" 
+                  value={card.weight}
+                  onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: e.target.value } : c))}
+                  className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Number(c.weight) + (unit === 'kg' ? 1 : 2.5) } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+              </div>
+            </div>
+            {cards.length > 1 && (
+              <button 
+                onClick={() => setCards(prev => prev.filter(c => c.id !== card.id))}
+                className="w-6 h-6 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 shrink-0"
+              >
+                <MinusIcon className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer Controls */}
+      <div className="flex justify-between items-center mt-2">
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }])}
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
+          >
+            +1 set
+          </button>
+          <button 
+            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }, { id: Date.now()+1, reps, weight }])}
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
+          >
+            +2 sets
+          </button>
+        </div>
+        <button 
+          onClick={handleSave}
+          className="px-5 py-2.5 bg-karga-orange hover:bg-orange-600 text-white font-black text-sm rounded-xl shadow-lg shadow-karga-orange/20 active:scale-95 transition-all"
+        >
+          Grabar {cards.length} sets
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const ThreeDotsIcon = ({ className }) => (
   <svg
@@ -42,6 +206,8 @@ export default function RoutineModal({
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const { start: startSession, isStarted } = useSessionStore();
+  const { version } = usePrototypeStore();
+  const [expandedExerciseId, setExpandedExerciseId] = useState(null);
 
   const {
     data: popularExercises,
@@ -224,8 +390,12 @@ export default function RoutineModal({
     if (isAddingExercises) {
       handleToggleExercise(exercise.id);
     } else {
-      setSelectedExerciseForHistory(exercise);
-      setIsHistoryModalOpen(true);
+      if (version === 1) {
+        setExpandedExerciseId(prev => prev === exercise.id ? null : exercise.id);
+      } else {
+        setSelectedExerciseForHistory(exercise);
+        setIsHistoryModalOpen(true);
+      }
     }
   };
 
@@ -368,73 +538,95 @@ export default function RoutineModal({
                     <div className="flex flex-col gap-3">
                       {exercisesToRender.map((exercise) => {
                         return (
-                          <div
-                            key={exercise.id}
-                            onClick={() => {
-                              if (isEditMode)
-                                toggleDeleteSelection(exercise.id);
-                              else handleExerciseClick(exercise);
-                            }}
-                            className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
-                              isEditMode &&
-                              selectedExercisesForDelete.includes(exercise.id)
-                                ? "bg-red-500/10 border border-red-500/50"
-                                : "bg-input-bg border border-transparent hover:bg-white/5"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {isEditMode && (
-                                <div
-                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
-                                    selectedExercisesForDelete.includes(
+                          <div key={exercise.id} className="flex flex-col">
+                            <div
+                              onClick={() => {
+                                if (isEditMode)
+                                  toggleDeleteSelection(exercise.id);
+                                else handleExerciseClick(exercise);
+                              }}
+                              className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
+                                isEditMode &&
+                                selectedExercisesForDelete.includes(exercise.id)
+                                  ? "bg-red-500/10 border border-red-500/50"
+                                  : "bg-input-bg border border-transparent hover:bg-white/5"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {isEditMode && (
+                                  <div
+                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                                      selectedExercisesForDelete.includes(
+                                        exercise.id,
+                                      )
+                                        ? "bg-red-500 border-red-500"
+                                        : "border-zinc-500"
+                                    }`}
+                                  >
+                                    {selectedExercisesForDelete.includes(
                                       exercise.id,
-                                    )
-                                      ? "bg-red-500 border-red-500"
-                                      : "border-zinc-500"
-                                  }`}
+                                    ) && (
+                                      <svg
+                                        className="w-3 h-3 text-white"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={3}
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                  </div>
+                                )}
+                                <div className="flex flex-col pr-4">
+                                  <span className="text-[15px] font-bold text-white tracking-tight">
+                                    {exercise.name}
+                                  </span>
+                                  <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">
+                                    {Array.isArray(exercise.muscle)
+                                      ? exercise.muscle.join(" - ")
+                                      : exercise.muscle}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {!isEditMode && version !== 1 && (
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedExerciseToLog(exercise);
+                                    setIsSetModalOpen(true);
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
                                 >
-                                  {selectedExercisesForDelete.includes(
-                                    exercise.id,
-                                  ) && (
-                                    <svg
-                                      className="w-3 h-3 text-white"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                      strokeWidth={3}
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  )}
+                                  <PlusIcon className="w-5 h-5 text-white" />
                                 </div>
                               )}
-                              <div className="flex flex-col pr-4">
-                                <span className="text-[15px] font-bold text-white tracking-tight">
-                                  {exercise.name}
-                                </span>
-                                <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">
-                                  {Array.isArray(exercise.muscle)
-                                    ? exercise.muscle.join(" - ")
-                                    : exercise.muscle}
-                                </span>
-                              </div>
+                              
+                              {!isEditMode && version === 1 && (
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedExerciseForHistory(exercise);
+                                    setIsHistoryModalOpen(true);
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                >
+                                  <MdHistory className="w-5 h-5 text-white -translate-x-[1px]" />
+                                </div>
+                              )}
                             </div>
-
-                            {!isEditMode && (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedExerciseToLog(exercise);
-                                  setIsSetModalOpen(true);
-                                }}
-                                className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                              >
-                                <PlusIcon className="w-5 h-5 text-white" />
-                              </div>
+                            
+                            {/* V1 Inline Expander */}
+                            {version === 1 && expandedExerciseId === exercise.id && !isEditMode && (
+                              <InlineExerciseExpander 
+                                exercise={exercise} 
+                                onSaveDone={() => setExpandedExerciseId(null)} 
+                              />
                             )}
                           </div>
                         );

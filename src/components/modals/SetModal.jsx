@@ -4,6 +4,8 @@ import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
 import { useRestStore } from '../../stores/restStore';
 import { useSetsStore } from '../../stores/setsStore';
+import { usePrototypeStore } from '../../stores/prototypeStore';
+import { useEffect } from 'react';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -20,6 +22,11 @@ const XIcon = ({ className }) => (
 export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
+  
+  const { version } = usePrototypeStore();
+  const [multiplier, setMultiplier] = useState(1);
+  const [v2Cards, setV2Cards] = useState([{ id: 1, reps: 0, weight: 0 }]);
+
   
   const { unit, toggleUnit, convertToKg } = useWeightUnit();
   
@@ -43,7 +50,29 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const restTime = rest_time !== undefined ? rest_time : (user?.rest_time ?? 60);
-  const { addSet } = useSetsStore();
+  const { addSet, getLastSetForExercise } = useSetsStore();
+
+  useEffect(() => {
+    if (exercise?.id) {
+      const lastSet = getLastSetForExercise(exercise.id);
+      if (lastSet) {
+        // Assume last set weight is stored in kg and needs to be displayed in current unit
+        const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
+        setReps(lastSet.rep || 0);
+        setWeight(displayWeight || 0);
+        
+        // Update initial V2 card as well
+        setV2Cards([{ id: 1, reps: lastSet.rep || 0, weight: displayWeight || 0 }]);
+      }
+    }
+  }, [exercise, unit, getLastSetForExercise]);
+
+  // Effect to sync global controls to V2 cards
+  useEffect(() => {
+    if (version === 2) {
+      setV2Cards(prev => prev.map(card => ({ ...card, reps, weight })));
+    }
+  }, [reps, weight, version]);
 
   if (!exercise) return null;
 
@@ -77,10 +106,31 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
         weight: Number(weightInKg.toFixed(2))
       };
 
-      if (onSaveOverride) {
-        onSaveOverride(setData);
+      if (version === 2) {
+        // V2 Loop over individual cards
+        for (const card of v2Cards) {
+          const cardWeightKg = unit === 'kg' ? Number(card.weight) : Number((Number(card.weight) / 2.20462).toFixed(2));
+          const cardData = {
+            ...setData,
+            rep: Number(card.reps || 0),
+            weight: Number(cardWeightKg.toFixed(2))
+          };
+          if (onSaveOverride) onSaveOverride(cardData);
+          else addSet(cardData);
+        }
+      } else if (version === 3) {
+        // V3 Loop over multiplier
+        for (let i = 0; i < multiplier; i++) {
+          if (onSaveOverride) onSaveOverride(setData);
+          else addSet(setData);
+        }
       } else {
-        addSet(setData);
+        // V4 Default
+        if (onSaveOverride) {
+          onSaveOverride(setData);
+        } else {
+          addSet(setData);
+        }
       }
  
       startRest(restTime);
@@ -125,6 +175,65 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
         onClick={handleCloseWithAnimation}
       />
+
+      {version === 2 && (
+        <div className={`relative w-full sm:max-w-md sm:mx-auto flex flex-col gap-2 px-4 pb-4 transition-all duration-300 ${isClosing ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
+          <div className="flex gap-2 justify-center mb-2">
+            <button 
+              onClick={() => setV2Cards(prev => [...prev, { id: Date.now(), reps: prev[prev.length-1]?.reps || 0, weight: prev[prev.length-1]?.weight || 0 }])}
+              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-sm transition-colors"
+            >
+              +1 set
+            </button>
+            <button 
+              onClick={() => setV2Cards(prev => [...prev, { id: Date.now(), reps: prev[prev.length-1]?.reps || 0, weight: prev[prev.length-1]?.weight || 0 }, { id: Date.now()+1, reps: prev[prev.length-1]?.reps || 0, weight: prev[prev.length-1]?.weight || 0 }])}
+              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-sm transition-colors"
+            >
+              +2 sets
+            </button>
+          </div>
+          
+          <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto no-scrollbar pb-2">
+            {v2Cards.map((card, index) => (
+              <div key={card.id} className="bg-[#2A2424] border border-white/5 rounded-2xl p-4 flex items-center gap-4 relative animate-fade-in">
+                <span className="text-zinc-500 font-black text-lg w-6 shrink-0">{index + 1}°</span>
+                
+                <div className="flex-1 flex gap-4">
+                  <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                    <button onClick={() => setV2Cards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Math.max(0, Number(c.reps) - 1) } : c))} className="text-white/50 hover:text-white p-1"><MinusIcon className="w-3 h-3" /></button>
+                    <input 
+                      type="number" 
+                      value={card.reps}
+                      onChange={(e) => setV2Cards(prev => prev.map(c => c.id === card.id ? { ...c, reps: e.target.value } : c))}
+                      className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button onClick={() => setV2Cards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Number(c.reps) + 1 } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+                  </div>
+                  <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                    <button onClick={() => setV2Cards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Math.max(0, Number(c.weight) - (unit === 'kg' ? 1 : 2.5)) } : c))} className="text-white/50 hover:text-white p-1"><MinusIcon className="w-3 h-3" /></button>
+                    <input 
+                      type="number" 
+                      value={card.weight}
+                      onChange={(e) => setV2Cards(prev => prev.map(c => c.id === card.id ? { ...c, weight: e.target.value } : c))}
+                      className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button onClick={() => setV2Cards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Number(c.weight) + (unit === 'kg' ? 1 : 2.5) } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+                  </div>
+                </div>
+
+                {v2Cards.length > 1 && (
+                  <button 
+                    onClick={() => setV2Cards(prev => prev.filter(c => c.id !== card.id))}
+                    className="w-8 h-8 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                  >
+                    <MinusIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Contenedor Bottom Sheet */}
       <div 
@@ -251,6 +360,20 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
               >
                 {unit === 'kg' ? 'LB' : 'KG'}
               </button>
+
+              {/* Botón Multiplicador V3 */}
+              {version === 3 && (
+                <button 
+                  onClick={() => setMultiplier(prev => prev >= 5 ? 1 : prev + 1)}
+                  className={`px-4 py-2.5 rounded-full text-xs font-black whitespace-nowrap transition-colors ${
+                    multiplier > 1 
+                      ? 'bg-karga-orange text-white shadow-lg shadow-karga-orange/30' 
+                      : 'bg-white/10 hover:bg-white/20 text-white'
+                  }`}
+                >
+                  x{multiplier} set{multiplier !== 1 ? 's' : ''}
+                </button>
+              )}
             </div>
             
             {/* Botón Guardar */}

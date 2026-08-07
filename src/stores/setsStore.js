@@ -46,6 +46,14 @@ export const useSetsStore = create(
 
             getPendingSets: () => get().sets.filter((set) => !set.synced),
 
+            getLastSetForExercise: (exerciseId) => {
+                const exerciseSets = get().sets.filter(s => s.exercise_id === exerciseId);
+                if (exerciseSets.length === 0) return null;
+                // Sort by created_at descending (newest first)
+                exerciseSets.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                return exerciseSets[0];
+            },
+
             clearSets: () => set({ sets: [] }),
 
         }),

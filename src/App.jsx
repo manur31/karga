@@ -11,10 +11,12 @@ import Sessions from "./pages/Sessions";
 import Body from "./pages/Body";
 import Today from "./pages/Today";
 import ForgotPassword from "./pages/ForgotPassword";
+import DevToggle from "./components/DevToggle";
 
 function App() {
   return (
     <>
+      <DevToggle />
       <BrowserRouter>
         <Routes>
           <Route element={<PublicLayout />}>
