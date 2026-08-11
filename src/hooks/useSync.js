@@ -39,40 +39,33 @@ export const useSyncSets = (profile_id) => {
 };
 
 export const useSyncSessions = (profile_id) => {
-  const { getPendingSessions, markAsSynced } = useSessionStore();
+  const { getPendingSessions, replaceLocalSession } = useSessionStore();
   const { mutateAsync: createSession } = useCreateSession(profile_id);
 
   const sync = async () => {
+    if (!profile_id) return;
+
     const pendingSessions = getPendingSessions();
+
     if (pendingSessions.length === 0) return;
 
-    const sessionsToSync = pendingSessions.map((session) => {
-      const rest = unFormatData(session, true);
-      const created_at =
-        rest.created_at ||
-        rest.createAt ||
-        rest.startedAt ||
-        new Date();
-      const startedAt = rest.startedAt || new Date();
-      const finishedAt = rest.finishedAt || new Date();
-
-      return {
-        startedAt: new Date(startedAt).toISOString(),
-        finishedAt: new Date(finishedAt).toISOString(),
-        created_at: new Date(created_at).toISOString(),
-        profile_id: rest.profile_id || profile_id,
-        note: rest.note || null,
-      };
-    });
-
+    const sessionsToSync = pendingSessions.map((session) => ({
+      profile_id,
+      time_init: new Date(session.startedAt).toISOString(),
+      time_end: session.finishedAt
+        ? new Date(session.finishedAt).toISOString()
+        : null,
+      note: session.note || null,
+    }));
 
     try {
-      await createSession(sessionsToSync);
-      pendingSessions.forEach((session) => {
-        markAsSynced(session.id);
+      const createdSessions = await createSession(sessionsToSync);
+
+      pendingSessions.forEach((localSession, index) => {
+        replaceLocalSession(localSession.id, createdSessions[index]);
       });
     } catch (error) {
-      console.error("Error syncing sessions", error);
+      console.log("Error syncing sessions", error);
     }
   };
 
