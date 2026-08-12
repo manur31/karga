@@ -7,24 +7,16 @@ import {
 } from "../../hooks/queries/useExercises";
 import { useDeleteExercisesRoutine, useEditRoutines } from "../../hooks/mutations/useRoutinesMutation";
 import { ArrowLeft, CheckIcon, PlusIcon } from "../icons";
-import SetModal from "./SetModal";
 import ExerciseHistoryModal from "./ExerciseHistoryModal";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
 import ExerciseListSelector from "./ExerciseListSelector";
 import { useSessionStore } from "../../stores/sessionStore";
-import { FiPlay } from "react-icons/fi";
+import { FiPlay, FiMinus } from "react-icons/fi";
 import { MdHistory } from "react-icons/md";
-import { usePrototypeStore } from "../../stores/prototypeStore";
 import { useSetsStore } from "../../stores/setsStore";
 import { useWeightUnit } from "../../hooks/useWeightUnit";
-
-const MinusIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-  </svg>
-);
 
 const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
   const { unit, toggleUnit, convertToKg } = useWeightUnit();
@@ -33,8 +25,6 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
   const [weight, setWeight] = useState(0);
   const [cards, setCards] = useState([
     { id: 1, reps: 0, weight: 0 },
-    { id: 2, reps: 0, weight: 0 },
-    { id: 3, reps: 0, weight: 0 },
   ]);
 
   useEffect(() => {
@@ -96,7 +86,7 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
         <div className="flex-1 flex flex-col items-center">
           <span className="text-[9px] font-bold text-zinc-500 mb-1">PESO GLOBAL</span>
           <div className="flex items-center gap-1 w-full justify-between px-1">
-            <button onClick={() => setWeight(w => Math.max(0, Number(w) - (unit === 'kg' ? 1 : 2.5)))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><MinusIcon className="w-3 h-3" /></button>
+            <button onClick={() => setWeight(w => Math.max(0, Number(w) - (unit === 'kg' ? 1 : 2.5)))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
             <input 
               type="number" 
               value={weight}
@@ -121,7 +111,7 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
             <span className="text-zinc-500 font-black text-sm w-4 shrink-0">{idx + 1}°</span>
             <div className="flex-1 flex gap-2">
               <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
-                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Math.max(0, Number(c.reps) - 1) } : c))} className="text-white/50 hover:text-white p-1"><MinusIcon className="w-3 h-3" /></button>
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Math.max(0, Number(c.reps) - 1) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
                 <input 
                   type="number" 
                   value={card.reps}
@@ -131,7 +121,7 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
                 <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Number(c.reps) + 1 } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
               </div>
               <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
-                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Math.max(0, Number(c.weight) - (unit === 'kg' ? 1 : 2.5)) } : c))} className="text-white/50 hover:text-white p-1"><MinusIcon className="w-3 h-3" /></button>
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Math.max(0, Number(c.weight) - (unit === 'kg' ? 1 : 2.5)) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
                 <input 
                   type="number" 
                   value={card.weight}
@@ -146,7 +136,7 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
                 onClick={() => setCards(prev => prev.filter(c => c.id !== card.id))}
                 className="w-6 h-6 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 shrink-0"
               >
-                <MinusIcon className="w-3 h-3" />
+                <FiMinus className="w-3 h-3" />
               </button>
             )}
           </div>
@@ -206,7 +196,6 @@ export default function RoutineModal({
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const { start: startSession, isStarted } = useSessionStore();
-  const { version } = usePrototypeStore();
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
 
   const {
@@ -256,9 +245,6 @@ export default function RoutineModal({
   const handleCreateCustomExercise = () => {
     setIsCustomExerciseModalOpen(true);
   };
-
-  const [selectedExerciseToLog, setSelectedExerciseToLog] = useState(null);
-  const [isSetModalOpen, setIsSetModalOpen] = useState(false);
 
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] =
     useState(null);
@@ -390,12 +376,7 @@ export default function RoutineModal({
     if (isAddingExercises) {
       handleToggleExercise(exercise.id);
     } else {
-      if (version === 1) {
-        setExpandedExerciseId(prev => prev === exercise.id ? null : exercise.id);
-      } else {
-        setSelectedExerciseForHistory(exercise);
-        setIsHistoryModalOpen(true);
-      }
+      setExpandedExerciseId(prev => prev === exercise.id ? null : exercise.id);
     }
   };
 
@@ -594,20 +575,7 @@ export default function RoutineModal({
                                 </div>
                               </div>
 
-                              {!isEditMode && version !== 1 && (
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedExerciseToLog(exercise);
-                                    setIsSetModalOpen(true);
-                                  }}
-                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                                >
-                                  <PlusIcon className="w-5 h-5 text-white" />
-                                </div>
-                              )}
-                              
-                              {!isEditMode && version === 1 && (
+                              {!isEditMode && (
                                 <div
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -622,7 +590,7 @@ export default function RoutineModal({
                             </div>
                             
                             {/* V1 Inline Expander */}
-                            {version === 1 && expandedExerciseId === exercise.id && !isEditMode && (
+                            {expandedExerciseId === exercise.id && !isEditMode && (
                               <InlineExerciseExpander 
                                 exercise={exercise} 
                                 onSaveDone={() => setExpandedExerciseId(null)} 
@@ -705,14 +673,6 @@ export default function RoutineModal({
         <ExerciseHistoryModal
           exercise={selectedExerciseForHistory}
           onClose={() => setIsHistoryModalOpen(false)}
-        />
-      )}
-
-      {/* SET MODAL (BOTTOM SHEET) */}
-      {isSetModalOpen && selectedExerciseToLog && (
-        <SetModal
-          exercise={selectedExerciseToLog}
-          onClose={() => setIsSetModalOpen(false)}
         />
       )}
 
