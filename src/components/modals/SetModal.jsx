@@ -1,4 +1,15 @@
 import { useState } from 'react';
+import { useWeightUnit } from '../../hooks/useWeightUnit';
+import { CheckIcon, PlusIcon } from '../icons';
+import { useRestStore } from '../../stores/restStore';
+import { useSessionStore } from '../../stores/sessionStore';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+} from '../../lib/notifications';
+import ConfirmModal from './ConfirmModal';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
@@ -19,7 +30,7 @@ const XIcon = ({ className }) => (
   </svg>
 );
 
-export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
+export default function SetModal({ exercise, onClose, rest_time, onSaveOverride, profile_id }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
 
@@ -31,6 +42,8 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSessionPrompt, setShowSessionPrompt] = useState(false);
+  const [pendingSessionSet, setPendingSessionSet] = useState(null);
 
   const handleToggleUnit = () => {
     if (unit === 'kg') {
@@ -42,7 +55,12 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   };
 
   const { startRest } = useRestStore();
+  const { isStarted, start: startSession } = useSessionStore();
+  const restNotificationsEnabled = useSettingsStore((s) => s.restNotificationsEnabled);
 
+  const restSeconds =
+    Number(rest_time) || 60;
+  const { mutateAsync: createSet } = useCreateSet(profile_id);
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const restTime = rest_time !== undefined ? rest_time : (user?.rest_time ?? 60);
@@ -73,6 +91,48 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
     }, 300);
   };
 
+  const finishAfterSave = async ({ setId, createdAtMs, weightInKg, repsValue }) => {
+    if (restNotificationsEnabled && getNotificationPermission() === 'default') {
+      await requestNotificationPermission();
+    }
+
+    startRest({
+      seconds: restSeconds,
+      lastSet: {
+        exerciseName: exercise.name,
+        weightKg: Number(weightInKg.toFixed(2)),
+        reps: repsValue,
+      },
+    });
+
+    if (!onSaveOverride && !isStarted && setId) {
+      setPendingSessionSet({ setId, createdAtMs });
+      setShowSessionPrompt(true);
+      setIsSaving(false);
+      return;
+    }
+
+    handleCloseWithAnimation(null);
+  };
+
+  const handleSessionPromptConfirm = () => {
+    if (pendingSessionSet) {
+      startSession({
+        startedAt: Math.max(0, pendingSessionSet.createdAtMs - 500),
+        sessionSetIds: [pendingSessionSet.setId],
+      });
+    }
+    setPendingSessionSet(null);
+    setShowSessionPrompt(false);
+    handleCloseWithAnimation(null);
+  };
+
+  const handleSessionPromptClose = () => {
+    setPendingSessionSet(null);
+    setShowSessionPrompt(false);
+    handleCloseWithAnimation(null);
+  };
+
   const handleSave = async (e) => {
     if (e) {
       e.stopPropagation();
@@ -83,18 +143,29 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
 
     setIsSaving(true);
     const weightInKg = convertToKg(weight);
+    const repsValue = Number(reps || 0);
+    const createdAt = new Date().toISOString();
+    const createdAtMs = new Date(createdAt).getTime();
 
     try {
       const setData = {
         profile_id,
         exercise_id: exercise.id,
-        rep: Number(reps || 0),
-        weight: Number(weightInKg.toFixed(2))
+        rep: repsValue,
+        weight: Number(weightInKg.toFixed(2)),
+        created_at: createdAt,
       };
+
+      let setId = null;
 
       if (onSaveOverride) {
         onSaveOverride(setData);
       } else {
+        const ids = await createSet(setData);
+        setId = Array.isArray(ids) ? ids[0] : ids;
+      }
+
+      await finishAfterSave({ setId, createdAtMs, weightInKg, repsValue });
         addSet(setData);
         startRest(restTime);
       }
@@ -133,12 +204,15 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
     return 'text-4xl sm:text-5xl';
   };
 
+  return (
+    <>
+    <div className="fixed inset-0 z-60 flex flex-col justify-end pointer-events-auto">
   return createPortal(
     <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
-        onClick={handleCloseWithAnimation}
+        onClick={showSessionPrompt ? undefined : handleCloseWithAnimation}
       />
 
       {/* Contenedor Bottom Sheet */}
@@ -284,6 +358,18 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
           
         </div>
       </div>
+    </div>
+
+    <ConfirmModal
+      isOpen={showSessionPrompt}
+      title="¿Iniciar sesión?"
+      description="El set ya se guardó. ¿Quieres iniciar una sesión de entrenamiento o era solo un set suelto?"
+      confirmText="Iniciar sesión"
+      cancelText="Solo el set"
+      onConfirm={handleSessionPromptConfirm}
+      onClose={handleSessionPromptClose}
+    />
+    </>
     </div>,
     document.body
   );

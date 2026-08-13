@@ -5,7 +5,7 @@ export function createRepository(tableName) {
 
   return {
     async add(data) {
-      const id = crypto.randomUUID();
+      const id = data.id || crypto.randomUUID();
       await table.add({ id, ...data });
       return id;
     },
@@ -19,20 +19,29 @@ export function createRepository(tableName) {
       if (!record) return;
 
       if (!record.synced) {
-        // nunca llegó al servidor, lo eliminamos directo
         await table.delete(id);
       } else {
-        // ya existe en Supabase, hay que avisarle al sync
         await table.update(id, { deleted: true, synced: false });
       }
     },
 
     async getAll() {
-      return table.where('deleted').equals(0).toArray();
+      return table.filter((r) => !r.deleted).toArray();
     },
 
     async getPending() {
-      return table.where('synced').equals(0).toArray();
+      return table.filter((r) => !r.synced).toArray();
+    },
+
+    async getById(id) {
+      const record = await table.get(id);
+      if (!record || record.deleted) return null;
+      return record;
+    },
+
+    async bulkDelete(ids) {
+      if (!ids?.length) return;
+      await table.bulkDelete(ids);
     },
   };
 }

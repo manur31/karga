@@ -8,16 +8,12 @@ import { FiChevronDown } from 'react-icons/fi';
  *
  * Props:
  *   dayActivity    { sets: [], sessions: [] } | null
- *   exerciseMap    { [exercise_id]: exerciseName }  — optional, for name resolution
+ *   exercises      exercise catalog for name resolution
+ *   isLoading      optional loading flag from Dexie query
  */
-export default function ActivityList({ dayActivity, exercises }) {
+export default function ActivityList({ dayActivity, exercises, isLoading = false }) {
   const groups = groupSetsByExercise(dayActivity, exercises)
-  const [isLoading, setIsLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(true)
-
-  setTimeout(() => {
-    setIsLoading(false)
-  }, 800);
 
   return (
     <div className="mt-6">
@@ -33,7 +29,7 @@ export default function ActivityList({ dayActivity, exercises }) {
 
       <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-y-auto max-h-80">
-          { isLoading ? (
+          {isLoading ? (
             <LoadingState/>
           ) : (
             groups.length === 0 ? (

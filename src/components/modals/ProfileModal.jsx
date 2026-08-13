@@ -7,6 +7,7 @@ import {
   FiUser,
   FiClock,
   FiCalendar,
+  FiBell,
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
@@ -17,11 +18,21 @@ import {
   useUpdateProfileRestTime,
 } from "../../hooks/mutations/useAuthMutations";
 import { useSettingsStore } from "../../stores/settingsStore";
+import {
+  getNotificationPermission,
+  isNotificationSupported,
+  requestNotificationPermission,
+} from "../../lib/notifications";
 import { logout } from "../../service/authService";
 
 export default function ProfileModal({ isOpen, onClose }) {
   const { data: user } = useAuth();
-  const { weightUnit, setWeightUnit } = useSettingsStore();
+  const {
+    weightUnit,
+    setWeightUnit,
+    restNotificationsEnabled,
+    setRestNotificationsEnabled,
+  } = useSettingsStore();
 
   const [trainingDays, setTrainingDays] = useState(1);
   const [restTime, setRestTime] = useState(60);
@@ -103,6 +114,32 @@ export default function ProfileModal({ isOpen, onClose }) {
     }
 
     return `${minutes}m ${remainingSeconds}s`;
+  };
+
+  const handleToggleRestNotifications = async () => {
+    if (restNotificationsEnabled) {
+      setRestNotificationsEnabled(false);
+      return;
+    }
+
+    if (!isNotificationSupported()) {
+      setRestNotificationsEnabled(false);
+      return;
+    }
+
+    const permission = getNotificationPermission();
+    if (permission === "denied") {
+      setRestNotificationsEnabled(false);
+      return;
+    }
+
+    if (permission === "default") {
+      const result = await requestNotificationPermission();
+      setRestNotificationsEnabled(result === "granted");
+      return;
+    }
+
+    setRestNotificationsEnabled(true);
   };
 
   return createPortal(
@@ -227,6 +264,46 @@ export default function ProfileModal({ isOpen, onClose }) {
                   <FiChevronRight size={18} />
                 </button>
               </div>
+            </div>
+
+            {/* Notificaciones de descanso */}
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4">
+              <div className="flex items-center gap-2.5">
+                <FiBell className="text-karga-orange" size={18} />
+
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-white">
+                    Aviso al terminar descanso
+                  </span>
+                  <span className="text-[10px] text-white/35">
+                    {!isNotificationSupported()
+                      ? "No soportado en este navegador"
+                      : getNotificationPermission() === "denied"
+                        ? "Permiso bloqueado en el navegador"
+                        : "Notifica con ejercicio, peso y reps"}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={restNotificationsEnabled}
+                onClick={handleToggleRestNotifications}
+                disabled={
+                  !isNotificationSupported() ||
+                  getNotificationPermission() === "denied"
+                }
+                className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                  restNotificationsEnabled ? "bg-karga-orange" : "bg-white/15"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                    restNotificationsEnabled ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
             </div>
 
             {/* Días de entrenamiento */}
