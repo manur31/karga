@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/queries/useAuth';
 import { useUpdateSet } from '../../hooks/mutations/useSetsMutations';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
+import { useSetsStore } from '../../stores/setsStore';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -40,6 +41,7 @@ export default function EditSetModal({ setToEdit, onClose }) {
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const { mutateAsync: updateSet } = useUpdateSet(profile_id);
+  const { editSet, sets: allSetsFromStore } = useSetsStore();
 
   if (!setToEdit) return null;
 
@@ -66,11 +68,23 @@ export default function EditSetModal({ setToEdit, onClose }) {
     const weightInKg = convertToKg(weight);
 
     try {
-      await updateSet({
-        set_id: setToEdit.set_id || setToEdit.id,
+      const setId = setToEdit.set_id || setToEdit.id;
+      const isLocal = allSetsFromStore.some(s => s.id === setId || s.set_id === setId);
+      
+      const setUpdateData = {
         rep: Number(reps || 0),
         weight: Number(weightInKg.toFixed(2))
-      });
+      };
+
+      if (isLocal) {
+        editSet(setId, setUpdateData);
+      } else {
+        await updateSet({
+          set_id: setId,
+          ...setUpdateData
+        });
+      }
+      
       handleCloseWithAnimation(null);
     } catch (error) {
       console.error("Error al actualizar el set:", error);

@@ -7,7 +7,7 @@ import {
 } from "../../hooks/queries/useExercises";
 import { ArrowLeft, PlusIcon, CheckIcon } from "../icons";
 import CustomExerciseModal from "./CustomExerciseModal";
-import ExerciseInfoModal from "./ExerciseInfoModal";
+import ExerciseListSelector from "./ExerciseListSelector";
 
 const QuestionIcon = ({ className }) => (
   <svg
@@ -73,7 +73,6 @@ export default function WorkoutModal({ onClose, onSave }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] =
     useState(false);
-  const [selectedExerciseForInfo, setSelectedExerciseForInfo] = useState(null);
 
   const handleCloseWithAnimation = () => {
     setIsClosing(true);
@@ -95,11 +94,6 @@ export default function WorkoutModal({ onClose, onSave }) {
       onSave(routineName, description, selectedExercises);
     }
     handleCloseWithAnimation();
-  };
-
-  const handleOpenExerciseInfo = (e, exercise) => {
-    e.stopPropagation();
-    setSelectedExerciseForInfo(exercise);
   };
 
   const handleCreateCustomExercise = () => {
@@ -162,77 +156,15 @@ export default function WorkoutModal({ onClose, onSave }) {
             />
           </div>
 
-          {/* LISTA DE EJERCICIOS */}
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-end mb-1 pl-1">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                Ejercicios disponibles
-              </label>
-              <span className="text-xs text-karga-orange font-bold">
-                {selectedExercises.length} agregados
-              </span>
-            </div>
-
-            {isLoading && exercises.length === 0 ? (
-              <div className="flex justify-center py-12">
-                <div className="w-8 h-8 border-4 border-t-karga-orange border-white/10 rounded-full animate-spin" />
-              </div>
-            ) : null}
-
-            {isError && (
-              <div className="text-red-400 text-sm text-center p-4 bg-red-500/10 rounded-2xl border border-red-500/10 font-medium">
-                Error al cargar los ejercicios de la base de datos.
-              </div>
-            )}
-
-            {exercises &&
-              exercises.map((exercise) => {
-                const isSelected = selectedExercises.includes(exercise.id);
-
-                return (
-                  <div
-                    key={exercise.id}
-                    onClick={() => handleToggleExercise(exercise.id)}
-                    className={`flex items-center p-4 rounded-2xl cursor-pointer transition-all border ${
-                      isSelected
-                        ? "bg-karga-gray border-green-500/50 shadow-lg shadow-green-500/5"
-                        : "bg-karga-gray border-transparent hover:bg-white/2"
-                    }`}
-                  >
-                    <div className="flex flex-col flex-1">
-                      <span className="text-[15px] text-zinc-100 font-bold tracking-tight">
-                        {exercise.name}
-                      </span>
-                      <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">
-                        {exercise.muscle.join(" - ")}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={(e) => handleOpenExerciseInfo(e, exercise)}
-                        className="p-2 text-zinc-500 hover:text-karga-orange hover:bg-white/5 rounded-xl transition-all"
-                      >
-                        <QuestionIcon className="w-5 h-5" />
-                      </button>
-
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 shrink-0 ${
-                          isSelected
-                            ? "border-green-500 bg-green-500/10 scale-105"
-                            : "border-zinc-600 bg-transparent"
-                        }`}
-                      >
-                        {isSelected && (
-                          <CheckIcon className="w-4 h-4 text-green-500" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+          {/* LISTA DE EJERCICIOS (REFACTORIZADA) */}
+          <ExerciseListSelector 
+            exercises={exercises}
+            selectedExercises={selectedExercises}
+            routineExercises={[]}
+            isLoading={isLoading}
+            isError={isError}
+            onToggleExercise={handleToggleExercise}
+          />
         </div>
 
         {/* BOTÓN CREAR EJERCICIO */}
@@ -251,13 +183,6 @@ export default function WorkoutModal({ onClose, onSave }) {
       {isCustomExerciseModalOpen && (
         <CustomExerciseModal
           onClose={() => setIsCustomExerciseModalOpen(false)}
-        />
-      )}
-
-      {selectedExerciseForInfo && (
-        <ExerciseInfoModal
-          exercise={selectedExerciseForInfo}
-          onClose={() => setSelectedExerciseForInfo(null)}
         />
       )}
     </div>,

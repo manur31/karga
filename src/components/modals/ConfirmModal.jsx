@@ -32,8 +32,8 @@ export default function ConfirmModal({
   if (!isOpen && !isClosing) return null;
 
   return createPortal(
-    <div
-      className={`fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-100 p-4 ${isClosing ? "animate-fade-out" : "animate-fade-in"}`}
+    <div 
+      className={`fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={handleClose}
     >
       <div

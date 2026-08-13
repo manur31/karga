@@ -142,6 +142,12 @@ export const useSessionStore = create(
         }));
       },
 
+      removeSession: (sessionId) => {
+        set((state) => ({
+          sessions: state.sessions.filter((session) => session.id !== sessionId && session.session_id !== sessionId && session.sessionId !== sessionId)
+        }));
+      },
+
       getPendingSessions: () =>
         get().sessions.filter((session) => !session.synced),
 

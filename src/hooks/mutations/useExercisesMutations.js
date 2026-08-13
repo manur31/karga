@@ -4,7 +4,6 @@ import {
   createExercise,
   deleteExercise,
   updateFavorite,
-  updateExercise,
 } from "../../service/exersiseService";
 
 export const useCreateExercise = (profile_id) => {
@@ -82,29 +81,6 @@ export const useDeleteExercise = (profile_id) => {
       return deleteExercise({
         exercise_id,
         profile_id,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["exercises", profile_id],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["favoriteExercises", profile_id],
-      });
-    },
-  });
-};
-
-export const useUpdateExercise = (profile_id) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, name, muscle }) => {
-      return updateExercise({
-        id,
-        name,
-        muscle,
       });
     },
     onSuccess: () => {

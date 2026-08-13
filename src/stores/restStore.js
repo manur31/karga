@@ -5,79 +5,74 @@ export const useRestStore = create(
   persist(
     (set, get) => ({
       restTime: 0,
+      endTime: null,
       intervalId: null,
       isRunning: false,
 
-      startRest: (minute) => {
-        if (get().isRunning) {
-          set({
-            restTime: 0,
-            intervalId: null,
-            isRunning: false,
-          });
-        }
+      startRest: (seconds) => {
         const { intervalId } = get();
-        const seconds = minute * 60;
-
         if (intervalId) {
           clearInterval(intervalId);
         }
 
-        set({ restTime: seconds });
+        const endTime = Date.now() + seconds * 1000;
+        set({ restTime: seconds, endTime, intervalId: null, isRunning: true });
 
         const id = setInterval(() => {
-          const currentTime = get().restTime;
+          const currentEndTime = get().endTime;
+          if (!currentEndTime) return;
+          
+          const remaining = Math.round((currentEndTime - Date.now()) / 1000);
 
-          if (currentTime <= 0) {
-            clearInterval(id);
-            set({ intervalId: null, isRunning: false });
+          if (remaining <= 0) {
+            clearInterval(get().intervalId);
+            set({ intervalId: null, isRunning: false, restTime: 0, endTime: null });
             return;
           }
 
-          set({
-            restTime: currentTime - 1,
-          });
+          set({ restTime: remaining });
         }, 1000);
 
-        set({ intervalId: id, isRunning: true });
+        set({ intervalId: id });
       },
 
       continueRest: () => {
-        const { intervalId, restTime, isRunning } = get();
+        const { intervalId, endTime } = get();
         if (intervalId) {
           clearInterval(intervalId);
         }
         
-        if (restTime > 0) {
+        if (endTime && endTime > Date.now()) {
           const id = setInterval(() => {
-            const currentTime = get().restTime;
+            const currentEndTime = get().endTime;
+            if (!currentEndTime) return;
+            
+            const remaining = Math.round((currentEndTime - Date.now()) / 1000);
 
-            if (currentTime <= 0) {
-              clearInterval(id);
-              set({ intervalId: null, isRunning: false });
+            if (remaining <= 0) {
+              clearInterval(get().intervalId);
+              set({ intervalId: null, isRunning: false, restTime: 0, endTime: null });
               return;
             }
 
-            set({
-              restTime: currentTime - 1,
-            });
+            set({ restTime: remaining });
           }, 1000);
 
           set({ intervalId: id, isRunning: true });
         } else {
-          set({ intervalId: null, isRunning: false });
+          set({ intervalId: null, isRunning: false, restTime: 0, endTime: null });
         }
       },
 
       deleteRest: () => {
         const { intervalId } = get();
-
         if (intervalId) {
           clearInterval(intervalId);
         }
 
         set({
           restTime: 0,
+          endTime: null,
           intervalId: null,
           isRunning: false,
         });
@@ -85,6 +80,11 @@ export const useRestStore = create(
     }),
     {
       name: "rest-storage",
-    },
+      partialize: (state) => ({ 
+        restTime: state.restTime,
+        endTime: state.endTime,
+        isRunning: state.isRunning 
+      }),
+    }
   ),
 );

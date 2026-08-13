@@ -7,11 +7,180 @@ import {
 } from "../../hooks/queries/useExercises";
 import { useDeleteExercisesRoutine, useEditRoutines } from "../../hooks/mutations/useRoutinesMutation";
 import { ArrowLeft, CheckIcon, PlusIcon } from "../icons";
-import SetModal from "./SetModal";
 import ExerciseHistoryModal from "./ExerciseHistoryModal";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
+import ExerciseListSelector from "./ExerciseListSelector";
+import { useSessionStore } from "../../stores/sessionStore";
+import { useRestStore } from "../../stores/restStore";
+import { FiPlay, FiMinus } from "react-icons/fi";
+import { TbChecklist } from "react-icons/tb";
+import { useSetsStore } from "../../stores/setsStore";
+import { useWeightUnit } from "../../hooks/useWeightUnit";
+import SuperSetExpander from "./SuperSetExpander";
+
+const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
+  const { data: user } = useAuth();
+  const { startRest } = useRestStore();
+  const restTime = user?.rest_time ?? 60;
+  
+  const { unit, toggleUnit, convertToKg } = useWeightUnit();
+  const { addSet, getLastSetForExercise } = useSetsStore();
+  const [reps, setReps] = useState(0);
+  const [weight, setWeight] = useState(0);
+  const [cards, setCards] = useState([
+    { id: 1, reps: 0, weight: 0 },
+  ]);
+
+  useEffect(() => {
+    const lastSet = getLastSetForExercise(exercise.id);
+    if (lastSet) {
+      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
+      setReps(lastSet.rep || 0);
+      setWeight(displayWeight || 0);
+      setCards(prev => prev.map(c => ({ ...c, reps: lastSet.rep || 0, weight: displayWeight || 0 })));
+    }
+  }, [exercise, unit, getLastSetForExercise]);
+
+  useEffect(() => {
+    setCards(prev => prev.map(c => ({ ...c, reps, weight })));
+  }, [reps, weight]);
+
+  const handleToggleUnit = () => {
+    if (unit === 'kg') {
+      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(2)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) * 2.20462).toFixed(2)) })));
+    } else {
+      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(2)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) / 2.20462).toFixed(2)) })));
+    }
+    toggleUnit();
+  };
+
+  const handleSave = () => {
+    for (const card of cards) {
+      const cardWeightKg = unit === 'kg' ? Number(card.weight) : Number((Number(card.weight) / 2.20462).toFixed(2));
+      addSet({
+        profile_id: 'mock_profile',
+        exercise_id: exercise.id,
+        rep: Number(card.reps || 0),
+        weight: Number(cardWeightKg.toFixed(2))
+      });
+    }
+    
+    // Only trigger rest timer if exactly 1 set is being saved
+    if (cards.length === 1) {
+      startRest(restTime);
+    }
+    
+    onSaveDone();
+  };
+
+  return (
+    <div className="w-full bg-[#1A1616] rounded-xl mt-2 p-4 flex flex-col gap-4 animate-fade-in origin-top">
+      {/* Global Controls Row */}
+      <div className="flex gap-2 items-center bg-white/5 p-3 rounded-xl">
+        <div className="flex-1 flex flex-col items-center">
+          <span className="text-[9px] font-bold text-zinc-500 mb-1">REPS GLOBALES</span>
+          <div className="flex items-center gap-1 w-full justify-between px-1">
+            <button onClick={() => setReps(r => Math.max(0, Number(r) - 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
+            <input 
+              type="number" 
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+              className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <button onClick={() => setReps(r => Number(r) + 1)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+          </div>
+        </div>
+        <div className="w-px h-8 bg-white/10 mx-1"></div>
+        <div className="flex-1 flex flex-col items-center">
+          <span className="text-[9px] font-bold text-zinc-500 mb-1">PESO GLOBAL</span>
+          <div className="flex items-center gap-1 w-full justify-between px-1">
+            <button onClick={() => setWeight(w => Math.max(0, Number(w) - (unit === 'kg' ? 1 : 2.5)))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
+            <input 
+              type="number" 
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <button onClick={() => setWeight(w => Number(w) + (unit === 'kg' ? 1 : 2.5))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+          </div>
+        </div>
+        <button 
+          onClick={handleToggleUnit}
+          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white uppercase ml-1 shrink-0"
+        >
+          {unit}
+        </button>
+      </div>
+
+      {/* Cards List */}
+      <div className="flex flex-col gap-2">
+        {cards.map((card, idx) => (
+          <div key={card.id} className="bg-[#2A2424] rounded-xl p-3 flex items-center gap-2 animate-fade-in" style={{ animationDelay: `${idx * 120}ms`, animationFillMode: 'both' }}>
+            <span className="text-zinc-500 font-black text-sm w-4 shrink-0">{idx + 1}°</span>
+            <div className="flex-1 flex gap-2">
+              <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Math.max(0, Number(c.reps) - 1) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
+                <input 
+                  type="number" 
+                  value={card.reps}
+                  onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: e.target.value } : c))}
+                  className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Number(c.reps) + 1 } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+              </div>
+              <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Math.max(0, Number(c.weight) - (unit === 'kg' ? 1 : 2.5)) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
+                <input 
+                  type="number" 
+                  value={card.weight}
+                  onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: e.target.value } : c))}
+                  className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Number(c.weight) + (unit === 'kg' ? 1 : 2.5) } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+              </div>
+            </div>
+            {cards.length > 1 && (
+              <button 
+                onClick={() => setCards(prev => prev.filter(c => c.id !== card.id))}
+                className="w-6 h-6 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 shrink-0"
+              >
+                <FiMinus className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer Controls */}
+      <div className="flex justify-between items-center mt-2">
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }])}
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
+          >
+            +1&nbsp;serie
+          </button>
+          <button 
+            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }, { id: Date.now()+1, reps, weight }])}
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
+          >
+            +2&nbsp;series
+          </button>
+        </div>
+        <button 
+          onClick={handleSave}
+          className="px-5 py-2.5 bg-karga-orange hover:bg-orange-600 text-white font-black text-sm rounded-xl shadow-lg shadow-karga-orange/20 active:scale-95 transition-all"
+        >
+          Grabar {cards.length} serie(s)
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const ThreeDotsIcon = ({ className }) => (
   <svg
@@ -38,6 +207,9 @@ export default function RoutineModal({
 }) {
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
+  const { start: startSession, isStarted } = useSessionStore();
+  const [expandedExerciseId, setExpandedExerciseId] = useState(null);
+  const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
 
   const {
     data: popularExercises,
@@ -86,9 +258,6 @@ export default function RoutineModal({
   const handleCreateCustomExercise = () => {
     setIsCustomExerciseModalOpen(true);
   };
-
-  const [selectedExerciseToLog, setSelectedExerciseToLog] = useState(null);
-  const [isSetModalOpen, setIsSetModalOpen] = useState(false);
 
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] =
     useState(null);
@@ -145,6 +314,14 @@ export default function RoutineModal({
     } catch (error) {
       console.error("Error al borrar ejercicios de la rutina:", error);
     }
+  };
+
+  const handleStartWorkout = () => {
+    if (isStarted) {
+      alert("Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.");
+      return;
+    }
+    startSession();
   };
 
   const menuRef = useRef(null);
@@ -314,13 +491,23 @@ export default function RoutineModal({
               )}
 
               {!isEditMode && (
-                <button
-                  onClick={() => setIsAddingExercises(true)}
-                  className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-full font-bold shadow-lg transition-all active:scale-[0.98]"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  Agregar ejercicios
-                </button>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleStartWorkout}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-2xl font-black text-[16px] shadow-lg shadow-karga-orange/20 transition-transform active:scale-[0.98]"
+                  >
+                    <FiPlay className="w-5 h-5 ml-1" />
+                    Empezar entrenamiento
+                  </button>
+
+                  <button
+                    onClick={() => setIsAddingExercises(true)}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
+                  >
+                    <PlusIcon className="w-5 h-5 text-zinc-400" />
+                    Agregar ejercicios
+                  </button>
+                </div>
               )}
 
               <div className="flex flex-col gap-3">
@@ -346,73 +533,102 @@ export default function RoutineModal({
                     <div className="flex flex-col gap-3">
                       {exercisesToRender.map((exercise) => {
                         return (
-                          <div
-                            key={exercise.id}
-                            onClick={() => {
-                              if (isEditMode)
-                                toggleDeleteSelection(exercise.id);
-                              else handleExerciseClick(exercise);
-                            }}
-                            className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
-                              isEditMode &&
-                              selectedExercisesForDelete.includes(exercise.id)
-                                ? "bg-red-500/10 border border-red-500/50"
-                                : "bg-input-bg border border-transparent hover:bg-white/5"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {isEditMode && (
-                                <div
-                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
-                                    selectedExercisesForDelete.includes(
+                          <div key={exercise.id} className="flex flex-col">
+                            <div
+                              onClick={() => {
+                                if (isEditMode)
+                                  toggleDeleteSelection(exercise.id);
+                                else handleExerciseClick(exercise);
+                              }}
+                              className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
+                                isEditMode &&
+                                selectedExercisesForDelete.includes(exercise.id)
+                                  ? "bg-red-500/10 border border-red-500/50"
+                                  : "bg-input-bg border border-transparent hover:bg-white/5"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {isEditMode && (
+                                  <div
+                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                                      selectedExercisesForDelete.includes(
+                                        exercise.id,
+                                      )
+                                        ? "bg-red-500 border-red-500"
+                                        : "border-zinc-500"
+                                    }`}
+                                  >
+                                    {selectedExercisesForDelete.includes(
                                       exercise.id,
-                                    )
-                                      ? "bg-red-500 border-red-500"
-                                      : "border-zinc-500"
-                                  }`}
-                                >
-                                  {selectedExercisesForDelete.includes(
-                                    exercise.id,
-                                  ) && (
-                                    <svg
-                                      className="w-3 h-3 text-white"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                      strokeWidth={3}
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  )}
+                                    ) && (
+                                      <svg
+                                        className="w-3 h-3 text-white"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={3}
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                  </div>
+                                )}
+                                <div className="flex flex-col pr-4">
+                                  <span className="text-[15px] font-bold text-white tracking-tight">
+                                    {exercise.name}
+                                  </span>
+                                  <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">
+                                    {Array.isArray(exercise.muscle)
+                                      ? exercise.muscle.join(" - ")
+                                      : exercise.muscle}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {!isEditMode && (
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExpandedExerciseId(null);
+                                      setActiveSuperSetExerciseId(prev => prev === exercise.id ? null : exercise.id);
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                  >
+                                    <TbChecklist className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveSuperSetExerciseId(null);
+                                      setExpandedExerciseId(prev => prev === exercise.id ? null : exercise.id);
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                  >
+                                    <PlusIcon className="w-5 h-5 text-white" />
+                                  </div>
                                 </div>
                               )}
-                              <div className="flex flex-col pr-4">
-                                <span className="text-[15px] font-bold text-white tracking-tight">
-                                  {exercise.name}
-                                </span>
-                                <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">
-                                  {Array.isArray(exercise.muscle)
-                                    ? exercise.muscle.join(" - ")
-                                    : exercise.muscle}
-                                </span>
-                              </div>
                             </div>
-
-                            {!isEditMode && (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedExerciseToLog(exercise);
-                                  setIsSetModalOpen(true);
-                                }}
-                                className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                              >
-                                <PlusIcon className="w-5 h-5 text-white" />
-                              </div>
+                            
+                            {/* V1 Inline Expander */}
+                            {expandedExerciseId === exercise.id && !isEditMode && (
+                              <InlineExerciseExpander 
+                                exercise={exercise} 
+                                onSaveDone={() => setExpandedExerciseId(null)} 
+                              />
+                            )}
+                            
+                            {/* V2 SuperSet Expander */}
+                            {activeSuperSetExerciseId === exercise.id && !isEditMode && (
+                              <SuperSetExpander 
+                                exercise={exercise} 
+                                onSaveDone={() => setActiveSuperSetExerciseId(null)} 
+                              />
                             )}
                           </div>
                         );
@@ -429,80 +645,15 @@ export default function RoutineModal({
                 className={`absolute inset-0 bg-dark-bg z-20 flex flex-col ${isAddingClosing ? "animate-slide-out-custom" : "animate-slide-in-custom"}`}
               >
                 <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-3 scrollbar-none [&::-webkit-scrollbar]:none">
-                  <div className="flex justify-between items-end mb-1 pl-1">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                      Ejercicios disponibles
-                    </label>
-                    <span className="text-xs text-karga-orange font-bold">
-                      {selectedExercises.length} seleccionados
-                    </span>
-                  </div>
-
-                  {isLoading && allExercises.length === 0 ? (
-                    <div className="p-8 flex justify-center">
-                      <div className="w-8 h-8 border-4 border-karga-orange border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : isError ? (
-                    <div className="text-red-400 text-sm text-center p-4 bg-red-500/10 rounded-2xl border border-red-500/10 font-medium">
-                      Error al cargar los ejercicios.
-                    </div>
-                  ) : (
-                    allExercises &&
-                    allExercises.map((exercise) => {
-                      const alreadyInRoutine = routine.routines_exercises?.some(
-                        (re) => re.id_exercises === exercise.id,
-                      );
-                      const isSelected = selectedExercises.includes(
-                        exercise.id,
-                      );
-
-                      return (
-                        <div
-                          key={exercise.id}
-                          onClick={() => {
-                            if (alreadyInRoutine) return;
-                            handleExerciseClick(exercise);
-                          }}
-                          className={`flex items-center justify-between p-4 rounded-2xl transition-all border ${
-                            alreadyInRoutine
-                              ? "opacity-40 cursor-not-allowed bg-black/20 border-transparent"
-                              : isSelected
-                                ? "bg-karga-gray border-green-500/50 shadow-lg shadow-green-500/5 cursor-pointer"
-                                : "bg-karga-gray border-transparent hover:bg-white/2 cursor-pointer"
-                          }`}
-                        >
-                          <div className="flex flex-col flex-1 pr-4">
-                            <span className="text-[15px] text-zinc-100 font-bold tracking-tight">
-                              {exercise.name}
-                            </span>
-                            <span className="text-[11px] text-zinc-500 font-semibold mt-0.5 capitalize">
-                              {alreadyInRoutine
-                                ? "Ya está en la rutina"
-                                : Array.isArray(exercise.muscle)
-                                  ? exercise.muscle.join(" - ")
-                                  : exercise.muscle}
-                            </span>
-                          </div>
-
-                          <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 shrink-0 ${
-                              alreadyInRoutine
-                                ? "border-transparent"
-                                : isSelected
-                                  ? "border-green-500 bg-green-500/10 scale-105"
-                                  : "border-zinc-600 bg-transparent"
-                            }`}
-                          >
-                            {alreadyInRoutine ? (
-                              <CheckIcon className="w-4 h-4 text-zinc-500" />
-                            ) : isSelected ? (
-                              <CheckIcon className="w-4 h-4 text-green-500" />
-                            ) : null}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                  <ExerciseListSelector
+                    exercises={allExercises}
+                    selectedExercises={selectedExercises}
+                    routineExercises={routine.routines_exercises || []}
+                    isLoading={isLoading}
+                    isError={isError}
+                    onToggleExercise={handleToggleExercise}
+                    onExerciseClick={handleExerciseClick}
+                  />
                 </div>
 
                 {/* BOTÓN CREAR EJERCICIO PERSONALIZADO */}
@@ -556,14 +707,6 @@ export default function RoutineModal({
         <ExerciseHistoryModal
           exercise={selectedExerciseForHistory}
           onClose={() => setIsHistoryModalOpen(false)}
-        />
-      )}
-
-      {/* SET MODAL (BOTTOM SHEET) */}
-      {isSetModalOpen && selectedExerciseToLog && (
-        <SetModal
-          exercise={selectedExerciseToLog}
-          onClose={() => setIsSetModalOpen(false)}
         />
       )}
 

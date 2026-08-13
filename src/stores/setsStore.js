@@ -10,24 +10,19 @@ export const useSetsStore = create(
                 const sycnedSets = sets?.map((set) => ({
                     ...set,
                     synced: true,
-                })) || [];
+                }))
 
-                const addedSets = get().sets
-
-                const newSyncSets = sycnedSets?.filter((set) => !addedSets?.some((addedSet) => addedSet.set_id === set.set_id))
-
-                if (newSyncSets.length > 0) {
-                    set((state) => ({
-                        sets: [...state.sets, ...newSyncSets],
-                    }))
-                }
-
+                set((state) => ({
+                    sets: [...state.sets, ...sycnedSets],
+                }))
             },
+
+                
 
             addSet: (newSet) => set((state) => ({
                 sets: [...state.sets, { 
                     ...newSet,
-                    id: crypto.randomUUID(),
+                    id: newSet.id || crypto.randomUUID(),
                     synced: false,
                     created_at: new Date(),
                 }]
@@ -50,6 +45,27 @@ export const useSetsStore = create(
             })),
 
             getPendingSets: () => get().sets.filter((set) => !set.synced),
+
+            getLastSetForExercise: (exerciseId) => {
+                const exerciseSets = get().sets.filter(s => s.exercise_id === exerciseId);
+                if (exerciseSets.length === 0) return null;
+                // Sort by created_at descending (newest first)
+                exerciseSets.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                return exerciseSets[0];
+            },
+
+            getPreviousSessionSetsForExercise: (exerciseId) => {
+                const exerciseSets = get().sets.filter(s => s.exercise_id === exerciseId);
+                if (exerciseSets.length === 0) return [];
+                // Sort by created_at descending
+                exerciseSets.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                // Get date of the most recent set
+                const lastSetDate = new Date(exerciseSets[0].created_at).toDateString();
+                // Return all sets from that date, chronological
+                return exerciseSets
+                    .filter(s => new Date(s.created_at).toDateString() === lastSetDate)
+                    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            },
 
             clearSets: () => set({ sets: [] }),
 
