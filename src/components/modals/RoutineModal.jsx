@@ -13,6 +13,7 @@ import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
 import ExerciseListSelector from "./ExerciseListSelector";
 import { useSessionStore } from "../../stores/sessionStore";
+import { useRestStore } from "../../stores/restStore";
 import { FiPlay, FiMinus } from "react-icons/fi";
 import { TbChecklist } from "react-icons/tb";
 import { useSetsStore } from "../../stores/setsStore";
@@ -20,6 +21,10 @@ import { useWeightUnit } from "../../hooks/useWeightUnit";
 import SuperSetExpander from "./SuperSetExpander";
 
 const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
+  const { data: user } = useAuth();
+  const { startRest } = useRestStore();
+  const restTime = user?.rest_time ?? 60;
+  
   const { unit, toggleUnit, convertToKg } = useWeightUnit();
   const { addSet, getLastSetForExercise } = useSetsStore();
   const [reps, setReps] = useState(0);
@@ -63,6 +68,12 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
         weight: Number(cardWeightKg.toFixed(2))
       });
     }
+    
+    // Only trigger rest timer if exactly 1 set is being saved
+    if (cards.length === 1) {
+      startRest(restTime);
+    }
+    
     onSaveDone();
   };
 
