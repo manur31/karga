@@ -1,25 +1,37 @@
-import { useState } from 'react';
-import { useCreateExercise } from '../../hooks/mutations/useExercisesMutations';
+import { useEffect, useState } from 'react';
+import { useCreateExercise, useUpdateExercise } from '../../hooks/mutations/useExercisesMutations';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useExercises } from '../../hooks/queries/useExercises';
 import { ArrowLeft } from '../icons';
 
 const MUSCLES = [
   'Espalda', 'Bíceps', 'Pecho', 'Hombros', 'Tríceps', 'Abdominales', 
-  'Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Flexores de cadera', 'Oblicuos', 'Gemelos'
+  'Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Gemelos', 'Cuerpo completo', 'Cardio'
 ];
 
-export default function CustomExerciseModal({ onClose }) {
+export default function CustomExerciseModal({ onClose, exerciseToEdit }) {
   const [name, setName] = useState("");
   const [selectedMuscles, setSelectedMuscles] = useState([]);
+  const [trackingType, setTrackingType] = useState("weight_reps");
   const [isClosing, setIsClosing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (exerciseToEdit) {
+      setName(exerciseToEdit.name || "");
+      setSelectedMuscles(exerciseToEdit.muscle ? exerciseToEdit.muscle.map(m => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()) : []);
+      setTrackingType(exerciseToEdit.tracking_type || "weight_reps");
+    }
+  }, [exerciseToEdit]);
 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
 
   const { data: allExercises } = useExercises(profile_id);
-  const { mutateAsync: createExercise, isPending } = useCreateExercise(profile_id);
+  const { mutateAsync: createExercise, isPending: isCreating } = useCreateExercise(profile_id);
+  const { mutateAsync: updateExercise, isPending: isUpdating } = useUpdateExercise(profile_id);
+  
+  const isPending = isCreating || isUpdating;
 
   const handleCloseWithAnimation = () => {
     setIsClosing(true);
@@ -38,20 +50,30 @@ export default function CustomExerciseModal({ onClose }) {
   };
 
   const handleSave = async () => {
-    if (!name.trim() || selectedMuscles.length === 0) return;
+    if (!name.trim()) return;
 
-    const nameExists = allExercises?.some(ex => ex.name.toLowerCase() === name.trim().toLowerCase());
+    const nameExists = allExercises?.some(ex => ex.name.toLowerCase() === name.trim().toLowerCase() && ex.id !== exerciseToEdit?.id);
     if (nameExists) {
       setErrorMsg("Ya existe un ejercicio con este nombre");
       return;
     }
 
     try {
-      await createExercise({
-        name: name.trim(),
-        muscle: selectedMuscles.map(m => m.toLowerCase()),
-        category: 1,
-      });
+      if (exerciseToEdit) {
+        await updateExercise({
+          id: exerciseToEdit.id,
+          name: name.trim(),
+          muscle: selectedMuscles.map(m => m.toLowerCase()),
+          tracking_type: trackingType,
+        });
+      } else {
+        await createExercise({
+          name: name.trim(),
+          muscle: selectedMuscles.map(m => m.toLowerCase()),
+          category: 1,
+          tracking_type: trackingType,
+        });
+      }
       handleCloseWithAnimation();
     } catch (error) {
       console.error("Error creating custom exercise:", error);
@@ -78,10 +100,10 @@ export default function CustomExerciseModal({ onClose }) {
           <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <span className="text-lg font-black text-white tracking-tight">Ejercicio personalizado</span>
+          <span className="text-lg font-black text-white tracking-tight">{exerciseToEdit ? 'Editar ejercicio' : 'Ejercicio personalizado'}</span>
           <button 
             onClick={handleSave}
-            disabled={!name.trim() || selectedMuscles.length === 0 || isPending}
+            disabled={!name.trim() || isPending}
             className="text-karga-orange font-bold text-sm px-3 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
           >
             {isPending ? 'Guardando...' : 'Guardar'}
@@ -113,10 +135,66 @@ export default function CustomExerciseModal({ onClose }) {
             )}
           </div>
 
+          {/* SELECTOR DE TIPO DE EJERCICIO */}
+          <div className="flex flex-col gap-3">
+            <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1">
+              ¿Cómo se mide?
+            </label>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => setTrackingType('weight_reps')}
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                  trackingType === 'weight_reps' 
+                    ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-lg shadow-karga-orange/5' 
+                    : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${trackingType === 'weight_reps' ? 'border-karga-orange' : 'border-zinc-500'}`}>
+                  {trackingType === 'weight_reps' && <div className="w-2 h-2 rounded-full bg-karga-orange" />}
+                </div>
+                <div className="flex flex-col items-start text-left">
+                  <span className="font-bold text-sm">Peso y repeticiones</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setTrackingType('time')}
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                  trackingType === 'time' 
+                    ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-lg shadow-karga-orange/5' 
+                    : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${trackingType === 'time' ? 'border-karga-orange' : 'border-zinc-500'}`}>
+                  {trackingType === 'time' && <div className="w-2 h-2 rounded-full bg-karga-orange" />}
+                </div>
+                <div className="flex flex-col items-start text-left">
+                  <span className="font-bold text-sm">Solo tiempo</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setTrackingType('weight_time')}
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                  trackingType === 'weight_time' 
+                    ? 'bg-karga-orange/10 border-karga-orange text-karga-orange shadow-lg shadow-karga-orange/5' 
+                    : 'bg-white/5 border-transparent text-zinc-400 hover:bg-white/10'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${trackingType === 'weight_time' ? 'border-karga-orange' : 'border-zinc-500'}`}>
+                  {trackingType === 'weight_time' && <div className="w-2 h-2 rounded-full bg-karga-orange" />}
+                </div>
+                <div className="flex flex-col items-start text-left">
+                  <span className="font-bold text-sm">Peso y tiempo</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* SELECTOR DE MÚSCULOS */}
           <div className="flex flex-col gap-3">
             <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1">
-              Músculos implicados
+              Músculos implicados <span className="text-zinc-600 lowercase">(Opcional)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {MUSCLES.map(muscle => {
@@ -136,11 +214,6 @@ export default function CustomExerciseModal({ onClose }) {
                 );
               })}
             </div>
-            {selectedMuscles.length === 0 && (
-              <span className="text-[11px] font-medium text-red-400 pl-1 mt-1">
-                Debes seleccionar al menos un músculo
-              </span>
-            )}
           </div>
 
         </div>

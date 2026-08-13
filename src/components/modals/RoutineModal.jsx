@@ -15,6 +15,7 @@ import ExerciseListSelector from "./ExerciseListSelector";
 import { useSessionStore } from "../../stores/sessionStore";
 import { useRestStore } from "../../stores/restStore";
 import { FiPlay, FiMinus } from "react-icons/fi";
+import { VscRecord } from "react-icons/vsc";
 import { TbChecklist } from "react-icons/tb";
 import { useSetsStore } from "../../stores/setsStore";
 import { useWeightUnit } from "../../hooks/useWeightUnit";
@@ -29,9 +30,15 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
   const { addSet, getLastSetForExercise } = useSetsStore();
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [cards, setCards] = useState([
-    { id: 1, reps: 0, weight: 0 },
+    { id: 1, reps: 0, weight: 0, duration: 0 },
   ]);
+
+  const trackingType = exercise.tracking_type || 'weight_reps';
+  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+  const showReps = trackingType === 'weight_reps';
+  const showTime = trackingType === 'time' || trackingType === 'weight_time';
 
   useEffect(() => {
     const lastSet = getLastSetForExercise(exercise.id);
@@ -39,13 +46,14 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
       const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
       setReps(lastSet.rep || 0);
       setWeight(displayWeight || 0);
-      setCards(prev => prev.map(c => ({ ...c, reps: lastSet.rep || 0, weight: displayWeight || 0 })));
+      setDuration(lastSet.duration || 0);
+      setCards(prev => prev.map(c => ({ ...c, reps: lastSet.rep || 0, weight: displayWeight || 0, duration: lastSet.duration || 0 })));
     }
   }, [exercise, unit, getLastSetForExercise]);
 
   useEffect(() => {
-    setCards(prev => prev.map(c => ({ ...c, reps, weight })));
-  }, [reps, weight]);
+    setCards(prev => prev.map(c => ({ ...c, reps, weight, duration })));
+  }, [reps, weight, duration]);
 
   const handleToggleUnit = () => {
     if (unit === 'kg') {
@@ -64,8 +72,9 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
       addSet({
         profile_id: 'mock_profile',
         exercise_id: exercise.id,
-        rep: Number(card.reps || 0),
-        weight: Number(cardWeightKg.toFixed(2))
+        rep: showReps ? Number(card.reps || 0) : 0,
+        weight: showWeight ? Number(cardWeightKg.toFixed(2)) : 0,
+        duration: showTime ? Number(card.duration || 0) : 0,
       });
     }
     
@@ -81,39 +90,81 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
     <div className="w-full bg-[#1A1616] rounded-xl mt-2 p-4 flex flex-col gap-4 animate-fade-in origin-top">
       {/* Global Controls Row */}
       <div className="flex gap-2 items-center bg-white/5 p-3 rounded-xl">
-        <div className="flex-1 flex flex-col items-center">
-          <span className="text-[9px] font-bold text-zinc-500 mb-1">REPS GLOBALES</span>
-          <div className="flex items-center gap-1 w-full justify-between px-1">
-            <button onClick={() => setReps(r => Math.max(0, Number(r) - 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
-            <input 
-              type="number" 
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-              className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <button onClick={() => setReps(r => Number(r) + 1)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+        
+        {showReps && (
+          <div className="flex-1 flex flex-col items-center">
+            <span className="text-[9px] font-bold text-zinc-500 mb-1">REPS GLOBALES</span>
+            <div className="flex items-center gap-1 w-full justify-between px-1">
+              <button onClick={() => setReps(r => Math.max(0, Number(r) - 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
+              <input 
+                type="number" 
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+                className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <button onClick={() => setReps(r => Number(r) + 1)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+            </div>
           </div>
-        </div>
-        <div className="w-px h-8 bg-white/10 mx-1"></div>
-        <div className="flex-1 flex flex-col items-center">
-          <span className="text-[9px] font-bold text-zinc-500 mb-1">PESO GLOBAL</span>
-          <div className="flex items-center gap-1 w-full justify-between px-1">
-            <button onClick={() => setWeight(w => Math.max(0, Number(w) - (unit === 'kg' ? 1 : 2.5)))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
-            <input 
-              type="number" 
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <button onClick={() => setWeight(w => Number(w) + (unit === 'kg' ? 1 : 2.5))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+        )}
+
+        {showTime && (
+          <div className="flex-1 flex flex-col items-center">
+            <span className="text-[9px] font-bold text-zinc-500 mb-1">TIEMPO GLOBAL</span>
+            <div className="flex items-center gap-1 w-full justify-center px-1">
+              <button onClick={() => setDuration(d => Math.max(0, Number(d) - 15))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
+              <div className="flex items-center text-white font-black text-lg gap-0.5">
+                <input 
+                  type="number" 
+                  value={Math.floor(duration / 60).toString().padStart(2, '0')}
+                  onChange={(e) => setDuration(parseInt(e.target.value || 0) * 60 + (duration % 60))}
+                  className="w-8 bg-transparent text-right outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span className="text-zinc-500">:</span>
+                <input 
+                  type="number" 
+                  value={(duration % 60).toString().padStart(2, '0')}
+                  onChange={(e) => setDuration(Math.floor(duration / 60) * 60 + parseInt(e.target.value || 0))}
+                  className="w-8 bg-transparent text-left outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+              <button onClick={() => setDuration(d => Number(d) + 15)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+            </div>
           </div>
-        </div>
-        <button 
-          onClick={handleToggleUnit}
-          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white uppercase ml-1 shrink-0"
-        >
-          {unit}
-        </button>
+        )}
+
+        {showWeight && showReps && <div className="w-px h-8 bg-white/10 mx-1"></div>}
+        {showWeight && showTime && <div className="w-px h-8 bg-white/10 mx-1"></div>}
+
+        {showWeight && (
+          <div className="flex-1 flex flex-col items-center">
+            <span className="text-[9px] font-bold text-zinc-500 mb-1">PESO GLOBAL</span>
+            <div className="flex items-center gap-1 w-full justify-between px-1">
+              <button onClick={() => setWeight(w => Math.max(0, Number(w) - (unit === 'kg' ? 1 : 2.5)))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
+              <input 
+                type="number" 
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <button onClick={() => setWeight(w => Number(w) + (unit === 'kg' ? 1 : 2.5))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
+            </div>
+          </div>
+        )}
+        {!showWeight ? (
+          <button 
+            className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg text-red-500 ml-1 shrink-0 flex items-center justify-center transition-colors"
+            title="Temporizador (Próximamente)"
+          >
+            <VscRecord className="w-5 h-5" />
+          </button>
+        ) : (
+          <button 
+            onClick={handleToggleUnit}
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white uppercase ml-1 shrink-0"
+          >
+            {unit}
+          </button>
+        )}
       </div>
 
       {/* Cards List */}
@@ -122,26 +173,54 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
           <div key={card.id} className="bg-[#2A2424] rounded-xl p-3 flex items-center gap-2 animate-fade-in" style={{ animationDelay: `${idx * 120}ms`, animationFillMode: 'both' }}>
             <span className="text-zinc-500 font-black text-sm w-4 shrink-0">{idx + 1}°</span>
             <div className="flex-1 flex gap-2">
-              <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
-                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Math.max(0, Number(c.reps) - 1) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
-                <input 
-                  type="number" 
-                  value={card.reps}
-                  onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: e.target.value } : c))}
-                  className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Number(c.reps) + 1 } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
-              </div>
-              <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
-                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Math.max(0, Number(c.weight) - (unit === 'kg' ? 1 : 2.5)) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
-                <input 
-                  type="number" 
-                  value={card.weight}
-                  onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: e.target.value } : c))}
-                  className="w-8 bg-transparent text-center font-bold text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Number(c.weight) + (unit === 'kg' ? 1 : 2.5) } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
-              </div>
+              
+              {showReps && (
+                <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                  <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Math.max(0, Number(c.reps) - 1) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
+                  <input 
+                    type="number" 
+                    value={card.reps}
+                    onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: e.target.value } : c))}
+                    className="w-8 bg-transparent text-center font-bold text-white/40 focus:text-white transition-colors outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, reps: Number(c.reps) + 1 } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+                </div>
+              )}
+
+              {showTime && (
+                <div className={`bg-white/5 rounded-lg flex items-center justify-center gap-4 p-1 px-2 ${!showWeight && !showReps ? 'mx-auto w-2/3' : 'flex-1'}`}>
+                  <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, duration: Math.max(0, Number(c.duration) - 15) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
+                  <div className="flex items-center text-white font-bold text-sm gap-0.5">
+                    <input 
+                      type="number" 
+                      value={Math.floor(card.duration / 60).toString().padStart(2, '0')}
+                      onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, duration: parseInt(e.target.value || 0) * 60 + (c.duration % 60) } : c))}
+                      className="w-6 bg-transparent text-right text-white/40 focus:text-white transition-colors outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-zinc-500">:</span>
+                    <input 
+                      type="number" 
+                      value={(card.duration % 60).toString().padStart(2, '0')}
+                      onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, duration: Math.floor(c.duration / 60) * 60 + parseInt(e.target.value || 0) } : c))}
+                      className="w-6 bg-transparent text-left text-white/40 focus:text-white transition-colors outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, duration: Number(c.duration) + 15 } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+                </div>
+              )}
+
+              {showWeight && (
+                <div className="flex-1 bg-white/5 rounded-lg flex items-center justify-between p-1 px-2">
+                  <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Math.max(0, Number(c.weight) - (unit === 'kg' ? 1 : 2.5)) } : c))} className="text-white/50 hover:text-white p-1"><FiMinus className="w-3 h-3" /></button>
+                  <input 
+                    type="number" 
+                    value={card.weight}
+                    onChange={(e) => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: e.target.value } : c))}
+                    className="w-8 bg-transparent text-center font-bold text-white/40 focus:text-white transition-colors outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button onClick={() => setCards(prev => prev.map(c => c.id === card.id ? { ...c, weight: Number(c.weight) + (unit === 'kg' ? 1 : 2.5) } : c))} className="text-white/50 hover:text-white p-1"><PlusIcon className="w-3 h-3" /></button>
+                </div>
+              )}
             </div>
             {cards.length > 1 && (
               <button 
@@ -159,13 +238,13 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
       <div className="flex justify-between items-center mt-2">
         <div className="flex gap-2">
           <button 
-            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }])}
+            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight, duration }])}
             className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
           >
             +1&nbsp;serie
           </button>
           <button 
-            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }, { id: Date.now()+1, reps, weight }])}
+            onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight, duration }, { id: Date.now()+1, reps, weight, duration }])}
             className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
           >
             +2&nbsp;series

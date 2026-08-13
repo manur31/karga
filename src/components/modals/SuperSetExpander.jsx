@@ -13,6 +13,11 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
   const [cards, setCards] = useState([]);
   const [editingCard, setEditingCard] = useState(null);
   
+  const trackingType = exercise?.tracking_type || 'weight_reps';
+  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+  const showReps = trackingType === 'weight_reps';
+  const showTime = trackingType === 'time' || trackingType === 'weight_time';
+  
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const { startRest, deleteRest } = useRestStore();
@@ -25,10 +30,11 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
         id: Date.now(),
         reps: lastSet.rep || 0,
         weight: unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2)),
+        duration: lastSet.duration || 0,
         completed: false
       }]);
     } else {
-      setCards([{ id: Date.now(), reps: 0, weight: 0, completed: false }]);
+      setCards([{ id: Date.now(), reps: 0, weight: 0, duration: 0, completed: false }]);
     }
   }, [exercise, unit, getLastSetForExercise]);
 
@@ -43,8 +49,9 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
         id: newSavedSetId,
         profile_id: profile_id || 'mock_profile',
         exercise_id: exercise.id,
-        rep: Number(card.reps || 0),
-        weight: Number(cardWeightKg.toFixed(2))
+        rep: showReps ? Number(card.reps || 0) : 0,
+        weight: showWeight ? Number(cardWeightKg.toFixed(2)) : 0,
+        duration: showTime ? Number(card.duration || 0) : 0
       });
       
       startRest(restTime);
@@ -77,7 +84,10 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
             
             <div className="flex-1 flex items-center">
               <span className={`text-sm font-bold ${card.completed ? 'text-green-500' : 'text-white'}`}>
-                {idx + 1}° serie: {card.reps} reps · {card.weight} {unit}
+                {idx + 1}° serie: 
+                {showReps && ` ${card.reps} reps `}
+                {showTime && ` ${Math.floor(card.duration / 60).toString().padStart(2, '0')}:${(card.duration % 60).toString().padStart(2, '0')} min `}
+                {showWeight && ` · ${card.weight} ${unit}`}
               </span>
             </div>
             
@@ -104,8 +114,8 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
       <div className="flex flex-col gap-2 mt-2">
         <button 
           onClick={() => {
-            const lastCard = cards.length > 0 ? cards[cards.length - 1] : { reps: 0, weight: 0 };
-            setCards(prev => [...prev, { id: Date.now(), reps: lastCard.reps, weight: lastCard.weight, completed: false }]);
+            const lastCard = cards.length > 0 ? cards[cards.length - 1] : { reps: 0, weight: 0, duration: 0 };
+            setCards(prev => [...prev, { id: Date.now(), reps: lastCard.reps, weight: lastCard.weight, duration: lastCard.duration, completed: false }]);
           }}
           className="w-full py-3 rounded-xl border border-white/10 flex items-center justify-center gap-2 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors font-bold text-sm"
         >
@@ -121,7 +131,7 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
           onSaveOverride={(data) => {
             setCards(prev => prev.map(c => 
               c.id === editingCard.id 
-                ? { ...c, reps: data.rep, weight: unit === 'kg' ? data.weight : Number((data.weight * 2.20462).toFixed(2)) } 
+                ? { ...c, reps: data.rep, weight: unit === 'kg' ? data.weight : Number((data.weight * 2.20462).toFixed(2)), duration: data.duration } 
                 : c
             ));
             setEditingCard(null);

@@ -22,6 +22,12 @@ const XIcon = ({ className }) => (
 export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const trackingType = exercise?.tracking_type || 'weight_reps';
+  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+  const showReps = trackingType === 'weight_reps';
+  const showTime = trackingType === 'time' || trackingType === 'weight_time';
 
   
   const { unit, toggleUnit, convertToKg } = useWeightUnit();
@@ -56,6 +62,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
         const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
         setReps(lastSet.rep || 0);
         setWeight(displayWeight || 0);
+        setDuration(lastSet.duration || 0);
       }
     }
   }, [exercise, unit, getLastSetForExercise]);
@@ -88,8 +95,9 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
       const setData = {
         profile_id,
         exercise_id: exercise.id,
-        rep: Number(reps || 0),
-        weight: Number(weightInKg.toFixed(2))
+        rep: showReps ? Number(reps || 0) : 0,
+        weight: showWeight ? Number(weightInKg.toFixed(2)) : 0,
+        duration: showTime ? Number(duration || 0) : 0
       };
 
       if (onSaveOverride) {
@@ -108,6 +116,10 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
 
   const handleAdjustReps = (amount) => {
     setReps(prev => Math.max(0, Number(prev || 0) + amount));
+  };
+
+  const handleAdjustDuration = (amount) => {
+    setDuration(prev => Math.max(0, Number(prev || 0) + amount));
   };
 
   const handleAdjustWeight = (amount) => {
@@ -167,8 +179,10 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
           </h2>
           
           {/* ZONA DE INPUTS */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className={`grid gap-4 mb-6 ${!showWeight ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            
             {/* Lado izquierdo: REPS */}
+            {showReps && (
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl">
               <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Repeticiones</span>
               <div className="flex items-center justify-between w-full px-2">
@@ -195,8 +209,52 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
                 </button>
               </div>
             </div>
+            )}
+
+            {/* Lado izquierdo: TIEMPO */}
+            {showTime && (
+            <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl">
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Tiempo (MM:SS)</span>
+              <div className="flex items-center justify-between w-full px-2">
+                <button 
+                  onClick={() => handleAdjustDuration(-15)}
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                >
+                  <MinusIcon className="w-4 h-4" />
+                </button>
+                
+                <div className="flex items-center justify-center gap-0.5 font-black text-white flex-1 min-w-0">
+                  <input 
+                    type="number"
+                    value={Math.floor(duration / 60)}
+                    onChange={(e) => setDuration(parseInt(e.target.value || 0) * 60 + (duration % 60))}
+                    onFocus={handleFocus}
+                    style={{ width: `${Math.max(1, String(Math.floor(duration / 60)).length)}ch`, boxSizing: 'content-box' }}
+                    className={`bg-transparent p-0 text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all tracking-tighter ${String(Math.floor(duration / 60)).length + 3 >= 5 ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'}`}
+                  />
+                  <span className={`pb-1 ${String(Math.floor(duration / 60)).length + 3 >= 5 ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'}`}>:</span>
+                  <input 
+                    type="number"
+                    value={(duration % 60).toString().padStart(2, '0')}
+                    onChange={(e) => setDuration(Math.floor(duration / 60) * 60 + parseInt(e.target.value || 0))}
+                    onFocus={handleFocus}
+                    style={{ width: '2ch', boxSizing: 'content-box' }}
+                    className={`bg-transparent p-0 text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all tracking-tighter ${String(Math.floor(duration / 60)).length + 3 >= 5 ? 'text-lg sm:text-xl' : 'text-2xl sm:text-3xl'}`}
+                  />
+                </div>
+                
+                <button 
+                  onClick={() => handleAdjustDuration(15)}
+                  className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-all hover:bg-white/20"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            )}
 
             {/* Lado derecho: WEIGHT */}
+            {showWeight && (
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl">
               <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Peso ({unit.toUpperCase()})</span>
               <div className="flex items-center justify-between w-full px-2">
@@ -223,6 +281,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
                 </button>
               </div>
             </div>
+            )}
           </div>
 
           {/* ETIQUETAS/OPCIONES RÁPIDAS & BOTÓN GUARDAR EN LA MISMA FILA */}
@@ -260,12 +319,14 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
               </div>
 
               {/* Botón LB / KG */}
-              <button 
-                onClick={handleToggleUnit}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold text-zinc-300 whitespace-nowrap transition-colors uppercase"
-              >
-                {unit === 'kg' ? 'LB' : 'KG'}
-              </button>
+              {showWeight && (
+                <button 
+                  onClick={handleToggleUnit}
+                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold text-zinc-300 whitespace-nowrap transition-colors uppercase"
+                >
+                  {unit === 'kg' ? 'LB' : 'KG'}
+                </button>
+              )}
             </div>
             
             {/* Botón Guardar */}

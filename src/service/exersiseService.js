@@ -56,7 +56,7 @@ export const addToFavorite = async ({ exercise_id, profile_id }) => {
   return data;
 };
 
-export const createExercise = async ({ name, muscle, profile_id }) => {
+export const createExercise = async ({ name, muscle, profile_id, tracking_type }) => {
   const { data: exercise, error: exerciseError } = await supabase
     .from("exercises")
     .insert([
@@ -64,6 +64,7 @@ export const createExercise = async ({ name, muscle, profile_id }) => {
         name,
         muscle,
         is_populary: false,
+        tracking_type,
       },
     ])
     .select()
@@ -155,10 +156,10 @@ export const getExerciseForID = async ({ id, profile_id }) => {
   return data;
 };
 
-export const updateExercise = async ({ id, name, muscle }) => {
+export const updateExercise = async ({ id, name, muscle, tracking_type }) => {
   const { data, error } = await supabase
     .from("exercises")
-    .update({ name, muscle })
+    .update({ name, muscle, tracking_type })
     .eq("id", id)
     .select()
     .single();
