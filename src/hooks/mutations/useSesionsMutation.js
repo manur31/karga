@@ -4,6 +4,13 @@ import { setsRepository } from '../../lib/local/setsRepository';
 import { db } from '../../lib/db';
 import { runSyncNow } from '../../lib/sync/syncScheduler';
 import { useSessionStore } from '../../stores/sessionStore';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  deleteSession,
+  insertSession,
+  updateSession,
+  updateSessionWithSets,
+} from "../../service/sessionService";
 
 function toIso(value) {
   if (!value) return null;
@@ -47,6 +54,11 @@ export const useDeleteSession = () => {
   return useMutation({
     mutationFn: async (session_id) => {
       await sessionsRepository.remove(session_id);
+    mutationFn: (session_id) => {
+      return deleteSession({
+        profile_id,
+        session_id,
+      });
     },
   });
 };
@@ -95,6 +107,13 @@ export const useFinishSession = (profile_id) => {
         finishedAt,
         note: state.note || null,
         createdAt: finishedAt,
+    mutationFn: ({ session_id, finishedAt, startedAt, note }) => {
+      return updateSession({
+        session_id,
+        profile_id,
+        finishedAt,
+        startedAt,
+        note,
       });
 
       state.resetTimer();
@@ -131,6 +150,31 @@ export const useDiscardSession = () => {
 
       // Session was never persisted on discard — only clear ephemeral timer
       state.resetTimer();
+    },
+  });
+};
+export const useUpdateSessionWithSets = (profile_id) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data) =>
+      updateSessionWithSets({
+        ...data,
+        profile_id,
+      }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["sets", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["weekActivity", profile_id],
+      });
     },
   });
 };

@@ -128,9 +128,9 @@ export default function Sessions() {
               </h2>
 
               <div className="flex flex-col gap-3">
-                {monthSessions.map((session) => (
+                {monthSessions.map((session, index) => (
                   <Card
-                    key={session.session_id || session.id}
+                    key={session.session_id || session.id || index}
                     variant="default"
                     onClick={() => setSelectedSession(session)}
                     className="p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all min-w-0 flex-1 hover:bg-white/5 border-transparent"

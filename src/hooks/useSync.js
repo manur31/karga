@@ -33,6 +33,36 @@ export function useBootstrapSync(isAuthenticated) {
     return () => window.removeEventListener('online', handleOnline);
   }, [isAuthenticated]);
 }
+export const useSyncSessions = (profile_id) => {
+  const { getPendingSessions, replaceLocalSession } = useSessionStore();
+  const { mutateAsync: createSession } = useCreateSession(profile_id);
+
+  const sync = async () => {
+    if (!profile_id) return;
+
+    const pendingSessions = getPendingSessions();
+
+    if (pendingSessions.length === 0) return;
+
+    const sessionsToSync = pendingSessions.map((session) => ({
+      profile_id,
+      time_init: new Date(session.startedAt).toISOString(),
+      time_end: session.finishedAt
+        ? new Date(session.finishedAt).toISOString()
+        : null,
+      note: session.note || null,
+    }));
+
+    try {
+      const createdSessions = await createSession(sessionsToSync);
+
+      pendingSessions.forEach((localSession, index) => {
+        replaceLocalSession(localSession.id, createdSessions[index]);
+      });
+    } catch (error) {
+      console.log("Error syncing sessions", error);
+    }
+  };
 
 /** @deprecated Use runSyncNow from syncScheduler or session lifecycle mutations */
 export const useSyncSets = () => ({

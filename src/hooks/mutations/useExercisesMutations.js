@@ -2,6 +2,13 @@ import { useMutation } from '@tanstack/react-query';
 import { db, setSyncWrite } from '../../lib/db';
 import { userExercisesRepository } from '../../lib/local/userExercisesRepository';
 import { scheduleSync } from '../../lib/sync/syncScheduler';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  addToFavorite,
+  createExercise,
+  deleteExercise,
+  updateFavorite,
+} from "../../service/exersiseService";
 
 export const useCreateExercise = (profile_id) => {
   return useMutation({

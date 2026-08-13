@@ -9,6 +9,45 @@ import { persist } from 'zustand/middleware';
  *
  * Persisted sessions live in Dexie, not here.
  */
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+const normalizeSession = (session) => {
+  const sessionId = session.session_id || null;
+
+  const startedAt =
+    session.startedAt || session.time_init || session.created_at || Date.now();
+
+  const finishedAt = session.finishedAt || session.time_end || null;
+
+  return {
+    ...session,
+
+    id: session.id || sessionId || crypto.randomUUID(),
+
+    session_id: sessionId,
+
+    startedAt,
+    finishedAt,
+
+    time_init: session.time_init || startedAt,
+    time_end: session.time_end || finishedAt,
+
+    synced: sessionId ? true : Boolean(session.synced),
+
+    createdAt:
+      session.createdAt || session.created_at || new Date().toISOString(),
+  };
+};
+
+const isSameSession = (a, b) => {
+  if (a.session_id && b.session_id) {
+    return a.session_id === b.session_id;
+  }
+
+  return a.id === b.id;
+};
+
 export const useSessionStore = create(
   persist(
     (set, get) => ({
@@ -56,6 +95,7 @@ export const useSessionStore = create(
 
       pause: () => {
         const state = get();
+
         if (!state.isStarted || state.isPaused) return;
 
         set({
@@ -66,6 +106,7 @@ export const useSessionStore = create(
 
       continue: () => {
         const state = get();
+
         if (!state.isPaused) return;
 
         const pauseDuration = Date.now() - state.pausedAt;
@@ -117,8 +158,17 @@ export const useSessionStore = create(
             sessionSetIds: rest.sessionSetIds || [],
           };
         }
+
+        if (version < 2) {
+          return {
+            ...persistedState,
+            sessions: [],
+          };
+        }
+
         return persistedState;
       },
+
       partialize: (state) => ({
         startedAt: state.startedAt,
         pausedAt: state.pausedAt,
