@@ -57,7 +57,7 @@ export default function StartWorkoutModal({ isOpen, onClose, routines, onSelectR
                 <FiPlay className="w-6 h-6 text-white ml-0.5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-white font-bold text-[16px]">Entrenamiento Libre</span>
+                <span className="text-white font-bold text-[16px]">Entrenamiento libre</span>
                 <span className="text-zinc-400 text-xs font-medium">Grabar sets sin seguir una rutina</span>
               </div>
             </button>

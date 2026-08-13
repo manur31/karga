@@ -43,7 +43,7 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
   useEffect(() => {
     const lastSet = getLastSetForExercise(exercise.id);
     if (lastSet) {
-      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
+      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(1));
       setReps(lastSet.rep || 0);
       setWeight(displayWeight || 0);
       setDuration(lastSet.duration || 0);
@@ -57,23 +57,23 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
 
   const handleToggleUnit = () => {
     if (unit === 'kg') {
-      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(2)));
-      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) * 2.20462).toFixed(2)) })));
+      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(1)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) * 2.20462).toFixed(1)) })));
     } else {
-      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(2)));
-      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) / 2.20462).toFixed(2)) })));
+      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(1)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) / 2.20462).toFixed(1)) })));
     }
     toggleUnit();
   };
 
   const handleSave = () => {
     for (const card of cards) {
-      const cardWeightKg = unit === 'kg' ? Number(card.weight) : Number((Number(card.weight) / 2.20462).toFixed(2));
+      const cardWeightKg = unit === 'kg' ? Number(card.weight) : Number((Number(card.weight) / 2.20462).toFixed(1));
       addSet({
         profile_id: 'mock_profile',
         exercise_id: exercise.id,
         rep: showReps ? Number(card.reps || 0) : 0,
-        weight: showWeight ? Number(cardWeightKg.toFixed(2)) : 0,
+        weight: showWeight ? Number(cardWeightKg.toFixed(1)) : 0,
         duration: showTime ? Number(card.duration || 0) : 0,
       });
     }
@@ -144,7 +144,7 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
                 type="number" 
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                className="w-10 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-14 bg-transparent text-center font-black text-white text-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <button onClick={() => setWeight(w => Number(w) + (unit === 'kg' ? 1 : 2.5))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><PlusIcon className="w-3 h-3" /></button>
             </div>
@@ -278,6 +278,24 @@ const ThreeDotsIcon = ({ className }) => (
   </svg>
 );
 
+const WalkthroughTooltip = ({ title, description, buttonText, onNext, align = 'center' }) => (
+  <div className="w-full bg-[#2A2424] rounded-2xl p-4 border border-karga-orange/20 shadow-2xl flex flex-col gap-3 relative animate-fade-in mt-1 z-50">
+    <div className={`absolute -top-2 ${align === 'center' ? 'left-1/2 -translate-x-1/2' : align === 'left' ? 'left-2' : 'right-2'} w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-[#2A2424]`} />
+    <div className="flex items-start gap-3">
+      <div className="w-6 h-6 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">
+         <span className="font-bold text-xs italic font-serif">i</span>
+      </div>
+      <div className="flex flex-col gap-1 text-left">
+        <h4 className="text-white font-bold text-base tracking-wide">{title}</h4>
+        <p className="text-zinc-400 text-xs leading-relaxed font-medium">{description}</p>
+      </div>
+    </div>
+    <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="w-full py-2 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-xl font-bold text-sm transition-colors mt-1">
+      {buttonText}
+    </button>
+  </div>
+);
+
 export default function RoutineModal({
   routine,
   onClose,
@@ -289,6 +307,46 @@ export default function RoutineModal({
   const { start: startSession, isStarted } = useSessionStore();
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
   const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
+  const [showWalkthrough, setShowWalkthrough] = useState(null);
+
+  useEffect(() => {
+    if (profile_id && routine) {
+      const exerciseCount = routine.routines_exercises?.length || 0;
+      
+      if (exerciseCount === 0) {
+        if (!localStorage.getItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`)) {
+          setShowWalkthrough('empty');
+        }
+      } else if (exerciseCount > 0 && !isStarted) {
+        if (!localStorage.getItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`)) {
+          setShowWalkthrough('ready');
+        }
+      } else if (exerciseCount > 0 && isStarted) {
+        if (!localStorage.getItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`)) {
+          setShowWalkthrough('active_step1');
+        }
+      }
+    }
+  }, [profile_id, routine, isStarted]);
+
+  const handleNextWalkthrough = () => {
+    if (showWalkthrough === 'active_step1') {
+      setShowWalkthrough('active_step2');
+    } else {
+      handleCloseWalkthrough();
+    }
+  };
+
+  const handleCloseWalkthrough = () => {
+    if (showWalkthrough === 'empty') {
+      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
+    } else if (showWalkthrough === 'ready') {
+      localStorage.setItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`, 'true');
+    } else if (showWalkthrough === 'active_step1' || showWalkthrough === 'active_step2') {
+      localStorage.setItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`, 'true');
+    }
+    setShowWalkthrough(null);
+  };
 
   const {
     data: popularExercises,
@@ -396,10 +454,8 @@ export default function RoutineModal({
   };
 
   const handleStartWorkout = () => {
-    if (isStarted) {
-      alert("Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva.");
-      return;
-    }
+    if (isStarted) return;
+    if (showWalkthrough === 'ready') handleCloseWalkthrough();
     startSession();
   };
 
@@ -570,22 +626,46 @@ export default function RoutineModal({
               )}
 
               {!isEditMode && (
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={handleStartWorkout}
-                    className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-2xl font-black text-[16px] shadow-lg shadow-karga-orange/20 transition-transform active:scale-[0.98]"
-                  >
-                    <FiPlay className="w-5 h-5 ml-1" />
-                    Empezar entrenamiento
-                  </button>
+                <div className="flex flex-col gap-3 relative">
+                  <div className="relative">
+                    <button
+                      onClick={handleStartWorkout}
+                      disabled={isStarted}
+                      className={`w-full flex items-center justify-center gap-2 p-4 text-white rounded-2xl font-black text-[16px] shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 shadow-karga-orange/20 active:scale-[0.98]'}`}
+                    >
+                      <FiPlay className="w-5 h-5 ml-1" />
+                      Empezar entrenamiento
+                    </button>
+                    {!isAddingExercises && showWalkthrough === 'ready' && (
+                      <WalkthroughTooltip 
+                        title="¡Todo listo!"
+                        description="Cuando estés listo, toca este botón para iniciar tu sesión y empezar a registrar tus marcas."
+                        buttonText="¡Entendido!"
+                        onNext={handleNextWalkthrough}
+                      />
+                    )}
+                  </div>
 
-                  <button
-                    onClick={() => setIsAddingExercises(true)}
-                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
-                  >
-                    <PlusIcon className="w-5 h-5 text-zinc-400" />
-                    Agregar ejercicios
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setIsAddingExercises(true);
+                        if (showWalkthrough === 'empty') handleCloseWalkthrough();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
+                    >
+                      <PlusIcon className="w-5 h-5 text-zinc-400" />
+                      Agregar ejercicios
+                    </button>
+                    {!isAddingExercises && showWalkthrough === 'empty' && (
+                      <WalkthroughTooltip 
+                        title="Tu rutina está vacía."
+                        description="Toca aquí para buscar tus ejercicios favoritos y armar tu plan de entrenamiento."
+                        buttonText="¡Entendido!"
+                        onNext={handleNextWalkthrough}
+                      />
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -610,7 +690,7 @@ export default function RoutineModal({
 
                   return (
                     <div className="flex flex-col gap-3">
-                      {exercisesToRender.map((exercise) => {
+                      {exercisesToRender.map((exercise, index) => {
                         return (
                           <div key={exercise.id} className="flex flex-col">
                             <div
@@ -669,17 +749,7 @@ export default function RoutineModal({
                               </div>
 
                               {!isEditMode && (
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setExpandedExerciseId(null);
-                                      setActiveSuperSetExerciseId(prev => prev === exercise.id ? null : exercise.id);
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                                  >
-                                    <TbChecklist className="w-5 h-5 text-white" />
-                                  </div>
+                                <div className="flex items-center gap-2 relative">
                                   <div
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -690,6 +760,39 @@ export default function RoutineModal({
                                   >
                                     <PlusIcon className="w-5 h-5 text-white" />
                                   </div>
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExpandedExerciseId(null);
+                                      setActiveSuperSetExerciseId(prev => prev === exercise.id ? null : exercise.id);
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                  >
+                                    <TbChecklist className="w-5 h-5 text-white" />
+                                  </div>
+
+                                  {index === 0 && showWalkthrough === 'active_step1' && (
+                                    <div className="absolute right-10 top-10 w-64 z-50">
+                                      <WalkthroughTooltip 
+                                        title="Registro rápido"
+                                        description="Toca aquí para empezar a cargar tus series de a una en vivo, o de forma diferida."
+                                        buttonText="Siguiente"
+                                        onNext={handleNextWalkthrough}
+                                        align="right"
+                                      />
+                                    </div>
+                                  )}
+                                  {index === 0 && showWalkthrough === 'active_step2' && (
+                                    <div className="absolute right-0 top-10 w-64 z-50">
+                                      <WalkthroughTooltip 
+                                        title="Series al detalle"
+                                        description="Y aquí si prefieres establecer las series de antemano e ir completándolas en vivo."
+                                        buttonText="¡Entendido!"
+                                        onNext={handleNextWalkthrough}
+                                        align="right"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
