@@ -14,9 +14,10 @@ import EditRoutineModal from "./EditRoutineModal";
 import ExerciseListSelector from "./ExerciseListSelector";
 import { useSessionStore } from "../../stores/sessionStore";
 import { FiPlay, FiMinus } from "react-icons/fi";
-import { MdHistory } from "react-icons/md";
+import { TbChecklist } from "react-icons/tb";
 import { useSetsStore } from "../../stores/setsStore";
 import { useWeightUnit } from "../../hooks/useWeightUnit";
+import SuperSetExpander from "./SuperSetExpander";
 
 const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
   const { unit, toggleUnit, convertToKg } = useWeightUnit();
@@ -72,7 +73,7 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
         <div className="flex-1 flex flex-col items-center">
           <span className="text-[9px] font-bold text-zinc-500 mb-1">REPS GLOBALES</span>
           <div className="flex items-center gap-1 w-full justify-between px-1">
-            <button onClick={() => setReps(r => Math.max(0, Number(r) - 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><MinusIcon className="w-3 h-3" /></button>
+            <button onClick={() => setReps(r => Math.max(0, Number(r) - 1))} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0"><FiMinus className="w-3 h-3" /></button>
             <input 
               type="number" 
               value={reps}
@@ -150,20 +151,20 @@ const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
             onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }])}
             className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
           >
-            +1 set
+            +1&nbsp;serie
           </button>
           <button 
             onClick={() => setCards(prev => [...prev, { id: Date.now(), reps, weight }, { id: Date.now()+1, reps, weight }])}
             className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full font-bold text-xs"
           >
-            +2 sets
+            +2&nbsp;series
           </button>
         </div>
         <button 
           onClick={handleSave}
           className="px-5 py-2.5 bg-karga-orange hover:bg-orange-600 text-white font-black text-sm rounded-xl shadow-lg shadow-karga-orange/20 active:scale-95 transition-all"
         >
-          Grabar {cards.length} sets
+          Grabar {cards.length} serie(s)
         </button>
       </div>
     </div>
@@ -197,6 +198,7 @@ export default function RoutineModal({
   const profile_id = user?.profile_id;
   const { start: startSession, isStarted } = useSessionStore();
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
+  const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
 
   const {
     data: popularExercises,
@@ -376,7 +378,8 @@ export default function RoutineModal({
     if (isAddingExercises) {
       handleToggleExercise(exercise.id);
     } else {
-      setExpandedExerciseId(prev => prev === exercise.id ? null : exercise.id);
+      setSelectedExerciseForHistory(exercise);
+      setIsHistoryModalOpen(true);
     }
   };
 
@@ -576,15 +579,27 @@ export default function RoutineModal({
                               </div>
 
                               {!isEditMode && (
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedExerciseForHistory(exercise);
-                                    setIsHistoryModalOpen(true);
-                                  }}
-                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                                >
-                                  <MdHistory className="w-5 h-5 text-white -translate-x-[1px]" />
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExpandedExerciseId(null);
+                                      setActiveSuperSetExerciseId(prev => prev === exercise.id ? null : exercise.id);
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                  >
+                                    <TbChecklist className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveSuperSetExerciseId(null);
+                                      setExpandedExerciseId(prev => prev === exercise.id ? null : exercise.id);
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                  >
+                                    <PlusIcon className="w-5 h-5 text-white" />
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -594,6 +609,14 @@ export default function RoutineModal({
                               <InlineExerciseExpander 
                                 exercise={exercise} 
                                 onSaveDone={() => setExpandedExerciseId(null)} 
+                              />
+                            )}
+                            
+                            {/* V2 SuperSet Expander */}
+                            {activeSuperSetExerciseId === exercise.id && !isEditMode && (
+                              <SuperSetExpander 
+                                exercise={exercise} 
+                                onSaveDone={() => setActiveSuperSetExerciseId(null)} 
                               />
                             )}
                           </div>

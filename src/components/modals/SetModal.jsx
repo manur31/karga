@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
@@ -95,9 +96,9 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
         onSaveOverride(setData);
       } else {
         addSet(setData);
+        startRest(restTime);
       }
  
-      startRest(restTime);
       handleCloseWithAnimation(null);
     } catch (error) {
       console.error("Error al guardar el set:", error);
@@ -132,8 +133,8 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
     return 'text-4xl sm:text-5xl';
   };
 
-  return (
-    <div className="fixed inset-0 z-60 flex flex-col justify-end pointer-events-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
@@ -283,6 +284,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
           
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
