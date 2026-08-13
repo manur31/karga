@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from "react";
+import { createPortal } from "react-dom";
 
-export default function ConfirmModal({ 
-  isOpen, 
-  title, 
-  description, 
-  confirmText = "Confirmar", 
-  cancelText = "Cancelar", 
-  onConfirm, 
-  onClose, 
-  danger = false 
+export default function ConfirmModal({
+  isOpen,
+  title,
+  description,
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  onConfirm,
+  onClose,
+  danger = false,
 }) {
   const [isClosing, setIsClosing] = useState(false);
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -36,8 +36,8 @@ export default function ConfirmModal({
       className={`fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
       onClick={handleClose}
     >
-      <div 
-        className={`bg-[#2A2424] w-full max-w-sm rounded-3xl p-6 flex flex-col shadow-2xl border border-white/5 ${isClosing ? 'animate-fade-out' : 'animate-slide-in-up'}`}
+      <div
+        className={`bg-[#2A2424] w-full max-w-sm rounded-3xl p-6 flex flex-col shadow-2xl border border-white/5 ${isClosing ? "animate-fade-out" : "animate-slide-in-up"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-black text-white mb-2">{title}</h2>
@@ -46,23 +46,23 @@ export default function ConfirmModal({
             {description}
           </p>
         )}
-        
+
         <div className="flex gap-3 mt-auto">
-          <button 
+          <button
             onClick={handleClose}
             className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-white/10 hover:bg-white/20 transition-colors"
           >
             {cancelText}
           </button>
-          <button 
+          <button
             onClick={() => {
               onConfirm();
               handleClose();
             }}
             className={`flex-1 py-3 px-4 rounded-xl font-bold text-white transition-colors shadow-lg ${
-              danger 
-                ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' 
-                : 'bg-karga-orange hover:bg-orange-600 shadow-karga-orange/20'
+              danger
+                ? "bg-red-500 hover:bg-red-600 shadow-red-500/20"
+                : "bg-karga-orange hover:bg-orange-600 shadow-karga-orange/20"
             }`}
           >
             {confirmText}
@@ -70,6 +70,6 @@ export default function ConfirmModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
