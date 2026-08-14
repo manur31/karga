@@ -4,7 +4,7 @@ export function setToSupabase(set) {
     exercise_id: set.exerciseId,
     profile_id: set.profileId,
     weight: set.weight,
-    reps: set.reps,
+    rep: set.rep,
     created_at: set.createdAt,
   };
 }
@@ -13,9 +13,10 @@ export function setFromSupabase(row) {
   return {
     id: row.set_id,
     exerciseId: row.exercise_id,
-    profile_id: row.profile_id,
+    profileId: row.profile_id,
     weight: row.weight,
-    reps: row.reps,
+    rep: row.rep,
     createdAt: row.created_at,
+    updatedAt: row.created_at,
   };
 }

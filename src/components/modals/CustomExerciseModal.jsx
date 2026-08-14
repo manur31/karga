@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCreateExercise, useUpdateExercise } from '../../hooks/mutations/useExercisesMutations';
-import { useAuth } from '../../hooks/queries/useAuth';
+import { getCachedProfile } from '../../storage/profile-storage';
 import { useExercises } from '../../hooks/queries/useExercises';
 import { ArrowLeft } from '../icons';
 
@@ -30,8 +30,8 @@ export default function CustomExerciseModal({ onClose, exerciseToEdit = null }) 
     setErrorMsg("");
   }
 
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
 
   const { data: allExercises } = useExercises(profile_id);
   const { mutateAsync: createExercise, isPending: isCreating } = useCreateExercise(profile_id);

@@ -1,25 +1,33 @@
-import { db } from '../db';
+import { db, setSyncWrite } from '../db';
 import { supabase } from '../supabaseClient';
 
-export async function pullEntity({ table, supabaseTable, fromSupabase }) {
+export async function pullEntity({
+  table,
+  supabaseTable,
+  fromSupabase,
+  readOnly = false,
+}) {
   const { data, error } = await supabase.from(supabaseTable).select('*');
   if (error) throw error;
+  if (!data?.length) return;
 
-  console.log('Sets desde Supabase:', data)
+  const mapped = data.map((row) => {
+    const base = fromSupabase(row);
+    if (readOnly) {
+      return base;
+    }
+    return {
+      ...base,
+      synced: true,
+      deleted: false,
+      syncError: null,
+    };
+  });
 
-  const mapped = data.map(row => ({
-    ...fromSupabase(row),
-    synced: true,
-    deleted: false,
-  }));
-
-  console.log(mapped)
-
+  setSyncWrite(true);
   try {
-    const result = await db[table].bulkPut(mapped);
-    console.log('Result:', result);
-  } catch (err) {
-    console.error(`Error de datos sincronizando ${table}:`, err);
-    throw err;
+    await db[table].bulkPut(mapped);
+  } finally {
+    setSyncWrite(false);
   }
 }
