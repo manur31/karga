@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiPlay } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
+import { FaPlay } from 'react-icons/fa';
 import Mancuerna from '../icons/Mancuerna';
 
 export default function StartWorkoutModal({ isOpen, onClose, routines, onSelectRoutine, onStartFree }) {
@@ -54,7 +55,7 @@ export default function StartWorkoutModal({ isOpen, onClose, routines, onSelectR
               className="w-full bg-karga-orange/10 hover:bg-karga-orange/20 border border-karga-orange/30 p-4 rounded-2xl flex items-center gap-4 transition-all active:scale-[0.98] text-left"
             >
               <div className="w-12 h-12 rounded-xl bg-karga-orange flex items-center justify-center shrink-0 shadow-lg shadow-karga-orange/30">
-                <FiPlay className="w-6 h-6 text-white ml-0.5" />
+                <FaPlay className="w-5 h-5 text-white ml-0.5" />
               </div>
               <div className="flex flex-col">
                 <span className="text-white font-bold text-[16px]">Entrenamiento libre</span>

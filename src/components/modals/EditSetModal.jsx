@@ -4,18 +4,7 @@ import { useUpdateSet } from '../../hooks/mutations/useSetsMutations';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
 import { useSetsStore } from '../../stores/setsStore';
-
-const MinusIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-  </svg>
-);
-
-const XIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
+import { FiMinus, FiX } from 'react-icons/fi';
 
 export default function EditSetModal({ setToEdit, exercise, onClose }) {
   const { unit, toggleUnit, convertToKg, displayWeight } = useWeightUnit();
@@ -154,7 +143,7 @@ export default function EditSetModal({ setToEdit, exercise, onClose }) {
           onClick={handleCloseWithAnimation}
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 z-20"
         >
-          <XIcon className="w-4 h-4" />
+          <FiX className="w-4 h-4" />
         </button>
         
         {/* Contenido */}
@@ -177,7 +166,7 @@ export default function EditSetModal({ setToEdit, exercise, onClose }) {
                     onClick={() => handleAdjustReps(-1)}
                     className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
                   >
-                    <MinusIcon className="w-4 h-4" />
+                    <FiMinus className="w-4 h-4" />
                   </button>
                   
                   <input 
@@ -212,7 +201,7 @@ export default function EditSetModal({ setToEdit, exercise, onClose }) {
                     onClick={() => handleAdjustDuration(-15)}
                     className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
                   >
-                    <MinusIcon className="w-4 h-4" />
+                    <FiMinus className="w-4 h-4" />
                   </button>
                   
                   <div className="flex items-center justify-center gap-0.5 font-black transition-all text-white">
@@ -258,7 +247,7 @@ export default function EditSetModal({ setToEdit, exercise, onClose }) {
                     onClick={() => handleAdjustWeight(-weightStep)}
                     className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
                   >
-                    <MinusIcon className="w-4 h-4" />
+                    <FiMinus className="w-4 h-4" />
                   </button>
                   
                   <input 

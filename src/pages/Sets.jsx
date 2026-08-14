@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Button from "../components/Button/Button";
-import { FiPlus, FiSettings, FiPlay } from "react-icons/fi";
+import { FiPlus, FiSettings } from "react-icons/fi";
+import { FaPlay } from "react-icons/fa";
 import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
@@ -231,7 +232,7 @@ export default function Sets() {
             className={`w-full flex-row items-center justify-start gap-4 p-5 border-none rounded-3xl shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 active:scale-[0.98]'}`}
           >
             <div className="w-12 h-12 shrink-0 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-              <FiPlay className="w-6 h-6 text-white ml-0.5" />
+              <FaPlay className="w-5 h-5 text-white ml-0.5" />
             </div>
             <div className="flex flex-col items-start text-left">
               <span className="text-xl font-black text-white">

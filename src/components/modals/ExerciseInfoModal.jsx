@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft } from '../icons';
+import { FiPlayCircle } from 'react-icons/fi';
 
 export default function ExerciseInfoModal({ exercise, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
@@ -40,10 +41,7 @@ export default function ExerciseInfoModal({ exercise, onClose }) {
           <div className="flex flex-col gap-2">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1">Demostración</h3>
             <div className="w-full aspect-video bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center">
-              <svg className="w-10 h-10 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-              </svg>
+              <FiPlayCircle className="w-10 h-10 text-white/20" strokeWidth={1.5} />
             </div>
           </div>
 

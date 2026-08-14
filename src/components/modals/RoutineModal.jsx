@@ -14,7 +14,8 @@ import EditRoutineModal from "./EditRoutineModal";
 import ExerciseListSelector from "./ExerciseListSelector";
 import { useSessionStore } from "../../stores/sessionStore";
 import { useRestStore } from "../../stores/restStore";
-import { FiPlay, FiMinus, FiSquare, FiMoreVertical } from "react-icons/fi";
+import { FiMinus, FiSquare, FiMoreVertical, FiTrash2, FiCheck } from "react-icons/fi";
+import { FaPlay } from "react-icons/fa";
 import { VscRecord } from "react-icons/vsc";
 import { TbChecklist } from "react-icons/tb";
 import { useSetsStore } from "../../stores/setsStore";
@@ -360,7 +361,7 @@ export default function RoutineModal({
                       disabled={isStarted}
                       className={`w-full flex items-center justify-center gap-2 p-4 text-white rounded-2xl font-black text-[16px] shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 shadow-karga-orange/20 active:scale-[0.98]'}`}
                     >
-                      <FiPlay className="w-5 h-5 ml-1" />
+                      <FaPlay className="w-4 h-4 ml-1" />
                       Empezar entrenamiento
                     </button>
                     {!isAddingExercises && showWalkthrough === 'ready' && (
@@ -447,19 +448,7 @@ export default function RoutineModal({
                                     {selectedExercisesForDelete.includes(
                                       exercise.id,
                                     ) && (
-                                      <svg
-                                        className="w-3 h-3 text-white"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={3}
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M5 13l4 4L19 7"
-                                        />
-                                      </svg>
+                                      <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />
                                     )}
                                   </div>
                                 )}
@@ -588,20 +577,7 @@ export default function RoutineModal({
                     onClick={() => setShowConfirmDialog(true)}
                     className="h-14 px-6 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center transition-all active:scale-95 gap-2"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                      />
-                    </svg>
+                    <FiTrash2 className="w-5 h-5" />
                     Eliminar {selectedExercisesForDelete.length} ejercicio
                     {selectedExercisesForDelete.length !== 1 ? "s" : ""}
                   </button>
