@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Button from "../components/Button/Button";
-import { FiPlus, FiSettings, FiPlay } from "react-icons/fi";
+import { FiPlus, FiSettings } from "react-icons/fi";
+import { FaPlay } from "react-icons/fa";
 import WorkoutModal from "../components/modals/WorkoutModal";
 import RoutineModal from "../components/modals/RoutineModal";
 import MyExercisesModal from "../components/modals/MyExercisesModal";
@@ -52,27 +53,44 @@ export default function Sets() {
   };
 
   useEffect(() => {
-    if (profile_id && routines && routines.length === 1) {
-      const seen = localStorage.getItem(
-        `hasSeenWorkoutStartWalkthrough_${profile_id}`,
-      );
-      if (!seen) {
-        const id = setTimeout(() => {
-          setShowOnboarding(true);
-        }, 0);
-        return () => clearTimeout(id);
+    if (profile_id && routines) {
+      if (routines.length === 0) {
+        const seenCreate = localStorage.getItem(
+          `hasSeenCreateRoutineWalkthrough_${profile_id}`,
+        );
+        if (!seenCreate) {
+          const id = setTimeout(() => {
+            setShowOnboarding('create');
+          }, 500);
+          return () => clearTimeout(id);
+        }
+      } else if (routines.length === 1) {
+        const seenStart = localStorage.getItem(
+          `hasSeenWorkoutStartWalkthrough_${profile_id}`,
+        );
+        if (!seenStart) {
+          const id = setTimeout(() => {
+            setShowOnboarding('start');
+          }, 500);
+          return () => clearTimeout(id);
+        }
       }
     }
-  }, [routines, profile_id]);
+  }, [profile_id, routines]);
 
   const handleCloseOnboarding = () => {
-    if (profile_id) {
+    if (showOnboarding === 'create') {
+      localStorage.setItem(
+        `hasSeenCreateRoutineWalkthrough_${profile_id}`,
+        "true",
+      );
+    } else if (showOnboarding === 'start') {
       localStorage.setItem(
         `hasSeenWorkoutStartWalkthrough_${profile_id}`,
         "true",
       );
     }
-    setShowOnboarding(false);
+    setShowOnboarding(null);
   };
 
   const { mutateAsync: createRoutines } = useCreateRoutines(profile_id);
@@ -214,17 +232,18 @@ export default function Sets() {
           <Button
             variant="primary"
             onClick={handleStartWorkoutClick}
-            className="w-full flex-row items-center justify-start gap-4 p-5 bg-linear-to-r from-karga-orange to-red-600 border-none rounded-3xl shadow-lg transition-transform active:scale-[0.98]"
+            disabled={isStarted}
+            className={`w-full flex-row items-center justify-start gap-4 p-5 border-none rounded-3xl shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 active:scale-[0.98]'}`}
           >
             <div className="w-12 h-12 shrink-0 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-              <FiPlay className="w-6 h-6 text-white ml-0.5" />
+              <FaPlay className="w-5 h-5 text-white ml-0.5" />
             </div>
             <div className="flex flex-col items-start text-left">
               <span className="text-xl font-black text-white">
                 Empezar entrenamiento
               </span>
               <span className="text-[11px] font-medium text-white/80 tracking-wide mt-0.5">
-                Iniciar una sesión vacía de ejercicio
+                Elige una rutina o sesión libre
               </span>
             </div>
           </Button>
@@ -403,13 +422,17 @@ export default function Sets() {
 
                 <div className="flex flex-col gap-1">
                   <h4 className="text-white font-bold text-xl tracking-wide">
-                    ¡Tu primera rutina está lista!
+                    {showOnboarding === 'create' ? "¡Empieza por aquí!" : "¡Tu primera rutina está lista!"}
                   </h4>
 
                   <p className="text-zinc-400 text-sm leading-relaxed font-medium">
-                    Ahora que ya tienes tu primera rutina, podrás empezar tus
-                    entrenamientos rápidamente desde aquí o desde la pestaña de{" "}
-                    <strong>Sesiones</strong>.
+                    {showOnboarding === 'create'
+                      ? "Toca este botón para crear tu primera rutina personalizada y agregarle los ejercicios que más te gusten."
+                      : (
+                        <>
+                          Ahora que ya tienes tu primera rutina, podrás empezar tus entrenamientos rápidamente desde aquí o desde la pestaña de <strong className="text-karga-orange">Sesiones</strong>.
+                        </>
+                      )}
                   </p>
                 </div>
               </div>

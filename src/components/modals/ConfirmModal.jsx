@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function ConfirmModal({
   isOpen,
   title,
   description,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
   onConfirm,
   onClose,
   danger = false,

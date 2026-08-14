@@ -4,24 +4,19 @@ import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
 import { getCachedProfile } from '../../storage/profile-storage';
 
-const MinusIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-  </svg>
-);
-
-const XIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
-export default function EditSetModal({ setToEdit, onClose }) {
+export default function EditSetModal({ setToEdit, exercise, onClose }) {
   const { unit, toggleUnit, convertToKg, displayWeight } = useWeightUnit();
   const profile_id = getCachedProfile()?.profile_id;
 
+  const trackingType = exercise?.tracking_type || 'weight_reps';
+  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+  const showReps = trackingType === 'weight_reps';
+  const showTime = trackingType === 'time' || trackingType === 'weight_time';
+
   const [reps, setReps] = useState(setToEdit?.rep || 0);
   const [weight, setWeight] = useState(() => displayWeight(setToEdit?.weight || 0));
+  const [duration, setDuration] = useState(setToEdit?.duration || 0);
+  
   const [etiqueta, setEtiqueta] = useState('none');
   const [isEtiquetaModalOpen, setIsEtiquetaModalOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -63,6 +58,24 @@ export default function EditSetModal({ setToEdit, onClose }) {
     const weightInKg = convertToKg(weight);
 
     try {
+      const setId = setToEdit.set_id || setToEdit.id;
+      const isLocal = allSetsFromStore.some(s => s.id === setId || s.set_id === setId);
+      
+      const setUpdateData = {
+        rep: showReps ? Number(reps || 0) : 0,
+        weight: showWeight ? Number(weightInKg.toFixed(2)) : 0,
+        duration: showTime ? Number(duration || 0) : 0
+      };
+
+      if (isLocal) {
+        editSet(setId, setUpdateData);
+      } else {
+        await updateSet({
+          set_id: setId,
+          ...setUpdateData
+        });
+      }
+      
       await updateSet({
         set_id: setToEdit.set_id || setToEdit.id,
         rep: Number(reps || 0),
@@ -84,6 +97,10 @@ export default function EditSetModal({ setToEdit, onClose }) {
       const val = Number(prev || 0) + amount;
       return Math.max(0, parseFloat(val.toFixed(2)));
     });
+  };
+
+  const handleAdjustDuration = (amount) => {
+    setDuration(prev => Math.max(0, Number(prev || 0) + amount));
   };
 
   const handleFocus = (e) => {
@@ -122,13 +139,48 @@ export default function EditSetModal({ setToEdit, onClose }) {
           onClick={handleCloseWithAnimation}
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 z-20"
         >
-          <XIcon className="w-4 h-4" />
+          <FiX className="w-4 h-4" />
         </button>
 
         <div className="px-6 flex flex-col">
           <h2 className="text-2xl font-black text-white tracking-tight mb-8 truncate pr-10">
             Editar set
           </h2>
+          
+          {/* ZONA DE INPUTS */}
+          <div className="flex flex-col gap-4 mb-6">
+            
+            {/* Lado izquierdo: REPS */}
+            {showReps && (
+            <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl relative">
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Repeticiones</span>
+              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-[32px] px-2 relative">
+                <div></div>
+                <div className="flex items-center justify-center gap-4 sm:gap-6">
+                  <button 
+                    onClick={() => handleAdjustReps(-1)}
+                    className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
+                  >
+                    <FiMinus className="w-4 h-4" />
+                  </button>
+                  
+                  <input 
+                    type="number"
+                    value={reps}
+                    onChange={(e) => setReps(e.target.value)}
+                    onFocus={handleFocus}
+                    className={`bg-transparent text-center font-black tracking-tighter outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all ${getInputTextSize(reps)} text-white`}
+                    style={{ width: `${Math.max(2, String(reps).length)}ch`, boxSizing: 'content-box' }}
+                  />
+                  
+                  <button 
+                    onClick={() => handleAdjustReps(1)}
+                    className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div></div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl">
@@ -157,7 +209,85 @@ export default function EditSetModal({ setToEdit, onClose }) {
                 </button>
               </div>
             </div>
+            )}
 
+            {/* Lado izquierdo: TIEMPO */}
+            {showTime && (
+            <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl relative">
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Tiempo (MM:SS)</span>
+              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-[32px] px-2 relative">
+                <div></div>
+                <div className="flex items-center justify-center gap-4 sm:gap-6">
+                  <button 
+                    onClick={() => handleAdjustDuration(-15)}
+                    className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
+                  >
+                    <FiMinus className="w-4 h-4" />
+                  </button>
+                  
+                  <div className="flex items-center justify-center gap-0.5 font-black transition-all text-white">
+                    <input 
+                      type="number"
+                      value={Math.floor(duration / 60)}
+                      onChange={(e) => setDuration(parseInt(e.target.value || 0) * 60 + (duration % 60))}
+                      onFocus={handleFocus}
+                      style={{ width: `${Math.max(1, String(Math.floor(duration / 60)).length)}ch`, boxSizing: 'content-box' }}
+                      className={`bg-transparent p-0 text-right outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all tracking-tighter ${String(Math.floor(duration / 60)).length + 3 >= 5 ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-5xl'} text-white`}
+                    />
+                    <span className={`pb-1 ${String(Math.floor(duration / 60)).length + 3 >= 5 ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-5xl'} text-white`}>:</span>
+                    <input 
+                      type="number"
+                      value={(duration % 60).toString().padStart(2, '0')}
+                      onChange={(e) => setDuration(Math.floor(duration / 60) * 60 + parseInt(e.target.value || 0))}
+                      onFocus={handleFocus}
+                      style={{ width: '2ch', boxSizing: 'content-box' }}
+                      className={`bg-transparent p-0 text-left outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all tracking-tighter ${String(Math.floor(duration / 60)).length + 3 >= 5 ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-5xl'} text-white`}
+                    />
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleAdjustDuration(15)}
+                    className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div></div>
+              </div>
+            </div>
+            )}
+
+            {/* Lado derecho: WEIGHT */}
+            {showWeight && (
+            <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl relative">
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Peso ({unit.toUpperCase()})</span>
+              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-[32px] px-2 relative">
+                <div></div>
+                <div className="flex items-center justify-center gap-4 sm:gap-6">
+                  <button 
+                    onClick={() => handleAdjustWeight(-weightStep)}
+                    className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
+                  >
+                    <FiMinus className="w-4 h-4" />
+                  </button>
+                  
+                  <input 
+                    type="number"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    onFocus={handleFocus}
+                    className={`bg-transparent text-center font-black tracking-tighter outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all ${getInputTextSize(weight)} text-white`}
+                    style={{ width: `${Math.max(2, String(weight).length)}ch`, boxSizing: 'content-box' }}
+                  />
+                  
+                  <button 
+                    onClick={() => handleAdjustWeight(weightStep)}
+                    className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div></div>
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl">
               <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Peso ({unit.toUpperCase()})</span>
               <div className="flex items-center justify-between w-full px-2">
@@ -184,6 +314,7 @@ export default function EditSetModal({ setToEdit, onClose }) {
                 </button>
               </div>
             </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between mt-2 gap-4">
@@ -221,6 +352,16 @@ export default function EditSetModal({ setToEdit, onClose }) {
                   </div>
                 )}
               </div>
+
+              {/* Botón LB / KG */}
+              {showWeight && (
+                <button 
+                  onClick={handleToggleUnit}
+                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold text-zinc-300 whitespace-nowrap transition-colors uppercase"
+                >
+                  {unit === 'kg' ? 'LB' : 'KG'}
+                </button>
+              )}
 
               <button
                 onClick={handleToggleUnit}

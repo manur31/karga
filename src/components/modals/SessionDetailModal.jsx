@@ -31,11 +31,21 @@ export default function SessionDetailModal({ session, onClose }) {
 
   const handleClose = () => {
     setIsClosing(true);
+
     setTimeout(() => {
       onClose();
       setIsClosing(false);
     }, 200);
   };
+  const handleEditSessions = (data) => {
+    updateSessionWithSetsMutate({
+      session_id: sessionId,
+      startedAt: data.startedAt,
+      finishedAt: data.finishedAt,
+      note: data.note,
+      sets: data.sets,
+      deletedSetIds: data.deletedSetIds,
+    });
 
   const handleEditSessions = async (data) => {
     await updateSessionWithSetsMutate({
@@ -57,6 +67,9 @@ export default function SessionDetailModal({ session, onClose }) {
       console.error('Error al eliminar sesión:', error);
     }
   };
+  const sessionSets =
+    sets?.filter((set) => {
+      if (!set.created_at || !sessionStart) return false;
 
   const sessionSets =
     sets?.filter((set) => {
@@ -70,15 +83,15 @@ export default function SessionDetailModal({ session, onClose }) {
     }) || [];
 
   const calculateDuration = (init, end) => {
-    if (!end) return 'En curso';
+    if (!end) return "En curso";
     const startDate = new Date(init);
     const endDate = new Date(end);
     const diffInSeconds = Math.floor((endDate - startDate) / 1000);
-    if (diffInSeconds < 0) return '00:00:00';
+    if (diffInSeconds < 0) return "00:00:00";
     const h = Math.floor(diffInSeconds / 3600);
     const m = Math.floor((diffInSeconds % 3600) / 60);
     const s = diffInSeconds % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
   const rawDate = new Date(session.startedAt).toLocaleDateString('es-ES', {
@@ -227,8 +240,8 @@ export default function SessionDetailModal({ session, onClose }) {
                         <span className="text-white font-medium">{set.rep}</span>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

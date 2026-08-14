@@ -56,6 +56,7 @@ export const useSessionStore = create(
 
       pause: () => {
         const state = get();
+
         if (!state.isStarted || state.isPaused) return;
 
         set({
@@ -66,6 +67,7 @@ export const useSessionStore = create(
 
       continue: () => {
         const state = get();
+
         if (!state.isPaused) return;
 
         const pauseDuration = Date.now() - state.pausedAt;
@@ -117,8 +119,17 @@ export const useSessionStore = create(
             sessionSetIds: rest.sessionSetIds || [],
           };
         }
+
+        if (version < 2) {
+          return {
+            ...persistedState,
+            sessions: [],
+          };
+        }
+
         return persistedState;
       },
+
       partialize: (state) => ({
         startedAt: state.startedAt,
         pausedAt: state.pausedAt,

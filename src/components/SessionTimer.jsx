@@ -1,4 +1,5 @@
-import { FiPlay, FiX, FiEdit3 } from "react-icons/fi";
+import { FiX, FiEdit3 } from "react-icons/fi";
+import { FaPlay } from "react-icons/fa";
 import { useSessionStore } from "../stores/sessionStore";
 import { useState, useRef, useEffect, useCallback } from "react";
 import useCurrentTime from "../hooks/useCurrentTime";
@@ -144,7 +145,7 @@ function SessionTimer({ profile_id }) {
               onClick={toggleMenu}
               className="w-14 h-14 bg-karga-orange hover:bg-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-karga-orange/20 transition-all active:scale-95"
             >
-              <FiPlay className="w-6 h-6 text-white ml-1" />
+              <FaPlay className="w-5 h-5 text-white ml-1" />
             </button>
           </div>
         </div>
@@ -158,7 +159,7 @@ function SessionTimer({ profile_id }) {
 
   return (
     <>
-      <div className="fixed bottom-22.5 left-0 right-0 bg-[#2A2424] border-t border-white/5 text-white py-3 px-6 z-40 shadow-lg animate-slide-in-up">
+      <div className="fixed bottom-22.5 left-0 right-0 bg-[#2A2424] border-t border-white/5 text-white py-3 px-6 z-50 shadow-lg animate-slide-in-up">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-karga-orange animate-pulse" />

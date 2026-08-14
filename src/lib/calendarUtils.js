@@ -150,8 +150,7 @@ export function calculateDailyMetrics(dayActivity) {
 export function groupSetsByExercise(dayActivity, exercises = []) {
   if (!dayActivity) return []
 
-  // Convierte el array a un mapa { id: name }
-  const exerciseMap = Object.fromEntries(exercises.map((e) => [e.id, e.name]))
+  const exerciseMap = Object.fromEntries(exercises.map((e) => [e.id, e]))
 
   const { sets = [], sessions = [] } = dayActivity
 
@@ -164,9 +163,11 @@ export function groupSetsByExercise(dayActivity, exercises = []) {
   for (const s of sets) {
     const key = s.exercise_id
     if (!grouped[key]) {
+      const exercise = exerciseMap[key] || s.exercises || s.exercise || {}
       grouped[key] = {
         exercise_id: key,
-        exerciseName: exerciseMap[key] ?? s.exercises?.name ?? s.exercise?.name ?? key,
+        exerciseName: exercise.name || key,
+        tracking_type: exercise.tracking_type || 'weight_reps',
         sets: [],
         sessionTime: sessionTimeMap[s.sessionId ?? s.session_id] ?? null,
       }

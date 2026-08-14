@@ -70,6 +70,7 @@ export const useRestStore = create(
   persist(
     (set, get) => ({
       restTime: 0,
+      endTime: null,
       intervalId: null,
       timeoutId: null,
       isRunning: false,
@@ -131,6 +132,7 @@ export const useRestStore = create(
         cancelScheduledRestNotification();
         set({
           restTime: 0,
+          endTime: null,
           intervalId: null,
           timeoutId: null,
           isRunning: false,

@@ -128,7 +128,7 @@ export default function Sessions() {
               </h2>
 
               <div className="flex flex-col gap-3">
-                {monthSessions.map((session) => (
+                {monthSessions.map((session, index) => (
                   <Card
                     key={session.session_id || session.id}
                     variant="default"

@@ -206,3 +206,28 @@ export const useUpdateSessionWithSets = (profile_id) => {
     },
   });
 };
+export const useUpdateSessionWithSets = (profile_id) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data) =>
+      updateSessionWithSets({
+        ...data,
+        profile_id,
+      }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sessions", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["sets", profile_id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["weekActivity", profile_id],
+      });
+    },
+  });
+};
