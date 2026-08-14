@@ -26,7 +26,7 @@ export default function ActivityList({ dayActivity, exercises }) {
           onClick={() => setIsOpen(!isOpen)}
           className="w-full flex items-center justify-between text-white font-bold text-[17px] px-5 py-4 bg-white/5 hover:bg-white/10 rounded-2xl outline-none active:scale-[0.98] transition-all"
         >
-          Ejercicios Realizados
+          Ejercicios realizados
           <FiChevronDown className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
@@ -44,6 +44,7 @@ export default function ActivityList({ dayActivity, exercises }) {
                   <SessionCard
                     key={group.exercise_id}
                     exerciseName={group.exerciseName}
+                    trackingType={group.tracking_type}
                     sets={group.sets}
                     sessionTime={group.sessionTime}
                   />

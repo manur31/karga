@@ -30,6 +30,11 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   if (!exercise) return null;
 
+  const trackingType = exercise.tracking_type || 'weight_reps';
+  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+  const showReps = trackingType === 'weight_reps';
+  const showTime = trackingType === 'time' || trackingType === 'weight_time';
+
   const handleCloseWithAnimation = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -214,13 +219,27 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
                             </div>
                             
                             <div className="flex items-center gap-4">
-                              <span className="text-base font-black text-white">
-                                {set.rep} <span className="text-xs text-zinc-500 font-bold ml-0.5">rep{set.rep !== 1 ? 's' : ''}</span>
-                              </span>
-                              <div className="w-1 h-1 rounded-full bg-white/20" />
-                              <span className="text-base font-black text-karga-orange">
-                                {displayWeight(set.weight)} <span className="text-xs text-karga-orange/60 font-bold ml-0.5">{unit}</span>
-                              </span>
+                              {showReps && (
+                                <span className="text-base font-black text-white">
+                                  {set.rep || 0} <span className="text-xs text-zinc-500 font-bold ml-0.5">rep{(set.rep || 0) !== 1 ? 's' : ''}</span>
+                                </span>
+                              )}
+                              
+                              {showTime && (
+                                <span className="text-base font-black text-white">
+                                  {Math.floor((set.duration || 0) / 60).toString().padStart(2, '0')}:{((set.duration || 0) % 60).toString().padStart(2, '0')}
+                                </span>
+                              )}
+
+                              {(showWeight && (showReps || showTime)) && (
+                                <div className="w-1 h-1 rounded-full bg-white/20" />
+                              )}
+
+                              {showWeight && (
+                                <span className="text-base font-black text-karga-orange">
+                                  {displayWeight(set.weight)} <span className="text-xs text-karga-orange/60 font-bold ml-0.5">{unit}</span>
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
@@ -273,6 +292,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       {isEditModalOpen && selectedSetToEdit && (
         <EditSetModal 
           setToEdit={selectedSetToEdit}
+          exercise={exercise}
           onClose={() => setIsEditModalOpen(false)} 
         />
       )}

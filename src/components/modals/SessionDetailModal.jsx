@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { FiX, FiClock, FiFileText, FiTrash2, FiEdit2 } from "react-icons/fi";
-import { useSets } from "../../hooks/queries/useSets";
+import { useSetsStore } from "../../stores/setsStore";
 import { useAuth } from "../../hooks/queries/useAuth";
+import { useExercises, useFavoriteExercises } from "../../hooks/queries/useExercises";
 import { useWeightUnit } from "../../hooks/useWeightUnit";
 import ConfirmModal from "./ConfirmModal";
 import {
@@ -17,7 +18,11 @@ export default function SessionDetailModal({ session, onClose }) {
   const [showEditSessions, setShowEditSessions] = useState(false);
 
   const { data: user } = useAuth();
-  const { data: sets } = useSets(user?.profile_id);
+  const { sets, editSet, removeSet } = useSetsStore();
+  const { data: popularExercises } = useExercises(user?.profile_id);
+  const { data: userExercises } = useFavoriteExercises(user?.profile_id);
+  const flattenedUserExercises = userExercises?.map(ue => ue.exercises).filter(Boolean) || [];
+  const allExercises = [...(popularExercises || []), ...flattenedUserExercises];
   const { displayWeight, unit } = useWeightUnit();
   const { mutateAsync: deleteSessionMutate } = useDeleteSession(
     user?.profile_id,
@@ -48,6 +53,14 @@ export default function SessionDetailModal({ session, onClose }) {
       note: data.note,
       sets: data.sets,
       deletedSetIds: data.deletedSetIds,
+    });
+
+    data.sets.forEach(set => {
+      editSet(set.set_id || set.id || set.tempId, set);
+    });
+    
+    data.deletedSetIds.forEach(id => {
+      removeSet(id);
     });
   };
   const handleDelete = () => {
@@ -195,7 +208,7 @@ export default function SessionDetailModal({ session, onClose }) {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-karga-orange rounded-full"></span>
-                Ejercicios Realizados
+                Ejercicios realizados
               </h3>
               <button
                 type="button"
@@ -211,40 +224,63 @@ export default function SessionDetailModal({ session, onClose }) {
               </div>
             ) : (
               <div className="space-y-3">
-                {sessionSets.map((set) => (
-                  <div
-                    key={set.set_id}
-                    className="bg-black/20 p-4 rounded-2xl border border-white/5 flex items-center justify-between"
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-white font-semibold">
-                        {set.exercises?.name || "Ejercicio Desconocido"}
-                      </span>
-                      <span className="text-zinc-500 text-xs">
-                        {set.exercises?.muscle}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-right">
+                {sessionSets.map((set) => {
+                  const exercise = set.exercises || allExercises?.find(e => e.id === set.exercise_id);
+                  const trackingType = exercise?.tracking_type || 'weight_reps';
+                  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+                  const showReps = trackingType === 'weight_reps';
+                  const showTime = trackingType === 'time' || trackingType === 'weight_time';
+
+                  return (
+                    <div
+                      key={set.set_id || set.id}
+                      className="bg-black/20 p-4 rounded-2xl border border-white/5 flex items-center justify-between"
+                    >
                       <div className="flex flex-col">
-                        <span className="text-xs text-zinc-500 uppercase tracking-wider">
-                          Peso
+                        <span className="text-white font-semibold">
+                          {exercise?.name || "Ejercicio Desconocido"}
                         </span>
-                        <span className="text-white font-medium">
-                          {displayWeight(set.weight)}
-                          {unit}
+                        <span className="text-zinc-500 text-xs">
+                          {Array.isArray(exercise?.muscle) ? exercise.muscle.join(', ') : exercise?.muscle}
                         </span>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-zinc-500 uppercase tracking-wider">
-                          Reps
-                        </span>
-                        <span className="text-white font-medium">
-                          {set.rep}
-                        </span>
+                      <div className="flex items-center gap-4 text-right">
+                        {showTime && (
+                          <div className="flex flex-col">
+                            <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                              Tiempo
+                            </span>
+                            <span className="text-white font-medium">
+                              {Math.floor((set.duration || 0) / 60).toString().padStart(2, '0')}:
+                              {((set.duration || 0) % 60).toString().padStart(2, '0')}
+                            </span>
+                          </div>
+                        )}
+                        {showWeight && (
+                          <div className="flex flex-col">
+                            <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                              Peso
+                            </span>
+                            <span className="text-white font-medium">
+                              {displayWeight(set.weight)}
+                              {unit}
+                            </span>
+                          </div>
+                        )}
+                        {showReps && (
+                          <div className="flex flex-col">
+                            <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                              Reps
+                            </span>
+                            <span className="text-white font-medium">
+                              {set.rep}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

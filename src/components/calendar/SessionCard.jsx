@@ -39,8 +39,11 @@ export default function SessionCard({ session }) {
       {/* Info */}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <p className="text-white font-semibold text-lg truncate">{duration}</p>
-        <p className="text-white/40 text-xs mt-0.5 capitalize">
-          {format(startedAtDate, "EEEE d 'de' MMMM, yyyy • HH:mm 'hs'", { locale: es })}
+        <p className="text-white/40 text-xs mt-0.5">
+          {(() => {
+            const dateStr = format(startedAtDate, "EEEE d 'de' MMMM, yyyy • HH:mm 'hs'", { locale: es });
+            return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+          })()}
         </p>
       </div>
     </div>

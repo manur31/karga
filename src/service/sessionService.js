@@ -124,6 +124,7 @@ export const updateSessionWithSets = async ({
         .update({
           weight: set.weight,
           rep: set.rep,
+          duration: set.duration,
           created_at: set.created_at,
         })
         .eq("set_id", set.set_id)
@@ -145,6 +146,7 @@ export const updateSessionWithSets = async ({
       exercise_id: set.exercise_id,
       weight: set.weight,
       rep: set.rep,
+      duration: set.duration,
       created_at: set.created_at,
     }));
 

@@ -8,11 +8,42 @@ import {
   FiTrash2,
   FiSave,
   FiPlus,
+  FiMinus,
 } from "react-icons/fi";
 import { format } from "date-fns";
 
 import ExerciseSelectorModal from "./ExerciseSelectorModal";
 import SetModal from "./SetModal";
+import { useAuth } from "../../hooks/queries/useAuth";
+import { useExercises, useFavoriteExercises } from "../../hooks/queries/useExercises";
+import { useWeightUnit } from "../../hooks/useWeightUnit";
+
+const AdjustableInput = ({ value, onChange, placeholder, step = 1, isTime = false }) => {
+  if (isTime) {
+    const minutes = Math.floor((value || 0) / 60);
+    const seconds = (value || 0) % 60;
+    
+    return (
+      <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 w-full border border-white/5 focus-within:border-karga-orange transition-colors">
+        <button type="button" onClick={() => onChange(Math.max(0, (value || 0) - 15))} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiMinus className="w-3 h-3"/></button>
+        <div className="flex items-center justify-center w-full font-bold text-sm">
+           <input type="number" className="w-6 text-right bg-transparent outline-none text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={minutes} onChange={(e) => onChange(parseInt(e.target.value || 0) * 60 + seconds)} />
+           <span className="text-zinc-500 pb-0.5">:</span>
+           <input type="number" className="w-6 text-left bg-transparent outline-none text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={seconds.toString().padStart(2, '0')} onChange={(e) => onChange(minutes * 60 + parseInt(e.target.value || 0))} />
+        </div>
+        <button type="button" onClick={() => onChange((value || 0) + 15)} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiPlus className="w-3 h-3"/></button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 w-full border border-white/5 focus-within:border-karga-orange transition-colors">
+      <button type="button" onClick={() => onChange(Math.max(0, Number(value || 0) - step))} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiMinus className="w-3 h-3"/></button>
+      <input type="number" className="w-full text-center bg-transparent outline-none text-sm font-bold text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+      <button type="button" onClick={() => onChange(Number(value || 0) + step)} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiPlus className="w-3 h-3"/></button>
+    </div>
+  )
+}
 
 export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
   const [isClosing, setIsClosing] = useState(false);
@@ -25,8 +56,16 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
       ...set,
       rep: set.rep ?? "",
       weight: set.weight ?? "",
+      duration: set.duration ?? "",
     })),
   );
+
+  const { data: user } = useAuth();
+  const { data: popularExercises } = useExercises(user?.profile_id);
+  const { data: userExercises } = useFavoriteExercises(user?.profile_id);
+  const flattenedUserExercises = userExercises?.map(ue => ue.exercises).filter(Boolean) || [];
+  const allExercises = [...(popularExercises || []), ...flattenedUserExercises];
+  const { unit } = useWeightUnit();
 
   const initialStartDate = session?.startedAt
     ? new Date(session.startedAt)
@@ -182,13 +221,21 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
     }
 
     const validSets = editedSets.filter((set) => {
-      const hasExercise = Boolean(set.exercise_id);
-      const hasRep =
-        set.rep !== "" && set.rep !== null && set.rep !== undefined;
-      const hasWeight =
-        set.weight !== "" && set.weight !== null && set.weight !== undefined;
-
-      return hasExercise && hasRep && hasWeight;
+      const exerciseId = set.exercise_id || getExerciseId(set.exercises || set.exercise);
+      const exercise = set.exercises || allExercises?.find(e => e.id === exerciseId);
+      const trackingType = exercise?.tracking_type || 'weight_reps';
+      
+      const hasExercise = Boolean(exerciseId);
+      
+      let isValid = hasExercise;
+      if (trackingType === 'weight_reps') {
+         isValid = isValid && set.rep !== "" && set.weight !== "";
+      } else if (trackingType === 'time') {
+         isValid = isValid && set.duration !== "";
+      } else if (trackingType === 'weight_time') {
+         isValid = isValid && set.weight !== "" && set.duration !== "";
+      }
+      return isValid;
     });
 
     const payload = {
@@ -208,8 +255,9 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
 
         return {
           ...set,
-          rep: Number(set.rep),
-          weight: Number(set.weight),
+          rep: Number(set.rep) || 0,
+          weight: Number(set.weight) || 0,
+          duration: Number(set.duration) || null,
           created_at: createdAt,
         };
       }),
@@ -331,57 +379,79 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
               </div>
             ) : (
               <div className="space-y-4">
-                {exercisesWithSets.map((group) => (
+                {exercisesWithSets.map((group) => {
+                  const exercise = group.exercise || allExercises?.find(e => e.id === group.exerciseId);
+                  const trackingType = exercise?.tracking_type || 'weight_reps';
+                  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+                  const showReps = trackingType === 'weight_reps';
+                  const showTime = trackingType === 'time' || trackingType === 'weight_time';
+                  const colClass = (showTime && !showWeight && !showReps) ? "grid-cols-[24px_1fr_32px]" : "grid-cols-[24px_1fr_1fr_32px]";
+                  const weightStep = unit === 'kg' ? 1 : 2.5;
+
+                  return (
                   <div
                     key={group.exerciseId}
                     className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-black/20 p-4"
                   >
                     <div className="flex flex-col">
                       <span className="font-bold text-white">
-                        {group.exercise?.name || "Ejercicio"}
+                        {exercise?.name || "Ejercicio"}
                       </span>
 
-                      {group.exercise?.muscle && (
+                      {exercise?.muscle && (
                         <span className="text-xs capitalize text-zinc-500">
-                          {Array.isArray(group.exercise.muscle)
-                            ? group.exercise.muscle.join(" • ")
-                            : group.exercise.muscle}
+                          {Array.isArray(exercise.muscle)
+                            ? exercise.muscle.join(" • ")
+                            : exercise.muscle}
                         </span>
                       )}
                     </div>
 
                     <div className="flex flex-col gap-2">
+                      <div className={`grid ${colClass} items-center gap-2 px-2 pb-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider text-center`}>
+                        <span></span>
+                        {showTime && <span>Tiempo</span>}
+                        {showWeight && <span>Peso</span>}
+                        {showReps && <span>Reps</span>}
+                        <span></span>
+                      </div>
                       {group.sets.map((set, index) => {
                         const setId = getSetId(set);
 
                         return (
                           <div
                             key={setId}
-                            className="grid grid-cols-[24px_1fr_1fr_32px] items-center gap-2 rounded-xl bg-white/5 p-2"
+                            className={`grid ${colClass} items-center gap-2 rounded-xl bg-white/5 p-2`}
                           >
                             <span className="text-center text-xs font-bold text-zinc-500">
                               {index + 1}
                             </span>
 
-                            <input
-                              type="number"
-                              value={set.weight}
-                              onChange={(e) =>
-                                handleChangeSet(setId, "weight", e.target.value)
-                              }
-                              className="w-full rounded-lg border border-white/5 bg-black/20 px-2 py-2 text-center text-sm font-bold text-white outline-none focus:border-karga-orange"
-                              placeholder="Kg"
-                            />
+                            {showTime && (
+                              <AdjustableInput
+                                value={set.duration}
+                                onChange={(val) => handleChangeSet(setId, "duration", val)}
+                                isTime={true}
+                              />
+                            )}
 
-                            <input
-                              type="number"
-                              value={set.rep}
-                              onChange={(e) =>
-                                handleChangeSet(setId, "rep", e.target.value)
-                              }
-                              className="w-full rounded-lg border border-white/5 bg-black/20 px-2 py-2 text-center text-sm font-bold text-white outline-none focus:border-karga-orange"
-                              placeholder="Reps"
-                            />
+                            {showWeight && (
+                              <AdjustableInput
+                                value={set.weight}
+                                onChange={(val) => handleChangeSet(setId, "weight", val)}
+                                step={weightStep}
+                                placeholder={unit}
+                              />
+                            )}
+
+                            {showReps && (
+                              <AdjustableInput
+                                value={set.rep}
+                                onChange={(val) => handleChangeSet(setId, "rep", val)}
+                                step={1}
+                                placeholder="Reps"
+                              />
+                            )}
 
                             <button
                               type="button"
@@ -404,7 +474,7 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
                       </button>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             )}
 
