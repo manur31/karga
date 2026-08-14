@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useAuth } from '../../hooks/queries/useAuth';
+import { getCachedProfile } from '../../storage/profile-storage';
 import { useExercises, useFavoriteExercises } from '../../hooks/queries/useExercises';
 import { FiX, FiSearch } from 'react-icons/fi';
 
 export default function ExerciseSelectorModal({ onClose, onSelect }) {
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
 
   const { data: popularExercises, isLoading: isPopularLoading } = useExercises(profile_id);
   const { data: userExercises, isLoading: isUserLoading } = useFavoriteExercises(profile_id);

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCalendarStore } from "../stores/calendarStore";
 import {
   calculateDailyMetrics,
@@ -48,7 +48,7 @@ export default function HistoryScreen() {
     closeMonthModal,
   } = useCalendarStore();
 
-  const { profile_id } = getCachedProfile();
+  const profile_id = getCachedProfile()?.profile_id;
 
   const { data: popularExercises } = useExercises(profile_id);
   const { data: userExercises } = useFavoriteExercises(profile_id);
@@ -62,11 +62,15 @@ export default function HistoryScreen() {
 
   const exercises = [...(popularExercises || []), ...(userExercisesList || [])];
 
-  const [monthRef, setMonthRef] = useState(
-    selectedDate ? new Date(selectedDate + "T00:00:00") : new Date(),
-  );
+  const [monthRef, setMonthRef] = useState(() => new Date());
 
   const [isSessionsOpen, setIsSessionsOpen] = useState(false);
+
+  useEffect(() => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    setSelectedDate(today);
+    setMonthRef(new Date(today + "T00:00:00"));
+  }, [setSelectedDate]);
 
   // Live from Dexie — no calendarStore cache
   const dayActivity = useMemo(() => {

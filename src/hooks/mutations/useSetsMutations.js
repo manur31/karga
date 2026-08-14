@@ -1,24 +1,37 @@
 import { useMutation } from '@tanstack/react-query';
 import { setsRepository } from '../../lib/local/setsRepository';
 import { useSessionStore } from '../../stores/sessionStore';
+import { getCachedProfile } from '../../storage/profile-storage';
+
+function resolveProfileId(explicit) {
+  if (explicit) return explicit;
+  return getCachedProfile()?.profile_id ?? null;
+}
 
 export const useCreateSet = (_profile_id) => {
   return useMutation({
     mutationFn: async (data) => {
+      const fallbackProfileId = resolveProfileId(_profile_id);
       const items = Array.isArray(data) ? data : [data];
       const ids = [];
 
       for (const item of items) {
-        const id = await setsRepository.add({
-          profileId: item.profile_id || item.profileId || _profile_id,
+        const payload = {
+          profileId: item.profile_id || item.profileId || fallbackProfileId,
           exerciseId: item.exercise_id || item.exerciseId,
           weight: item.weight,
           rep: item.rep ?? item.reps ?? 0,
-          createdAt: item.created_at || item.createdAt || new Date().toISOString(),
-        });
+          createdAt:
+            item.created_at || item.createdAt || new Date().toISOString(),
+        };
+
+        if (item.id) {
+          payload.id = item.id;
+        }
+
+        const id = await setsRepository.add(payload);
         ids.push(id);
 
-        // Track sets belonging to the active session (ephemeral)
         const session = useSessionStore.getState();
         if (session.isStarted) {
           session.addSessionSetId(id);

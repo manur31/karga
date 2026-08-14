@@ -12,7 +12,7 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 
-import { useAuth } from "../../hooks/queries/useAuth";
+import { getCachedProfile, setCachedProfile } from "../../storage/profile-storage";
 import {
   useUpdateProfileDays,
   useUpdateProfileRestTime,
@@ -26,7 +26,7 @@ import {
 import { logout } from "../../service/authService";
 
 export default function ProfileModal({ isOpen, onClose }) {
-  const { data: user } = useAuth();
+  const [user, setUser] = useState(() => getCachedProfile() || null);
   const {
     weightUnit,
     setWeightUnit,
@@ -42,6 +42,12 @@ export default function ProfileModal({ isOpen, onClose }) {
 
   const { mutate: updateProfileRestTime, isPending: isUpdatingRestTime } =
     useUpdateProfileRestTime();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const cached = getCachedProfile();
+    if (cached) setUser(cached);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!user || !isOpen) return;
@@ -72,6 +78,11 @@ export default function ProfileModal({ isOpen, onClose }) {
         time_for_week: newValue,
       },
       {
+        onSuccess: (data) => {
+          const next = { ...(getCachedProfile() || user), ...(data || {}), time_for_week: newValue };
+          setCachedProfile(next);
+          setUser(next);
+        },
         onError: () => {
           setTrainingDays(trainingDays);
         },
@@ -94,6 +105,11 @@ export default function ProfileModal({ isOpen, onClose }) {
         rest_time: newValue,
       },
       {
+        onSuccess: (data) => {
+          const next = { ...(getCachedProfile() || user), ...(data || {}), rest_time: newValue };
+          setCachedProfile(next);
+          setUser(next);
+        },
         onError: () => {
           setRestTime(restTime);
         },

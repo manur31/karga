@@ -27,7 +27,7 @@ function SessionTimer({ profile_id }) {
   const navigate = useNavigate();
   const now = useCurrentTime();
   const { mutateAsync: finishSession } = useFinishSession(profile_id);
-  const { mutateAsync: discardSession } = useDiscardSession(profile_id);
+  const { mutateAsync: discardSession } = useDiscardSession();
 
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
@@ -112,7 +112,7 @@ function SessionTimer({ profile_id }) {
   if (!isStarted) {
     return (
       <>
-        <div className="fixed bottom-26.75 z-40 w-full max-w-md mx-auto left-0 right-0 flex justify-end px-4 pointer-events-none">
+        <div className="fixed bottom-26.75 z-50 w-full max-w-md mx-auto left-0 right-0 flex justify-end px-4 pointer-events-none">
           <div className="relative pointer-events-auto" ref={menuRef}>
             {(showMenu || isClosing) && (
               <div

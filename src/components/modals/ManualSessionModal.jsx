@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiPlus, FiClock, FiCalendar, FiFileText } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { useAuth } from '../../hooks/queries/useAuth';
+import { getCachedProfile } from '../../storage/profile-storage';
 import { useCreateSession } from '../../hooks/mutations/useSesionsMutation';
 import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
 import { runSyncNow } from '../../lib/sync/syncScheduler';
@@ -12,8 +12,8 @@ import { useWeightUnit } from '../../hooks/useWeightUnit';
 
 export default function ManualSessionModal({ onClose }) {
   const [isClosing, setIsClosing] = useState(false);
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
 
   const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [startTime, setStartTime] = useState(() => format(new Date(Date.now() - 3600000), 'HH:mm'));

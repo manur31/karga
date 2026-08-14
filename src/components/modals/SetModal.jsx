@@ -1,15 +1,12 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
 import { useRestStore } from '../../stores/restStore';
-import { useSessionStore } from '../../stores/sessionStore';
-import { useSettingsStore } from '../../stores/settingsStore';
 import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
-import {
-  getNotificationPermission,
-  requestNotificationPermission,
-} from '../../lib/notifications';
-import ConfirmModal from './ConfirmModal';
+import { getLastSetForExercise } from '../../lib/local/setsHelpers';
+import { useEffect } from 'react';
 
 const MinusIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
@@ -23,9 +20,10 @@ const XIcon = ({ className }) => (
   </svg>
 );
 
-export default function SetModal({ exercise, onClose, rest_time, onSaveOverride, profile_id }) {
+export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
+
   
   const { unit, toggleUnit, convertToKg } = useWeightUnit();
   
@@ -34,8 +32,6 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride,
   
   const [isClosing, setIsClosing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [showSessionPrompt, setShowSessionPrompt] = useState(false);
-  const [pendingSessionSet, setPendingSessionSet] = useState(null);
 
   const handleToggleUnit = () => {
     if (unit === 'kg') {
@@ -47,12 +43,30 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride,
   };
 
   const { startRest } = useRestStore();
-  const { isStarted, start: startSession } = useSessionStore();
-  const restNotificationsEnabled = useSettingsStore((s) => s.restNotificationsEnabled);
 
-  const restSeconds =
-    Number(rest_time) || 60;
+  const { data: user } = useAuth();
+  const profile_id = user?.profile_id;
+  const restTime = rest_time !== undefined ? rest_time : (user?.rest_time ?? 60);
   const { mutateAsync: createSet } = useCreateSet(profile_id);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLast = async () => {
+      if (!exercise?.id) return;
+      const lastSet = await getLastSetForExercise(exercise.id, profile_id);
+      if (cancelled || !lastSet) return;
+      // Assume last set weight is stored in kg and needs to be displayed in current unit
+      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
+      setReps(lastSet.rep || 0);
+      setWeight(displayWeight || 0);
+    };
+
+    loadLast();
+    return () => {
+      cancelled = true;
+    };
+  }, [exercise?.id, profile_id, unit]);
 
   if (!exercise) return null;
 
@@ -67,48 +81,6 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride,
     }, 300);
   };
 
-  const finishAfterSave = async ({ setId, createdAtMs, weightInKg, repsValue }) => {
-    if (restNotificationsEnabled && getNotificationPermission() === 'default') {
-      await requestNotificationPermission();
-    }
-
-    startRest({
-      seconds: restSeconds,
-      lastSet: {
-        exerciseName: exercise.name,
-        weightKg: Number(weightInKg.toFixed(2)),
-        reps: repsValue,
-      },
-    });
-
-    if (!onSaveOverride && !isStarted && setId) {
-      setPendingSessionSet({ setId, createdAtMs });
-      setShowSessionPrompt(true);
-      setIsSaving(false);
-      return;
-    }
-
-    handleCloseWithAnimation(null);
-  };
-
-  const handleSessionPromptConfirm = () => {
-    if (pendingSessionSet) {
-      startSession({
-        startedAt: Math.max(0, pendingSessionSet.createdAtMs - 500),
-        sessionSetIds: [pendingSessionSet.setId],
-      });
-    }
-    setPendingSessionSet(null);
-    setShowSessionPrompt(false);
-    handleCloseWithAnimation(null);
-  };
-
-  const handleSessionPromptClose = () => {
-    setPendingSessionSet(null);
-    setShowSessionPrompt(false);
-    handleCloseWithAnimation(null);
-  };
-
   const handleSave = async (e) => {
     if (e) {
       e.stopPropagation();
@@ -120,28 +92,30 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride,
     setIsSaving(true);
     const weightInKg = convertToKg(weight);
     const repsValue = Number(reps || 0);
-    const createdAt = new Date().toISOString();
-    const createdAtMs = new Date(createdAt).getTime();
 
     try {
       const setData = {
         profile_id,
         exercise_id: exercise.id,
         rep: repsValue,
-        weight: Number(weightInKg.toFixed(2)),
-        created_at: createdAt,
+        weight: Number(weightInKg.toFixed(2))
       };
-
-      let setId = null;
 
       if (onSaveOverride) {
         onSaveOverride(setData);
       } else {
-        const ids = await createSet(setData);
-        setId = Array.isArray(ids) ? ids[0] : ids;
+        await createSet(setData);
+        startRest({
+          seconds: restTime,
+          lastSet: {
+            exerciseName: exercise.name,
+            weightKg: Number(weightInKg.toFixed(2)),
+            reps: repsValue,
+          },
+        });
       }
-
-      await finishAfterSave({ setId, createdAtMs, weightInKg, repsValue });
+ 
+      handleCloseWithAnimation(null);
     } catch (error) {
       console.error("Error al guardar el set:", error);
       setIsSaving(false);
@@ -175,15 +149,14 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride,
     return 'text-4xl sm:text-5xl';
   };
 
-  return (
-    <>
-    <div className="fixed inset-0 z-60 flex flex-col justify-end pointer-events-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-100 flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
-        onClick={showSessionPrompt ? undefined : handleCloseWithAnimation}
+        onClick={handleCloseWithAnimation}
       />
-      
+
       {/* Contenedor Bottom Sheet */}
       <div 
         className={`relative w-full sm:max-w-md sm:mx-auto bg-dark-bg rounded-t-3xl shadow-2xl flex flex-col overflow-hidden pb-8 h-auto ${
@@ -327,17 +300,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride,
           
         </div>
       </div>
-    </div>
-
-    <ConfirmModal
-      isOpen={showSessionPrompt}
-      title="¿Iniciar sesión?"
-      description="El set ya se guardó. ¿Quieres iniciar una sesión de entrenamiento o era solo un set suelto?"
-      confirmText="Iniciar sesión"
-      cancelText="Solo el set"
-      onConfirm={handleSessionPromptConfirm}
-      onClose={handleSessionPromptClose}
-    />
-    </>
+    </div>,
+    document.body
   );
 }

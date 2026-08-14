@@ -9,7 +9,7 @@ import { formatRelativeTime } from "../utils/timeFormatter";
 import { getCachedProfile } from "../storage/profile-storage";
 
 export default function Sessions() {
-  const { profile_id } = getCachedProfile();
+  const profile_id = getCachedProfile()?.profile_id;
 
   const { data: sessions = [], isLoading } = useSessions(profile_id);
   const { data: sets = [] } = useSets(profile_id);

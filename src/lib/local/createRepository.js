@@ -4,9 +4,15 @@ export function createRepository(tableName) {
   const table = db[tableName];
 
   return {
-    async add(data) {
-      const id = data.id || crypto.randomUUID();
-      await table.add({ id, ...data });
+    async add(data = {}) {
+      const { id: incomingId, ...rest } = data;
+      const id =
+        incomingId !== undefined && incomingId !== null && incomingId !== ''
+          ? incomingId
+          : crypto.randomUUID();
+
+      // `id` must win over any leftover undefined from callers
+      await table.add({ ...rest, id });
       return id;
     },
 

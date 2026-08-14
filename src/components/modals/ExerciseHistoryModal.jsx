@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../hooks/queries/useAuth';
+import { getCachedProfile } from '../../storage/profile-storage';
 import { useSetsForExercise } from '../../hooks/queries/useSets';
 import { useDeleteSet } from '../../hooks/mutations/useSetsMutations';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
@@ -21,8 +21,8 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   const { unit, displayWeight } = useWeightUnit();
 
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
   const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
 
@@ -243,6 +243,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       />
 
       {/* SetModal */}
+      <div className="">
       {isSetModalOpen && (
         <SetModal 
           exercise={exercise}
@@ -251,6 +252,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
           onClose={() => setIsSetModalOpen(false)} 
         />
       )}
+      </div>
 
       {/* EditSetModal */}
       {isEditModalOpen && selectedSetToEdit && (

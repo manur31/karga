@@ -4,19 +4,25 @@ import { setsRepository } from '../../lib/local/setsRepository';
 import { db } from '../../lib/db';
 import { runSyncNow } from '../../lib/sync/syncScheduler';
 import { useSessionStore } from '../../stores/sessionStore';
+import { getCachedProfile } from '../../storage/profile-storage';
 
 function toIso(value) {
   if (!value) return null;
   if (typeof value === 'string') return value;
   if (value instanceof Date) return value.toISOString();
-  // timestamps (ms)
   if (typeof value === 'number') return new Date(value).toISOString();
   return new Date(value).toISOString();
+}
+
+function resolveProfileId(explicit) {
+  if (explicit) return explicit;
+  return getCachedProfile()?.profile_id ?? null;
 }
 
 export const useCreateSession = (_profile_id) => {
   return useMutation({
     mutationFn: async (data) => {
+      const profileId = resolveProfileId(_profile_id);
       const items = Array.isArray(data) ? data : [data];
       const ids = [];
 
@@ -29,7 +35,7 @@ export const useCreateSession = (_profile_id) => {
           new Date().toISOString();
 
         const id = await sessionsRepository.add({
-          profileId: item.profile_id || item.profileId || _profile_id,
+          profileId: item.profile_id || item.profileId || profileId,
           startedAt,
           finishedAt,
           note: item.note ?? null,
@@ -82,6 +88,7 @@ export const useUpdateSession = () => {
 export const useFinishSession = (profile_id) => {
   return useMutation({
     mutationFn: async () => {
+      const pid = resolveProfileId(profile_id);
       const state = useSessionStore.getState();
       if (!state.isStarted) return null;
 
@@ -90,7 +97,7 @@ export const useFinishSession = (profile_id) => {
       const finishedAt = toIso(now);
 
       const id = await sessionsRepository.add({
-        profileId: profile_id,
+        profileId: pid,
         startedAt,
         finishedAt,
         note: state.note || null,
@@ -110,16 +117,15 @@ export const useFinishSession = (profile_id) => {
 
 /**
  * Discard active session.
- * @param {boolean} keepSets - if false, bulk-delete session set IDs from Dexie
+ * @param {{ keepSets: boolean }} opts
  */
 export const useDiscardSession = () => {
   return useMutation({
-    mutationFn: async ({ keepSets }) => {
+    mutationFn: async ({ keepSets } = { keepSets: true }) => {
       const state = useSessionStore.getState();
       const setIds = [...(state.sessionSetIds || [])];
 
       if (!keepSets && setIds.length > 0) {
-        // Hard-delete local-only sets; soft-delete any that somehow synced
         await db.transaction('rw', db.sets, async () => {
           for (const id of setIds) {
             await setsRepository.remove(id);
@@ -129,8 +135,74 @@ export const useDiscardSession = () => {
         await runSyncNow();
       }
 
-      // Session was never persisted on discard — only clear ephemeral timer
       state.resetTimer();
+    },
+  });
+};
+
+/**
+ * Edit a past session + its sets in Dexie (local-first).
+ */
+export const useUpdateSessionWithSets = (profile_id) => {
+  return useMutation({
+    mutationFn: async ({
+      session_id,
+      startedAt,
+      finishedAt,
+      note,
+      sets = [],
+      deletedSetIds = [],
+    }) => {
+      const pid = resolveProfileId(profile_id);
+      if (!session_id) throw new Error('session_id is required');
+
+      await sessionsRepository.update(session_id, {
+        startedAt: toIso(startedAt),
+        finishedAt: toIso(finishedAt),
+        note: note ?? null,
+      });
+
+      for (const setId of deletedSetIds || []) {
+        if (setId) await setsRepository.remove(setId);
+      }
+
+      for (const set of sets) {
+        const setId = set.set_id || set.id || null;
+        const payload = {
+          weight: Number(set.weight ?? 0),
+          rep: Number(set.rep ?? set.reps ?? 0),
+          createdAt: toIso(set.created_at || set.createdAt) || new Date().toISOString(),
+          exerciseId: set.exercise_id || set.exerciseId,
+          profileId: set.profile_id || set.profileId || pid,
+        };
+
+        if (setId) {
+          const existing = await setsRepository.getById(setId);
+          if (existing) {
+            await setsRepository.update(setId, {
+              weight: payload.weight,
+              rep: payload.rep,
+              createdAt: payload.createdAt,
+              exerciseId: payload.exerciseId || existing.exerciseId,
+            });
+            continue;
+          }
+        }
+
+        const addPayload = {
+          profileId: payload.profileId,
+          exerciseId: payload.exerciseId,
+          weight: payload.weight,
+          rep: payload.rep,
+          createdAt: payload.createdAt,
+        };
+        if (setId) addPayload.id = setId;
+        await setsRepository.add(addPayload);
+      }
+
+      if (navigator.onLine) {
+        await runSyncNow();
+      }
     },
   });
 };
