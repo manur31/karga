@@ -56,16 +56,8 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
       ...set,
       rep: set.rep ?? "",
       weight: set.weight ?? "",
-      duration: set.duration ?? "",
     })),
   );
-
-  const { data: user } = useAuth();
-  const { data: popularExercises } = useExercises(user?.profile_id);
-  const { data: userExercises } = useFavoriteExercises(user?.profile_id);
-  const flattenedUserExercises = userExercises?.map(ue => ue.exercises).filter(Boolean) || [];
-  const allExercises = [...(popularExercises || []), ...flattenedUserExercises];
-  const { unit } = useWeightUnit();
 
   const initialStartDate = session?.startedAt
     ? new Date(session.startedAt)
@@ -221,21 +213,13 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
     }
 
     const validSets = editedSets.filter((set) => {
-      const exerciseId = set.exercise_id || getExerciseId(set.exercises || set.exercise);
-      const exercise = set.exercises || allExercises?.find(e => e.id === exerciseId);
-      const trackingType = exercise?.tracking_type || 'weight_reps';
-      
-      const hasExercise = Boolean(exerciseId);
-      
-      let isValid = hasExercise;
-      if (trackingType === 'weight_reps') {
-         isValid = isValid && set.rep !== "" && set.weight !== "";
-      } else if (trackingType === 'time') {
-         isValid = isValid && set.duration !== "";
-      } else if (trackingType === 'weight_time') {
-         isValid = isValid && set.weight !== "" && set.duration !== "";
-      }
-      return isValid;
+      const hasExercise = Boolean(set.exercise_id);
+      const hasRep =
+        set.rep !== "" && set.rep !== null && set.rep !== undefined;
+      const hasWeight =
+        set.weight !== "" && set.weight !== null && set.weight !== undefined;
+
+      return hasExercise && hasRep && hasWeight;
     });
 
     const payload = {
@@ -255,9 +239,8 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
 
         return {
           ...set,
-          rep: Number(set.rep) || 0,
-          weight: Number(set.weight) || 0,
-          duration: Number(set.duration) || null,
+          rep: Number(set.rep),
+          weight: Number(set.weight),
           created_at: createdAt,
         };
       }),
@@ -269,7 +252,7 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 ${
+      className={`fixed inset-0 z-100 flex items-center justify-center bg-black/80 p-4 ${
         isClosing ? "animate-fade-out" : "animate-fade-in"
       }`}
       onClick={(e) => {
@@ -379,79 +362,57 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
               </div>
             ) : (
               <div className="space-y-4">
-                {exercisesWithSets.map((group) => {
-                  const exercise = group.exercise || allExercises?.find(e => e.id === group.exerciseId);
-                  const trackingType = exercise?.tracking_type || 'weight_reps';
-                  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
-                  const showReps = trackingType === 'weight_reps';
-                  const showTime = trackingType === 'time' || trackingType === 'weight_time';
-                  const colClass = (showTime && !showWeight && !showReps) ? "grid-cols-[24px_1fr_32px]" : "grid-cols-[24px_1fr_1fr_32px]";
-                  const weightStep = unit === 'kg' ? 1 : 2.5;
-
-                  return (
+                {exercisesWithSets.map((group) => (
                   <div
                     key={group.exerciseId}
                     className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-black/20 p-4"
                   >
                     <div className="flex flex-col">
                       <span className="font-bold text-white">
-                        {exercise?.name || "Ejercicio"}
+                        {group.exercise?.name || "Ejercicio"}
                       </span>
 
-                      {exercise?.muscle && (
+                      {group.exercise?.muscle && (
                         <span className="text-xs capitalize text-zinc-500">
-                          {Array.isArray(exercise.muscle)
-                            ? exercise.muscle.join(" • ")
-                            : exercise.muscle}
+                          {Array.isArray(group.exercise.muscle)
+                            ? group.exercise.muscle.join(" • ")
+                            : group.exercise.muscle}
                         </span>
                       )}
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <div className={`grid ${colClass} items-center gap-2 px-2 pb-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider text-center`}>
-                        <span></span>
-                        {showTime && <span>Tiempo</span>}
-                        {showWeight && <span>Peso</span>}
-                        {showReps && <span>Reps</span>}
-                        <span></span>
-                      </div>
                       {group.sets.map((set, index) => {
                         const setId = getSetId(set);
 
                         return (
                           <div
                             key={setId}
-                            className={`grid ${colClass} items-center gap-2 rounded-xl bg-white/5 p-2`}
+                            className="grid grid-cols-[24px_1fr_1fr_32px] items-center gap-2 rounded-xl bg-white/5 p-2"
                           >
                             <span className="text-center text-xs font-bold text-zinc-500">
                               {index + 1}
                             </span>
 
-                            {showTime && (
-                              <AdjustableInput
-                                value={set.duration}
-                                onChange={(val) => handleChangeSet(setId, "duration", val)}
-                                isTime={true}
-                              />
-                            )}
+                            <input
+                              type="number"
+                              value={set.weight}
+                              onChange={(e) =>
+                                handleChangeSet(setId, "weight", e.target.value)
+                              }
+                              className="w-full rounded-lg border border-white/5 bg-black/20 px-2 py-2 text-center text-sm font-bold text-white outline-none focus:border-karga-orange"
+                              placeholder="Kg"
+                            />
 
-                            {showWeight && (
-                              <AdjustableInput
-                                value={set.weight}
-                                onChange={(val) => handleChangeSet(setId, "weight", val)}
-                                step={weightStep}
-                                placeholder={unit}
-                              />
-                            )}
-
-                            {showReps && (
-                              <AdjustableInput
-                                value={set.rep}
-                                onChange={(val) => handleChangeSet(setId, "rep", val)}
-                                step={1}
-                                placeholder="Reps"
-                              />
-                            )}
+                            <input
+                              type="number"
+                              value={set.rep}
+                              onChange={(e) =>
+                                handleChangeSet(setId, "rep", e.target.value)
+                              }
+                              className="w-full rounded-lg border border-white/5 bg-black/20 px-2 py-2 text-center text-sm font-bold text-white outline-none focus:border-karga-orange"
+                              placeholder="Reps"
+                            />
 
                             <button
                               type="button"
@@ -474,7 +435,7 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
                       </button>
                     </div>
                   </div>
-                )})}
+                ))}
               </div>
             )}
 
@@ -504,7 +465,7 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
 
       {isExerciseSelectorOpen && (
         <div
-          className="fixed inset-0 z-[200]"
+          className="fixed inset-0 -z-200"
           onClick={(e) => e.stopPropagation()}
         >
           <ExerciseSelectorModal
@@ -516,7 +477,7 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
 
       {activeExerciseForSet && (
         <div
-          className="fixed inset-0 z-[200]"
+          className="fixed inset-0 z-200"
           onClick={(e) => e.stopPropagation()}
         >
           <SetModal

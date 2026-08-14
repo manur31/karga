@@ -1,12 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { CheckIcon, PlusIcon } from '../icons';
 import { useRestStore } from '../../stores/restStore';
-import { useSetsStore } from '../../stores/setsStore';
-import { VscRecord } from 'react-icons/vsc';
-import { FiSquare, FiMinus, FiX } from 'react-icons/fi';
+import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
+import { getLastSetForExercise } from '../../lib/local/setsHelpers';
+import { useEffect } from 'react';
+
+const MinusIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+  </svg>
+);
+
+const XIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
 
 export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
   const [reps, setReps] = useState(0);
@@ -65,20 +77,26 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   const { data: user } = useAuth();
   const profile_id = user?.profile_id;
   const restTime = rest_time !== undefined ? rest_time : (user?.rest_time ?? 60);
-  const { addSet, getLastSetForExercise } = useSetsStore();
+  const { mutateAsync: createSet } = useCreateSet(profile_id);
 
   useEffect(() => {
-    if (exercise?.id) {
-      const lastSet = getLastSetForExercise(exercise.id);
-      if (lastSet) {
-        // Assume last set weight is stored in kg and needs to be displayed in current unit
-        const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
-        setReps(lastSet.rep || 0);
-        setWeight(displayWeight || 0);
-        setDuration(lastSet.duration || 0);
-      }
-    }
-  }, [exercise, unit, getLastSetForExercise]);
+    let cancelled = false;
+
+    const loadLast = async () => {
+      if (!exercise?.id) return;
+      const lastSet = await getLastSetForExercise(exercise.id, profile_id);
+      if (cancelled || !lastSet) return;
+      // Assume last set weight is stored in kg and needs to be displayed in current unit
+      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
+      setReps(lastSet.rep || 0);
+      setWeight(displayWeight || 0);
+    };
+
+    loadLast();
+    return () => {
+      cancelled = true;
+    };
+  }, [exercise?.id, profile_id, unit]);
 
   if (!exercise) return null;
 
@@ -103,6 +121,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
 
     setIsSaving(true);
     const weightInKg = convertToKg(weight);
+    const repsValue = Number(reps || 0);
 
     try {
       const setData = {
@@ -116,8 +135,15 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
       if (onSaveOverride) {
         onSaveOverride(setData);
       } else {
-        addSet(setData);
-        startRest(restTime);
+        await createSet(setData);
+        startRest({
+          seconds: restTime,
+          lastSet: {
+            exerciseName: exercise.name,
+            weightKg: Number(weightInKg.toFixed(2)),
+            reps: repsValue,
+          },
+        });
       }
  
       handleCloseWithAnimation(null);
@@ -159,7 +185,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-auto">
+    <div className="fixed inset-0 z-100 flex flex-col justify-end pointer-events-auto">
       {/* Overlay oscuro para cerrar */}
       <div 
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}

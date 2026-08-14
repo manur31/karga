@@ -27,14 +27,15 @@ export default function Sets() {
   const [isMyExercisesModalOpen, setIsMyExercisesModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isStartWorkoutModalOpen, setIsStartWorkoutModalOpen] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(null);
+  const [showActiveSessionModal, setShowActiveSessionModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [routineToEdit, setRoutineToEdit] = useState(null);
   const [routineToDeleteId, setRoutineToDeleteId] = useState(null);
   const { start: startSession, isStarted } = useSessionStore();
   const [errorMessage, setErrorMessage] = useState("");
   const errorTimerRef = useRef(null);
 
-  const { profile_id } = getCachedProfile();
+  const profile_id = getCachedProfile()?.profile_id;
 
   const { data: routines, isLoading: isRoutinesLoading } =
     useRoutines(profile_id);
@@ -156,7 +157,10 @@ export default function Sets() {
   };
 
   const handleStartWorkoutClick = () => {
-    if (isStarted) return;
+    if (isStarted) {
+      setShowActiveSessionModal(true);
+      return;
+    }
     setIsStartWorkoutModalOpen(true);
   };
 
@@ -370,6 +374,13 @@ export default function Sets() {
           setRoutineToDeleteId(null);
         }}
         onClose={() => setRoutineToDeleteId(null)}
+      />
+      <ConfirmModal
+        isOpen={showActiveSessionModal}
+        title="Sesión activa"
+        description="Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva."
+        confirmText="Cerrar"
+        onClose={() => setShowActiveSessionModal(false)}
       />
 
       <StartWorkoutModal

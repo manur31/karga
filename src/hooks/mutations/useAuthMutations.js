@@ -8,6 +8,7 @@ import {
   updateProfileDays,
   updateProfileRestTime,
 } from "../../service/authService";
+import { getCachedProfile, setCachedProfile } from "../../storage/profile-storage";
 
 export const useRegister = () => {
   const queryClient = useQueryClient();
@@ -80,7 +81,11 @@ export const useUpdateProfileDays = () => {
 
   return useMutation({
     mutationFn: updateProfileDays,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data) {
+        const cached = getCachedProfile() || {};
+        setCachedProfile({ ...cached, ...data });
+      }
       queryClient.invalidateQueries({
         queryKey: ["auth-user"],
       });
@@ -93,7 +98,11 @@ export const useUpdateProfileRestTime = () => {
 
   return useMutation({
     mutationFn: updateProfileRestTime,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data) {
+        const cached = getCachedProfile() || {};
+        setCachedProfile({ ...cached, ...data });
+      }
       queryClient.invalidateQueries({
         queryKey: ["auth-user"],
       });

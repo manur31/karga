@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../hooks/queries/useAuth';
+import { getCachedProfile } from '../../storage/profile-storage';
 import { useSetsForExercise } from '../../hooks/queries/useSets';
 import { useDeleteSet } from '../../hooks/mutations/useSetsMutations';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
@@ -7,7 +7,6 @@ import { ArrowLeft, PlusIcon } from '../icons';
 import SetModal from './SetModal';
 import EditSetModal from './EditSetModal';
 import ConfirmModal from './ConfirmModal';
-import { useSetsStore } from '../../stores/setsStore';
 import { FiTrash2, FiClock, FiCheck } from 'react-icons/fi';
 
 export default function ExerciseHistoryModal({ exercise, onClose }) {
@@ -23,11 +22,10 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   const { unit, displayWeight } = useWeightUnit();
 
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
   const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
-  const { sets: allSetsFromStore, removeSet } = useSetsStore();
 
   if (!exercise) return null;
 
@@ -43,9 +41,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
     }, 300);
   };
 
-  const filteredSetsFromStore = allSetsFromStore.filter(set => set.exercise_id === exercise.id)
-
-  const allSets = [...filteredSetsFromStore, ...sets];
+  const allSets = sets;
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -276,12 +272,16 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       />
 
       {/* SetModal */}
+      <div className="">
       {isSetModalOpen && (
         <SetModal 
-          exercise={exercise} 
+          exercise={exercise}
+          rest_time={exercise?.rest_time}
+          profile_id={profile_id}
           onClose={() => setIsSetModalOpen(false)} 
         />
       )}
+      </div>
 
       {/* EditSetModal */}
       {isEditModalOpen && selectedSetToEdit && (

@@ -6,9 +6,12 @@ import { getCachedProfile } from '../storage/profile-storage';
 import usePWA from '../hooks/usePWA';
 import useInstallBanner from '../hooks/useInstallBanner';
 import InstallPWAModal from '../components/InstallPWAModal';
+import { useBootstrapSync } from '../hooks/useSync';
 
 export default function MainLayout() {
-  const { profile_id } = getCachedProfile();
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
+  useBootstrapSync(!!profile_id);
 
   const { isStandalone, isInstallable, install } = usePWA();
   const { shouldShow, dismiss, markInstalled } = useInstallBanner({
@@ -18,8 +21,7 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-dark-bg flex flex-col text-white overflow-x-hidden">
-      
-      <main className="flex-1 w-full max-w-md mx-auto overflow-x-hidden">
+      <main className="flex-1 w-full max-w-md mx-auto overflow-x-hidden mb-20">
         <Outlet />
       </main>
 
@@ -35,7 +37,6 @@ export default function MainLayout() {
         onDismiss={dismiss}
         onInstall={markInstalled}
       />
-      
     </div>
   );
 }

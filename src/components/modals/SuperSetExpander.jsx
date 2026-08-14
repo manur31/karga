@@ -1,106 +1,161 @@
-import { useState, useEffect } from "react";
-import { FiEdit2, FiCheck, FiMinus } from "react-icons/fi";
-import { PlusIcon } from "../icons";
-import { useSetsStore } from "../../stores/setsStore";
-import { useWeightUnit } from "../../hooks/useWeightUnit";
-import { useAuth } from '../../hooks/queries/useAuth';
+import { useEffect, useState } from 'react';
+import { FiEdit2, FiCheck, FiMinus } from 'react-icons/fi';
+import { PlusIcon } from '../icons';
+import { useWeightUnit } from '../../hooks/useWeightUnit';
 import { useRestStore } from '../../stores/restStore';
-import SetModal from "./SetModal";
+import { useCreateSet, useDeleteSet } from '../../hooks/mutations/useSetsMutations';
+import { getCachedProfile } from '../../storage/profile-storage';
+import { getLastSetForExercise } from '../../lib/local/setsHelpers';
+import SetModal from './SetModal';
 
-const SuperSetExpander = ({ exercise, onSaveDone }) => {
-  const { unit } = useWeightUnit();
-  const { addSet, removeSet, getLastSetForExercise } = useSetsStore();
-  const [cards, setCards] = useState([]);
+const SuperSetExpander = ({ exercise, onSaveDone, rest_time }) => {
+  const { unit, convertToKg } = useWeightUnit();
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
+  const restSeconds = Number(rest_time) || Number(profile.rest_time) || 60;
+
+  const [cards, setCards] = useState([{ id: Date.now(), reps: 0, weight: 0, completed: false }]);
   const [editingCard, setEditingCard] = useState(null);
-  
-  const trackingType = exercise?.tracking_type || 'weight_reps';
-  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
-  const showReps = trackingType === 'weight_reps';
-  const showTime = trackingType === 'time' || trackingType === 'weight_time';
-  
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
-  const { startRest, deleteRest } = useRestStore();
-  const restTime = user?.rest_time ?? 60;
-  
-  useEffect(() => {
-    const lastSet = getLastSetForExercise(exercise.id);
-    if (lastSet) {
-      setCards([{
-        id: Date.now(),
-        reps: lastSet.rep || 0,
-        weight: unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2)),
-        duration: lastSet.duration || 0,
-        completed: false
-      }]);
-    } else {
-      setCards([{ id: Date.now(), reps: 0, weight: 0, duration: 0, completed: false }]);
-    }
-  }, [exercise, unit, getLastSetForExercise]);
+  const [isWorking, setIsWorking] = useState(false);
 
-  const handleCompleteCard = (card) => {
-    if (!card.completed) {
-      // Completing the set
-      const newSavedSetId = crypto.randomUUID();
-      setCards(prev => prev.map(c => c.id === card.id ? { ...c, completed: true, savedSetId: newSavedSetId } : c));
-      
-      const cardWeightKg = unit === 'kg' ? Number(card.weight) : Number((Number(card.weight) / 2.20462).toFixed(2));
-      addSet({
-        id: newSavedSetId,
-        profile_id: profile_id || 'mock_profile',
-        exercise_id: exercise.id,
-        rep: showReps ? Number(card.reps || 0) : 0,
-        weight: showWeight ? Number(cardWeightKg.toFixed(2)) : 0,
-        duration: showTime ? Number(card.duration || 0) : 0
-      });
-      
-      startRest(restTime);
-    } else {
-      // Undoing the completion
-      if (card.savedSetId) {
-        removeSet(card.savedSetId);
-        deleteRest();
+  const { startRest, deleteRest } = useRestStore();
+  const { mutateAsync: createSet } = useCreateSet(profile_id);
+  const { mutateAsync: deleteSet } = useDeleteSet();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLast = async () => {
+      if (!exercise?.id) return;
+      const lastSet = await getLastSetForExercise(exercise.id, profile_id);
+      if (cancelled) return;
+
+      if (lastSet) {
+        setCards([
+          {
+            id: Date.now(),
+            reps: lastSet.rep || 0,
+            weight:
+              unit === 'kg'
+                ? lastSet.weight
+                : Number((lastSet.weight * 2.20462).toFixed(2)),
+            completed: false,
+          },
+        ]);
+      } else {
+        setCards([{ id: Date.now(), reps: 0, weight: 0, completed: false }]);
       }
-      setCards(prev => prev.map(c => c.id === card.id ? { ...c, completed: false, savedSetId: null } : c));
+    };
+
+    loadLast();
+    return () => {
+      cancelled = true;
+    };
+  }, [exercise?.id, profile_id, unit]);
+
+  const handleCompleteCard = async (card) => {
+    if (isWorking || !profile_id) return;
+    setIsWorking(true);
+
+    try {
+      if (!card.completed) {
+        const weightKg = convertToKg(card.weight);
+        const repsValue = Number(card.reps || 0);
+        const createdAt = new Date().toISOString();
+
+        const ids = await createSet({
+          profile_id,
+          exercise_id: exercise.id,
+          rep: repsValue,
+          weight: Number(weightKg.toFixed(2)),
+          created_at: createdAt,
+        });
+        const savedSetId = Array.isArray(ids) ? ids[0] : ids;
+
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === card.id ? { ...c, completed: true, savedSetId } : c,
+          ),
+        );
+
+        startRest({
+          seconds: restSeconds,
+          lastSet: {
+            exerciseName: exercise.name,
+            weightKg: Number(weightKg.toFixed(2)),
+            reps: repsValue,
+          },
+        });
+      } else {
+        if (card.savedSetId) {
+          await deleteSet(card.savedSetId);
+          deleteRest();
+        }
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === card.id
+              ? { ...c, completed: false, savedSetId: null }
+              : c,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error('Error al completar serie:', error);
+    } finally {
+      setIsWorking(false);
     }
   };
 
   return (
-    <div className="w-full bg-[#1A1616] rounded-xl mt-2 p-4 flex flex-col gap-3 animate-fade-in origin-top border border-[#2A2424]">
-      
-      {/* Cards List */}
+    <div className="w-full bg-[#1A1616] h-fit rounded-xl  p-4 flex flex-col gap-3 animate-fade-in origin-top border border-[#2A2424]">
       <div className="flex flex-col gap-2">
         {cards.map((card, idx) => (
-          <div 
-            key={card.id} 
-            className={`rounded-xl p-3 flex items-center gap-3 transition-colors ${card.completed ? 'bg-green-900/30 border border-green-500/50' : 'bg-[#2A2424] border border-transparent'}`}
+          <div
+            key={card.id}
+            className={`rounded-xl p-3 flex items-center gap-3 transition-colors ${
+              card.completed
+                ? 'bg-green-900/30 border border-green-500/50'
+                : 'bg-[#2A2424] border border-transparent'
+            }`}
           >
-            <button 
+            <button
               onClick={() => handleCompleteCard(card)}
-              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${card.completed ? 'bg-green-500 border-green-500' : 'border-zinc-500 hover:border-karga-orange'}`}
+              disabled={isWorking}
+              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                card.completed
+                  ? 'bg-green-500 border-green-500'
+                  : 'border-zinc-500 hover:border-karga-orange'
+              }`}
             >
               {card.completed && <FiCheck className="w-4 h-4 text-white" />}
             </button>
-            
+
             <div className="flex-1 flex items-center">
-              <span className={`text-sm font-bold ${card.completed ? 'text-green-500' : 'text-white'}`}>
-                {idx + 1}° serie: 
-                {showReps && ` ${card.reps} reps `}
-                {showTime && ` ${Math.floor(card.duration / 60).toString().padStart(2, '0')}:${(card.duration % 60).toString().padStart(2, '0')} min `}
-                {showWeight && ` · ${card.weight} ${unit}`}
+              <span
+                className={`text-sm font-bold ${
+                  card.completed ? 'text-green-500' : 'text-white'
+                }`}
+              >
+                {idx + 1}° serie: {card.reps} reps · {card.weight} {unit}
               </span>
             </div>
-            
-            <div className={`flex items-center gap-2 transition-opacity ${card.completed ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              <button 
+
+            <div
+              className={`flex items-center gap-2 transition-opacity ${
+                card.completed ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <button
                 onClick={() => setEditingCard(card)}
                 className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-karga-orange hover:bg-white/10 shrink-0"
               >
                 <FiEdit2 className="w-4 h-4" />
               </button>
               {cards.length > 1 && (
-                <button 
-                  onClick={() => setCards(prev => prev.filter(c => c.id !== card.id))}
+                <button
+                  onClick={() =>
+                    setCards((prev) => prev.filter((c) => c.id !== card.id))
+                  }
                   className="w-8 h-8 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 shrink-0"
                 >
                   <FiMinus className="w-4 h-4" />
@@ -112,10 +167,19 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
       </div>
 
       <div className="flex flex-col gap-2 mt-2">
-        <button 
+        <button
           onClick={() => {
-            const lastCard = cards.length > 0 ? cards[cards.length - 1] : { reps: 0, weight: 0, duration: 0 };
-            setCards(prev => [...prev, { id: Date.now(), reps: lastCard.reps, weight: lastCard.weight, duration: lastCard.duration, completed: false }]);
+            const lastCard =
+              cards.length > 0 ? cards[cards.length - 1] : { reps: 0, weight: 0 };
+            setCards((prev) => [
+              ...prev,
+              {
+                id: Date.now(),
+                reps: lastCard.reps,
+                weight: lastCard.weight,
+                completed: false,
+              },
+            ]);
           }}
           className="w-full py-3 rounded-xl border border-white/10 flex items-center justify-center gap-2 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors font-bold text-sm"
         >
@@ -124,21 +188,32 @@ const SuperSetExpander = ({ exercise, onSaveDone }) => {
         </button>
       </div>
 
-      {editingCard && (
-        <SetModal
-          exercise={{...exercise}}
-          onClose={() => setEditingCard(null)}
-          onSaveOverride={(data) => {
-            setCards(prev => prev.map(c => 
-              c.id === editingCard.id 
-                ? { ...c, reps: data.rep, weight: unit === 'kg' ? data.weight : Number((data.weight * 2.20462).toFixed(2)), duration: data.duration } 
-                : c
-            ));
-            setEditingCard(null);
-          }}
-        />
-      )}
+        {editingCard && (
+          <SetModal
+            exercise={{ ...exercise }}
+            rest_time={restSeconds}
+            onClose={() => setEditingCard(null)}
+            onSaveOverride={(data) => {
+              setCards((prev) =>
+                prev.map((c) =>
+                  c.id === editingCard.id
+                    ? {
+                        ...c,
+                        reps: data.rep,
+                        weight:
+                          unit === 'kg'
+                            ? data.weight
+                            : Number((data.weight * 2.20462).toFixed(2)),
+                      }
+                    : c,
+                ),
+              );
+              setEditingCard(null);
+            }}
+          />
+        )}
     </div>
   );
 };
+
 export default SuperSetExpander;

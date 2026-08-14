@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useAuth } from "../../hooks/queries/useAuth";
 import {
   useExercises,
   useFavoriteExercises,
@@ -23,6 +22,30 @@ import { useWeightUnit } from "../../hooks/useWeightUnit";
 import SuperSetExpander from "./SuperSetExpander";
 import { InlineExerciseExpander } from "./routine-modal/InlineExerciseExpander";
 import { WalkthroughTooltip } from "./routine-modal/WalkthroughTooltip";
+import SuperSetExpander from "./SuperSetExpander";
+import InlineExerciseExpander from "./InlineExerciseExpander";
+import ExerciseListSelector from "./ExerciseListSelector";
+import { useSessionStore } from "../../stores/sessionStore";
+import { FiPlay } from "react-icons/fi";
+import { TbChecklist } from "react-icons/tb";
+import { getCachedProfile } from "../../storage/profile-storage";
+
+const ThreeDotsIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+    />
+  </svg>
+);
 
 export default function RoutineModal({
   routine,
@@ -30,51 +53,10 @@ export default function RoutineModal({
   onAddExercises,
   onDeleteRoutine,
 }) {
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
+  const rest_time = profile.rest_time ?? 60;
   const { start: startSession, isStarted } = useSessionStore();
-  const [expandedExerciseId, setExpandedExerciseId] = useState(null);
-  const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
-  const [showWalkthrough, setShowWalkthrough] = useState(null);
-
-  useEffect(() => {
-    if (profile_id && routine) {
-      const exerciseCount = routine.routines_exercises?.length || 0;
-      
-      if (exerciseCount === 0) {
-        if (!localStorage.getItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`)) {
-          setShowWalkthrough('empty');
-        }
-      } else if (exerciseCount > 0 && !isStarted) {
-        if (!localStorage.getItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`)) {
-          setShowWalkthrough('ready');
-        }
-      } else if (exerciseCount > 0 && isStarted) {
-        if (!localStorage.getItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`)) {
-          setShowWalkthrough('active_step1');
-        }
-      }
-    }
-  }, [profile_id, routine, isStarted]);
-
-  const handleNextWalkthrough = () => {
-    if (showWalkthrough === 'active_step1') {
-      setShowWalkthrough('active_step2');
-    } else {
-      handleCloseWalkthrough();
-    }
-  };
-
-  const handleCloseWalkthrough = () => {
-    if (showWalkthrough === 'empty') {
-      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
-    } else if (showWalkthrough === 'ready') {
-      localStorage.setItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`, 'true');
-    } else if (showWalkthrough === 'active_step1' || showWalkthrough === 'active_step2') {
-      localStorage.setItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`, 'true');
-    }
-    setShowWalkthrough(null);
-  };
 
   const {
     data: popularExercises,
@@ -124,6 +106,11 @@ export default function RoutineModal({
     setIsCustomExerciseModalOpen(true);
   };
 
+  const [selectedExerciseToLog, setSelectedExerciseToLog] = useState(null);
+  const [isSetModalOpen, setIsSetModalOpen] = useState(false);
+  const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
+  const [expandedExerciseId, setExpandedExerciseId] = useState(null);
+
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] =
     useState(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -133,6 +120,7 @@ export default function RoutineModal({
     [],
   );
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showActiveSessionModal, setShowActiveSessionModal] = useState(false);
   const [showDeleteRoutineConfirmDialog, setShowDeleteRoutineConfirmDialog] =
     useState(false);
   const [isEditingDetails, setIsEditingDetails] = useState(false);
@@ -164,6 +152,14 @@ export default function RoutineModal({
         ? prev.filter((id) => id !== exerciseId)
         : [...prev, exerciseId],
     );
+  };
+
+  const handleStartWorkout = () => {
+    if (isStarted) {
+      setShowActiveSessionModal(true);
+      return;
+    }
+    startSession();
   };
 
   const handleDeleteSelected = async () => {
@@ -254,6 +250,7 @@ export default function RoutineModal({
     } else {
       setSelectedExerciseForHistory(exercise);
       setIsHistoryModalOpen(true);
+      
     }
   };
 
@@ -394,6 +391,22 @@ export default function RoutineModal({
                       />
                     )}
                   </div>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleStartWorkout}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-2xl font-black text-[16px] shadow-lg shadow-karga-orange/20 transition-transform active:scale-[0.98]"
+                  >
+                    <FiPlay className="w-5 h-5 ml-1" />
+                    Empezar entrenamiento
+                  </button>
+
+                  <button
+                    onClick={() => setIsAddingExercises(true)}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
+                  >
+                    <PlusIcon className="w-5 h-5 text-zinc-400" />
+                    Agregar ejercicios
+                  </button>
                 </div>
               )}
 
@@ -405,7 +418,11 @@ export default function RoutineModal({
                 {(() => {
                   const exercisesToRender =
                     routine.routines_exercises
-                      ?.map((re) => re.exercises)
+                      ?.map((re) =>
+                        re.exercises
+                          ? { ...re.exercises, rest_time: re.rest_time }
+                          : null,
+                      )
                       .filter(Boolean) || [];
 
                   if (exercisesToRender.length === 0) {
@@ -446,6 +463,24 @@ export default function RoutineModal({
                                     }`}
                                   >
                                     {selectedExercisesForDelete.includes(
+                          <div
+                            onClick={() => {
+                              if (isEditMode)
+                                toggleDeleteSelection(exercise.id);
+                              else handleExerciseClick(exercise);
+                            }}
+                            className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
+                              isEditMode &&
+                              selectedExercisesForDelete.includes(exercise.id)
+                                ? "bg-red-500/10 border border-red-500/50"
+                                : "bg-input-bg border border-transparent hover:bg-white/5"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              {isEditMode && (
+                                <div
+                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                                    selectedExercisesForDelete.includes(
                                       exercise.id,
                                     ) && (
                                       <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />
@@ -527,8 +562,57 @@ export default function RoutineModal({
                                 exercise={exercise} 
                                 onSaveDone={() => setActiveSuperSetExerciseId(null)} 
                               />
+
+                            {!isEditMode && (
+                              <div className="flex items-center gap-2">
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsSetModalOpen(false);
+                                    setSelectedExerciseToLog(null);
+                                    setExpandedExerciseId(null);
+                                    setActiveSuperSetExerciseId((prev) =>
+                                      prev === exercise.id ? null : exercise.id,
+                                    );
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                >
+                                  <TbChecklist className="w-5 h-5 text-white" />
+                                </div>
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsSetModalOpen(false);
+                                    setSelectedExerciseToLog(null);
+                                    setActiveSuperSetExerciseId(null);
+                                    setExpandedExerciseId((prev) =>
+                                      prev === exercise.id ? null : exercise.id,
+                                    );
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                >
+                                  <PlusIcon className="w-5 h-5 text-white" />
+                                </div>
+                              </div>
                             )}
                           </div>
+
+                          {expandedExerciseId === exercise.id && !isEditMode && (
+                            <InlineExerciseExpander
+                              exercise={exercise}
+                              rest_time={exercise.rest_time ?? rest_time}
+                              onSaveDone={() => setExpandedExerciseId(null)}
+                            />
+                          )}
+
+                          {activeSuperSetExerciseId === exercise.id && !isEditMode && (
+                            <SuperSetExpander
+                              exercise={exercise}
+                              rest_time={exercise.rest_time ?? rest_time}
+                              onSaveDone={() => setActiveSuperSetExerciseId(null)}
+                            />
+                          )}
+                        </div>
                         );
                       })}
                     </div>
@@ -595,12 +679,29 @@ export default function RoutineModal({
         />
       )}
 
+      {/* SET MODAL (BOTTOM SHEET) */}
+      {isSetModalOpen && selectedExerciseToLog && (
+        <SetModal
+          exercise={selectedExerciseToLog}
+          rest_time={rest_time}
+          onClose={() => setIsSetModalOpen(false)}
+        />
+      )} 
+
       {/* CUSTOM EXERCISE MODAL */}
       {isCustomExerciseModalOpen && (
         <CustomExerciseModal
           onClose={() => setIsCustomExerciseModalOpen(false)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={showActiveSessionModal}
+        title="Sesión activa"
+        description="Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva."
+        confirmText="Cerrar"
+        onClose={() => setShowActiveSessionModal(false)}
+      />
 
       {/* ConfirmModal para borrar ejercicios */}
       <ConfirmModal

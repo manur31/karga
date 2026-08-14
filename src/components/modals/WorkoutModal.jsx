@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { useAuth } from "../../hooks/queries/useAuth";
+import { getCachedProfile } from '../../storage/profile-storage';
 import {
   useExercises,
   useFavoriteExercises,
 } from "../../hooks/queries/useExercises";
-import { ArrowLeft, PlusIcon, CheckIcon } from "../icons";
+import { ArrowLeft, PlusIcon } from "../icons";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ExerciseListSelector from "./ExerciseListSelector";
 
 export default function WorkoutModal({ onClose, onSave }) {
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
 
   const {
     data: popularExercises,
@@ -139,15 +139,25 @@ export default function WorkoutModal({ onClose, onSave }) {
             />
           </div>
 
-          {/* LISTA DE EJERCICIOS (REFACTORIZADA) */}
-          <ExerciseListSelector 
-            exercises={exercises}
-            selectedExercises={selectedExercises}
-            routineExercises={[]}
-            isLoading={isLoading}
-            isError={isError}
-            onToggleExercise={handleToggleExercise}
-          />
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-end mb-1 pl-1">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                Ejercicios disponibles
+              </label>
+              <span className="text-xs text-karga-orange font-bold">
+                {selectedExercises.length} agregados
+              </span>
+            </div>
+
+            <ExerciseListSelector
+              exercises={exercises}
+              selectedExercises={selectedExercises}
+              routineExercises={[]}
+              isLoading={isLoading}
+              isError={isError}
+              onToggleExercise={handleToggleExercise}
+            />
+          </div>
         </div>
 
         {/* BOTÓN CREAR EJERCICIO */}

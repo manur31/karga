@@ -1,167 +1,56 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-const normalizeSession = (session) => {
-  const sessionId = session.session_id || null;
-
-  const startedAt =
-    session.startedAt || session.time_init || session.created_at || Date.now();
-
-  const finishedAt = session.finishedAt || session.time_end || null;
-
-  return {
-    ...session,
-
-    id: session.id || sessionId || crypto.randomUUID(),
-
-    session_id: sessionId,
-
-    startedAt,
-    finishedAt,
-
-    time_init: session.time_init || startedAt,
-    time_end: session.time_end || finishedAt,
-
-    synced: sessionId ? true : Boolean(session.synced),
-
-    createdAt:
-      session.createdAt || session.created_at || new Date().toISOString(),
-  };
-};
-
-const isSameSession = (a, b) => {
-  if (a.session_id && b.session_id) {
-    return a.session_id === b.session_id;
-  }
-
-  return a.id === b.id;
-};
-
+/**
+ * Ephemeral session state only:
+ * - active timer (start/pause/finish timestamps)
+ * - note while session is running
+ * - IDs of sets recorded during the current session (for discard)
+ *
+ * Persisted sessions live in Dexie, not here.
+ */
 export const useSessionStore = create(
   persist(
     (set, get) => ({
-      sessions: [],
-      isLoading: false,
-
       startedAt: null,
       pausedAt: null,
       totalPausedMs: 0,
       isStarted: false,
       isPaused: false,
       finishedAt: null,
-      note: "",
+      note: '',
+      sessionSetIds: [],
+      isLoading: false,
 
       setNote: (note) => set({ note }),
 
-      addSyncedSessions: (sessions = []) => {
-        if (!sessions) return;
-
-        set({ isLoading: true });
-
-        const syncedSessions = sessions.map((session) =>
-          normalizeSession({
-            ...session,
-            synced: true,
-          }),
-        );
-
-        set((state) => {
-          const pendingLocalSessions = state.sessions
-            .map(normalizeSession)
-            .filter((session) => !session.synced && !session.session_id);
-
-          const mergedSessions = [...pendingLocalSessions];
-
-          syncedSessions.forEach((syncedSession) => {
-            const alreadyExists = mergedSessions.some((session) =>
-              isSameSession(session, syncedSession),
-            );
-
-            if (!alreadyExists) {
-              mergedSessions.push(syncedSession);
-            }
-          });
-
-          return {
-            sessions: mergedSessions,
-            isLoading: false,
-          };
-        });
-      },
-
-      addSession: (newSession) => {
-        set({ isLoading: true });
-
+      addSessionSetId: (id) =>
         set((state) => ({
-          sessions: [
-            ...state.sessions,
-            normalizeSession({
-              ...newSession,
-              id: crypto.randomUUID(),
-              synced: false,
-              createdAt: new Date().toISOString(),
-            }),
-          ],
-        }));
+          sessionSetIds: state.sessionSetIds.includes(id)
+            ? state.sessionSetIds
+            : [...state.sessionSetIds, id],
+        })),
 
-        set({ isLoading: false });
-      },
+      clearSessionSetIds: () => set({ sessionSetIds: [] }),
 
-      replaceLocalSession: (localId, supabaseSession) => {
-        set((state) => ({
-          sessions: state.sessions.map((session) => {
-            if (session.id !== localId) return session;
-
-            return normalizeSession({
-              ...session,
-              ...supabaseSession,
-              id: session.id,
-              session_id: supabaseSession.session_id,
-              synced: true,
-            });
-          }),
-        }));
-      },
-
-      deleteLocalSession: (sessionId) => {
-        set((state) => ({
-          sessions: state.sessions.filter(
-            (session) =>
-              session.id !== sessionId && session.session_id !== sessionId,
-          ),
-        }));
-      },
-
-      markAsSynced: (sessionId) => {
-        set((state) => ({
-          sessions: state.sessions.map((session) =>
-            session.id === sessionId || session.session_id === sessionId
-              ? { ...session, synced: true }
-              : session,
-          ),
-        }));
-      },
-
-      removeSession: (sessionId) => {
-        set((state) => ({
-          sessions: state.sessions.filter((session) => session.id !== sessionId && session.session_id !== sessionId && session.sessionId !== sessionId)
-        }));
-      },
-
-      getPendingSessions: () =>
-        get().sessions.filter((session) => !session.synced),
-
-      start: () => {
+      start: (options = {}) => {
         if (get().isStarted) return;
 
+        const startedAt =
+          typeof options.startedAt === 'number' ? options.startedAt : Date.now();
+        const sessionSetIds = Array.isArray(options.sessionSetIds)
+          ? options.sessionSetIds
+          : [];
+
         set({
-          startedAt: Date.now(),
+          startedAt,
           pausedAt: null,
           totalPausedMs: 0,
           isStarted: true,
           isPaused: false,
           finishedAt: null,
-          note: "",
+          note: '',
+          sessionSetIds,
         });
       },
 
@@ -190,29 +79,8 @@ export const useSessionStore = create(
         });
       },
 
-      finish: (profile_id) => {
-        const state = get();
-        const now = Date.now();
-
-        get().addSession({
-          startedAt: state.startedAt,
-          finishedAt: now,
-          profile_id,
-          note: state.note,
-        });
-
-        set({
-          startedAt: null,
-          pausedAt: null,
-          totalPausedMs: 0,
-          isStarted: false,
-          isPaused: false,
-          finishedAt: now,
-          note: "",
-        });
-      },
-
-      discard: () => {
+      /** Reset timer UI state after finish/discard (persistence is handled by mutations) */
+      resetTimer: () =>
         set({
           startedAt: null,
           pausedAt: null,
@@ -220,37 +88,36 @@ export const useSessionStore = create(
           isStarted: false,
           isPaused: false,
           finishedAt: null,
-          note: "",
-        });
+          note: '',
+          sessionSetIds: [],
+        }),
+
+      /** @deprecated Use useFinishSession mutation — kept as timer reset alias */
+      finish: () => {
+        get().resetTimer();
+      },
+
+      /** @deprecated Use useDiscardSession mutation — kept as timer reset alias */
+      discard: () => {
+        get().resetTimer();
       },
 
       clearSession: () => {
-        set({
-          startedAt: null,
-          pausedAt: null,
-          totalPausedMs: 0,
-          isStarted: false,
-          isPaused: false,
-          finishedAt: null,
-          sessions: [],
-          note: "",
-        });
+        get().resetTimer();
       },
     }),
     {
-      name: "session-store",
+      name: 'session-store',
       version: 2,
-
-      migrate: (persistedState, version) => {
-        if (version === 0) {
-          const raw = localStorage.getItem("sesion-store");
-
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            localStorage.removeItem("sesion-store");
-
-            return { ...persistedState, ...parsed.state };
-          }
+      migrate: (persistedState) => {
+        // Drop legacy persisted sessions array
+        if (persistedState && 'sessions' in persistedState) {
+          const rest = { ...persistedState };
+          delete rest.sessions;
+          return {
+            ...rest,
+            sessionSetIds: rest.sessionSetIds || [],
+          };
         }
 
         if (version < 2) {
@@ -264,7 +131,6 @@ export const useSessionStore = create(
       },
 
       partialize: (state) => ({
-        sessions: state.sessions,
         startedAt: state.startedAt,
         pausedAt: state.pausedAt,
         totalPausedMs: state.totalPausedMs,
@@ -272,6 +138,7 @@ export const useSessionStore = create(
         isPaused: state.isPaused,
         finishedAt: state.finishedAt,
         note: state.note,
+        sessionSetIds: state.sessionSetIds,
       }),
     },
   ),
