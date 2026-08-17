@@ -171,6 +171,7 @@ export const useUpdateSessionWithSets = (profile_id) => {
         const payload = {
           weight: Number(set.weight ?? 0),
           rep: Number(set.rep ?? set.reps ?? 0),
+          duration: Number(set.duration ?? 0),
           createdAt: toIso(set.created_at || set.createdAt) || new Date().toISOString(),
           exerciseId: set.exercise_id || set.exerciseId,
           profileId: set.profile_id || set.profileId || pid,
@@ -182,6 +183,7 @@ export const useUpdateSessionWithSets = (profile_id) => {
             await setsRepository.update(setId, {
               weight: payload.weight,
               rep: payload.rep,
+              duration: payload.duration,
               createdAt: payload.createdAt,
               exerciseId: payload.exerciseId || existing.exerciseId,
             });
@@ -194,6 +196,7 @@ export const useUpdateSessionWithSets = (profile_id) => {
           exerciseId: payload.exerciseId,
           weight: payload.weight,
           rep: payload.rep,
+          duration: payload.duration,
           createdAt: payload.createdAt,
         };
         if (setId) addPayload.id = setId;
@@ -203,31 +206,6 @@ export const useUpdateSessionWithSets = (profile_id) => {
       if (navigator.onLine) {
         await runSyncNow();
       }
-    },
-  });
-};
-export const useUpdateSessionWithSets = (profile_id) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data) =>
-      updateSessionWithSets({
-        ...data,
-        profile_id,
-      }),
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["sessions", profile_id],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["sets", profile_id],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["weekActivity", profile_id],
-      });
     },
   });
 };

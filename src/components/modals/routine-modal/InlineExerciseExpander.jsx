@@ -1,25 +1,28 @@
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "../../../hooks/queries/useAuth";
 import { useRestStore } from "../../../stores/restStore";
-import { useSetsStore } from "../../../stores/setsStore";
+import { useCreateSet } from "../../../hooks/mutations/useSetsMutations";
+import { getLastSetForExercise } from "../../../lib/local/setsHelpers";
+import { getCachedProfile } from "../../../storage/profile-storage";
 import { useWeightUnit } from "../../../hooks/useWeightUnit";
 import { PlusIcon } from "../../icons";
 import { FiMinus, FiSquare } from "react-icons/fi";
 import { VscRecord } from "react-icons/vsc";
 
-export const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
-  const { data: user } = useAuth();
+export const InlineExerciseExpander = ({ exercise, onSaveDone, rest_time }) => {
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
+  const restSeconds = Number(rest_time) || Number(profile.rest_time) || 60;
   const { startRest } = useRestStore();
-  const restTime = user?.rest_time ?? 60;
+  const { mutateAsync: createSet } = useCreateSet(profile_id);
   
   const { unit, toggleUnit, convertToKg } = useWeightUnit();
-  const { addSet, getLastSetForExercise } = useSetsStore();
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [duration, setDuration] = useState(0);
   const [cards, setCards] = useState([
     { id: Date.now(), reps, weight, duration }
   ]);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [activeTimerId, setActiveTimerId] = useState(null);
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -49,21 +52,36 @@ export const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  const trackingType = exercise.tracking_type || 'weight_reps';
+  const trackingType = exercise?.tracking_type || exercise?.trackingType || 'weight_reps';
   const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
   const showReps = trackingType === 'weight_reps';
   const showTime = trackingType === 'time' || trackingType === 'weight_time';
 
   useEffect(() => {
-    const lastSet = getLastSetForExercise(exercise.id);
-    if (lastSet) {
-      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(1));
+    let cancelled = false;
+
+    const loadLast = async () => {
+      if (!exercise?.id) return;
+      const lastSet = await getLastSetForExercise(exercise.id, profile_id);
+      if (cancelled || !lastSet) return;
+
+      const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
       setReps(lastSet.rep || 0);
       setWeight(displayWeight || 0);
       setDuration(lastSet.duration || 0);
-      setCards(prev => prev.map(c => ({ ...c, reps: lastSet.rep || 0, weight: displayWeight || 0, duration: lastSet.duration || 0 })));
-    }
-  }, [exercise, unit, getLastSetForExercise]);
+      setCards(prev => prev.map(c => ({
+        ...c,
+        reps: lastSet.rep || 0,
+        weight: displayWeight || 0,
+        duration: lastSet.duration || 0,
+      })));
+    };
+
+    loadLast();
+    return () => {
+      cancelled = true;
+    };
+  }, [exercise?.id, profile_id, unit]);
 
   useEffect(() => {
     setCards(prev => prev.map(c => ({ ...c, reps, weight, duration })));
@@ -71,35 +89,64 @@ export const InlineExerciseExpander = ({ exercise, onSaveDone }) => {
 
   const handleToggleUnit = () => {
     if (unit === 'kg') {
-      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(1)));
-      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) * 2.20462).toFixed(1)) })));
+      setWeight(prev => Number((Number(prev) * 2.20462).toFixed(2)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) * 2.20462).toFixed(2)) })));
     } else {
-      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(1)));
-      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) / 2.20462).toFixed(1)) })));
+      setWeight(prev => Number((Number(prev) / 2.20462).toFixed(2)));
+      setCards(prev => prev.map(c => ({ ...c, weight: Number((Number(c.weight) / 2.20462).toFixed(2)) })));
     }
     toggleUnit();
   };
 
-  const handleSave = () => {
-    if (cards.length === 0) return;
+  const handleSave = async () => {
+    if (cards.length === 0 || !profile_id || isSaving) return;
+    setIsSaving(true);
+
+    try {
+      const runningTimerId = activeTimerId;
+      const runningSeconds = timerSeconds;
+      if (runningTimerId) {
+        handleStopTimer();
+      }
+
+      let lastWeightKg = 0;
+      let lastReps = 0;
+
+      for (const card of cards) {
+        const cardDuration = runningTimerId === card.id || runningTimerId === 'global'
+          ? runningSeconds
+          : Number(card.duration || 0);
+        const weightKg = convertToKg(card.weight);
+        lastWeightKg = Number(weightKg.toFixed(2));
+        lastReps = Number(card.reps || 0);
+
+        await createSet({
+          profile_id,
+          exercise_id: exercise.id,
+          rep: showReps ? lastReps : 0,
+          weight: showWeight ? lastWeightKg : 0,
+          duration: showTime ? cardDuration : 0,
+        });
+      }
     
-    for (const card of cards) {
-      const cardWeightKg = unit === 'kg' ? Number(card.weight) : Number((Number(card.weight) / 2.20462).toFixed(1));
-      addSet({
-        profile_id: 'mock_profile',
-        exercise_id: exercise.id,
-        rep: showReps ? Number(card.reps || 0) : 0,
-        weight: showWeight ? Number(cardWeightKg.toFixed(1)) : 0,
-        duration: showTime ? Number(card.duration || 0) : 0,
-      });
+      // Only trigger rest timer if exactly 1 set is being saved
+      if (cards.length === 1) {
+        startRest({
+          seconds: restSeconds,
+          lastSet: {
+            exerciseName: exercise.name,
+            weightKg: lastWeightKg,
+            reps: lastReps,
+          },
+        });
+      }
+    
+      onSaveDone?.();
+    } catch (error) {
+      console.error('Error al grabar series inline:', error);
+    } finally {
+      setIsSaving(false);
     }
-    
-    // Only trigger rest timer if exactly 1 set is being saved
-    if (cards.length === 1) {
-      startRest(restTime);
-    }
-    
-    onSaveDone();
   };
 
   return (

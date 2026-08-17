@@ -11,6 +11,13 @@ import {
 import { getCachedProfile } from '../../storage/profile-storage';
 import { EditSessions } from './EditSessions';
 
+function formatSetDuration(seconds) {
+  const s = Number(seconds || 0);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+}
+
 export default function SessionDetailModal({ session, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -37,15 +44,6 @@ export default function SessionDetailModal({ session, onClose }) {
       setIsClosing(false);
     }, 200);
   };
-  const handleEditSessions = (data) => {
-    updateSessionWithSetsMutate({
-      session_id: sessionId,
-      startedAt: data.startedAt,
-      finishedAt: data.finishedAt,
-      note: data.note,
-      sets: data.sets,
-      deletedSetIds: data.deletedSetIds,
-    });
 
   const handleEditSessions = async (data) => {
     await updateSessionWithSetsMutate({
@@ -67,9 +65,6 @@ export default function SessionDetailModal({ session, onClose }) {
       console.error('Error al eliminar sesión:', error);
     }
   };
-  const sessionSets =
-    sets?.filter((set) => {
-      if (!set.created_at || !sessionStart) return false;
 
   const sessionSets =
     sets?.filter((set) => {
@@ -83,15 +78,15 @@ export default function SessionDetailModal({ session, onClose }) {
     }) || [];
 
   const calculateDuration = (init, end) => {
-    if (!end) return "En curso";
+    if (!end) return 'En curso';
     const startDate = new Date(init);
     const endDate = new Date(end);
     const diffInSeconds = Math.floor((endDate - startDate) / 1000);
-    if (diffInSeconds < 0) return "00:00:00";
+    if (diffInSeconds < 0) return '00:00:00';
     const h = Math.floor(diffInSeconds / 3600);
     const m = Math.floor((diffInSeconds % 3600) / 60);
     const s = diffInSeconds % 60;
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
   const rawDate = new Date(session.startedAt).toLocaleDateString('es-ES', {
@@ -224,24 +219,38 @@ export default function SessionDetailModal({ session, onClose }) {
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-right">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-zinc-500 uppercase tracking-wider">
-                          Peso
-                        </span>
-                        <span className="text-white font-medium">
-                          {displayWeight(set.weight)}
-                          {unit}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-zinc-500 uppercase tracking-wider">
-                          Reps
-                        </span>
-                        <span className="text-white font-medium">{set.rep}</span>
-                      </div>
+                      {(set.weight ?? 0) > 0 && (
+                        <div className="flex flex-col">
+                          <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                            Peso
+                          </span>
+                          <span className="text-white font-medium">
+                            {displayWeight(set.weight)}
+                            {unit}
+                          </span>
+                        </div>
+                      )}
+                      {(set.rep ?? 0) > 0 && (
+                        <div className="flex flex-col">
+                          <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                            Reps
+                          </span>
+                          <span className="text-white font-medium">{set.rep}</span>
+                        </div>
+                      )}
+                      {(set.duration ?? 0) > 0 && (
+                        <div className="flex flex-col">
+                          <span className="text-xs text-zinc-500 uppercase tracking-wider">
+                            Tiempo
+                          </span>
+                          <span className="text-white font-medium">
+                            {formatSetDuration(set.duration)}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>

@@ -167,7 +167,7 @@ export function groupSetsByExercise(dayActivity, exercises = []) {
       grouped[key] = {
         exercise_id: key,
         exerciseName: exercise.name || key,
-        tracking_type: exercise.tracking_type || 'weight_reps',
+        tracking_type: exercise.tracking_type || exercise.trackingType || 'weight_reps',
         sets: [],
         sessionTime: sessionTimeMap[s.sessionId ?? s.session_id] ?? null,
       }

@@ -19,8 +19,9 @@ export const useCreateSet = (_profile_id) => {
         const payload = {
           profileId: item.profile_id || item.profileId || fallbackProfileId,
           exerciseId: item.exercise_id || item.exerciseId,
-          weight: item.weight,
+          weight: item.weight ?? 0,
           rep: item.rep ?? item.reps ?? 0,
+          duration: item.duration ?? 0,
           createdAt:
             item.created_at || item.createdAt || new Date().toISOString(),
         };
@@ -53,11 +54,12 @@ export const useDeleteSet = () => {
 
 export const useUpdateSet = () => {
   return useMutation({
-    mutationFn: async ({ set_id, rep, weight }) => {
-      await setsRepository.update(set_id, {
-        rep,
-        weight,
-      });
+    mutationFn: async ({ set_id, rep, weight, duration }) => {
+      const changes = {};
+      if (rep !== undefined) changes.rep = rep;
+      if (weight !== undefined) changes.weight = weight;
+      if (duration !== undefined) changes.duration = duration;
+      await setsRepository.update(set_id, changes);
     },
   });
 };

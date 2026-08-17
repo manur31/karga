@@ -5,6 +5,7 @@ export function setToSupabase(set) {
     profile_id: set.profileId,
     weight: set.weight,
     rep: set.rep,
+    duration: set.duration ?? 0,
     created_at: set.createdAt,
   };
 }
@@ -16,6 +17,7 @@ export function setFromSupabase(row) {
     profileId: row.profile_id,
     weight: row.weight,
     rep: row.rep,
+    duration: row.duration ?? 0,
     createdAt: row.created_at,
     updatedAt: row.created_at,
   };

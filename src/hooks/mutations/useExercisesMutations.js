@@ -20,6 +20,8 @@ export const useCreateExercise = (profile_id) => {
           description: data.description ?? null,
           image: data.image ?? null,
           isPopulary: false,
+          trackingType:
+            data.tracking_type || data.trackingType || 'weight_reps',
           createdAt: now,
         });
       } finally {
@@ -121,19 +123,21 @@ export const useDeleteExercise = (profile_id) => {
 
 export const useUpdateExercise = () => {
   return useMutation({
-    mutationFn: async ({ id, name, muscle }) => {
+    mutationFn: async ({ id, name, muscle, tracking_type, trackingType }) => {
       // Custom exercises live only in Dexie until pushCustomExercises runs
+      const nextTracking = tracking_type || trackingType;
       setSyncWrite(true);
       try {
         await db.exercises.update(id, {
           ...(name !== undefined ? { name } : {}),
           ...(muscle !== undefined ? { muscle } : {}),
+          ...(nextTracking !== undefined ? { trackingType: nextTracking } : {}),
         });
       } finally {
         setSyncWrite(false);
       }
       scheduleSync();
-      return { id, name, muscle };
+      return { id, name, muscle, trackingType: nextTracking };
     },
   });
 };

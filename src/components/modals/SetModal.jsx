@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/queries/useAuth';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
@@ -6,26 +6,15 @@ import { CheckIcon, PlusIcon } from '../icons';
 import { useRestStore } from '../../stores/restStore';
 import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
 import { getLastSetForExercise } from '../../lib/local/setsHelpers';
-import { useEffect } from 'react';
-
-const MinusIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-  </svg>
-);
-
-const XIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
+import { FiMinus, FiX, FiSquare } from 'react-icons/fi';
+import { VscRecord } from 'react-icons/vsc';
 
 export default function SetModal({ exercise, onClose, rest_time, onSaveOverride }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const trackingType = exercise?.tracking_type || 'weight_reps';
+  const trackingType = exercise?.tracking_type || exercise?.trackingType || 'weight_reps';
   const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
   const showReps = trackingType === 'weight_reps';
   const showTime = trackingType === 'time' || trackingType === 'weight_time';
@@ -90,6 +79,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
       const displayWeight = unit === 'kg' ? lastSet.weight : Number((lastSet.weight * 2.20462).toFixed(2));
       setReps(lastSet.rep || 0);
       setWeight(displayWeight || 0);
+      setDuration(lastSet.duration || 0);
     };
 
     loadLast();
@@ -122,6 +112,11 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
     setIsSaving(true);
     const weightInKg = convertToKg(weight);
     const repsValue = Number(reps || 0);
+    const finalDuration = isRecording ? timerSeconds : Number(duration || 0);
+
+    if (isRecording) {
+      handleStopTimer();
+    }
 
     try {
       const setData = {
@@ -129,7 +124,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
         exercise_id: exercise.id,
         rep: showReps ? Number(reps || 0) : 0,
         weight: showWeight ? Number(weightInKg.toFixed(2)) : 0,
-        duration: showTime ? Number(duration || 0) : 0
+        duration: showTime ? finalDuration : 0
       };
 
       if (onSaveOverride) {
@@ -224,7 +219,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
             {showReps && (
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl relative">
               <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Repeticiones</span>
-              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-[32px] px-2 relative">
+              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-8 px-2 relative">
                 <div></div>
                 <div className="flex items-center justify-center gap-4 sm:gap-6">
                   <button 
@@ -269,7 +264,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
                   </span>
                 ) : "Tiempo (MM:SS)"}
               </span>
-              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-[32px] px-2 relative">
+              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-8 px-2 relative">
                 <div></div>
                 <div className="flex items-center justify-center gap-4 sm:gap-6">
                   <button 
@@ -336,7 +331,7 @@ export default function SetModal({ exercise, onClose, rest_time, onSaveOverride 
             {showWeight && (
             <div className="flex flex-col items-center justify-center py-6 px-2 bg-white/5 rounded-3xl relative">
               <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mb-3">Peso ({unit.toUpperCase()})</span>
-              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-[32px] px-2 relative">
+              <div className="grid grid-cols-[1fr_auto_1fr] w-full items-center min-h-8 px-2 relative">
                 <div></div>
                 <div className="flex items-center justify-center gap-4 sm:gap-6">
                   <button 

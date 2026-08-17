@@ -14,13 +14,25 @@ const SuperSetExpander = ({ exercise, onSaveDone, rest_time }) => {
   const profile_id = profile.profile_id;
   const restSeconds = Number(rest_time) || Number(profile.rest_time) || 60;
 
-  const [cards, setCards] = useState([{ id: Date.now(), reps: 0, weight: 0, completed: false }]);
+  const trackingType = exercise?.tracking_type || exercise?.trackingType || 'weight_reps';
+  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
+  const showReps = trackingType === 'weight_reps';
+  const showTime = trackingType === 'time' || trackingType === 'weight_time';
+
+  const [cards, setCards] = useState([{ id: Date.now(), reps: 0, weight: 0, duration: 0, completed: false }]);
   const [editingCard, setEditingCard] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
 
   const { startRest, deleteRest } = useRestStore();
   const { mutateAsync: createSet } = useCreateSet(profile_id);
   const { mutateAsync: deleteSet } = useDeleteSet();
+
+  const formatDuration = (seconds) => {
+    const s = Number(seconds || 0);
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -39,11 +51,12 @@ const SuperSetExpander = ({ exercise, onSaveDone, rest_time }) => {
               unit === 'kg'
                 ? lastSet.weight
                 : Number((lastSet.weight * 2.20462).toFixed(2)),
+            duration: lastSet.duration || 0,
             completed: false,
           },
         ]);
       } else {
-        setCards([{ id: Date.now(), reps: 0, weight: 0, completed: false }]);
+        setCards([{ id: Date.now(), reps: 0, weight: 0, duration: 0, completed: false }]);
       }
     };
 
@@ -61,13 +74,15 @@ const SuperSetExpander = ({ exercise, onSaveDone, rest_time }) => {
       if (!card.completed) {
         const weightKg = convertToKg(card.weight);
         const repsValue = Number(card.reps || 0);
+        const durationValue = Number(card.duration || 0);
         const createdAt = new Date().toISOString();
 
         const ids = await createSet({
           profile_id,
           exercise_id: exercise.id,
-          rep: repsValue,
-          weight: Number(weightKg.toFixed(2)),
+          rep: showReps ? repsValue : 0,
+          weight: showWeight ? Number(weightKg.toFixed(2)) : 0,
+          duration: showTime ? durationValue : 0,
           created_at: createdAt,
         });
         const savedSetId = Array.isArray(ids) ? ids[0] : ids;
@@ -136,7 +151,10 @@ const SuperSetExpander = ({ exercise, onSaveDone, rest_time }) => {
                   card.completed ? 'text-green-500' : 'text-white'
                 }`}
               >
-                {idx + 1}° serie: {card.reps} reps · {card.weight} {unit}
+                {idx + 1}° serie:
+                {showReps ? ` ${card.reps} reps` : ''}
+                {showWeight ? ` · ${card.weight} ${unit}` : ''}
+                {showTime ? ` · ${formatDuration(card.duration)}` : ''}
               </span>
             </div>
 
@@ -170,13 +188,14 @@ const SuperSetExpander = ({ exercise, onSaveDone, rest_time }) => {
         <button
           onClick={() => {
             const lastCard =
-              cards.length > 0 ? cards[cards.length - 1] : { reps: 0, weight: 0 };
+              cards.length > 0 ? cards[cards.length - 1] : { reps: 0, weight: 0, duration: 0 };
             setCards((prev) => [
               ...prev,
               {
                 id: Date.now(),
                 reps: lastCard.reps,
                 weight: lastCard.weight,
+                duration: lastCard.duration || 0,
                 completed: false,
               },
             ]);
@@ -204,6 +223,7 @@ const SuperSetExpander = ({ exercise, onSaveDone, rest_time }) => {
                           unit === 'kg'
                             ? data.weight
                             : Number((data.weight * 2.20462).toFixed(2)),
+                        duration: data.duration ?? 0,
                       }
                     : c,
                 ),

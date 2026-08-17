@@ -6,24 +6,14 @@ import {
 } from "../../hooks/queries/useExercises";
 import { useDeleteExercisesRoutine, useEditRoutines } from "../../hooks/mutations/useRoutinesMutation";
 import { ArrowLeft, CheckIcon, PlusIcon } from "../icons";
+import SetModal from "./SetModal";
 import ExerciseHistoryModal from "./ExerciseHistoryModal";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
-import ExerciseListSelector from "./ExerciseListSelector";
-import { useSessionStore } from "../../stores/sessionStore";
-import { useRestStore } from "../../stores/restStore";
-import { FiMinus, FiSquare, FiMoreVertical, FiTrash2, FiCheck } from "react-icons/fi";
-import { FaPlay } from "react-icons/fa";
-import { VscRecord } from "react-icons/vsc";
-import { TbChecklist } from "react-icons/tb";
-import { useSetsStore } from "../../stores/setsStore";
-import { useWeightUnit } from "../../hooks/useWeightUnit";
 import SuperSetExpander from "./SuperSetExpander";
 import { InlineExerciseExpander } from "./routine-modal/InlineExerciseExpander";
 import { WalkthroughTooltip } from "./routine-modal/WalkthroughTooltip";
-import SuperSetExpander from "./SuperSetExpander";
-import InlineExerciseExpander from "./InlineExerciseExpander";
 import ExerciseListSelector from "./ExerciseListSelector";
 import { useSessionStore } from "../../stores/sessionStore";
 import { FiPlay } from "react-icons/fi";
@@ -110,6 +100,7 @@ export default function RoutineModal({
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
   const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
+  const [showWalkthrough, setShowWalkthrough] = useState(null);
 
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] =
     useState(null);
@@ -127,6 +118,43 @@ export default function RoutineModal({
   const { mutateAsync: editRoutine } = useEditRoutines(profile_id);
   const { mutateAsync: deleteExercisesRoutine } =
     useDeleteExercisesRoutine(profile_id);
+
+  useEffect(() => {
+    if (!profile_id || !routine) return;
+
+    const exerciseCount = routine.routines_exercises?.length || 0;
+
+    if (exerciseCount === 0) {
+      if (!localStorage.getItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`)) {
+        setShowWalkthrough('empty');
+      }
+    } else if (!isStarted) {
+      if (!localStorage.getItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`)) {
+        setShowWalkthrough('ready');
+      }
+    } else if (!localStorage.getItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`)) {
+      setShowWalkthrough('active_step1');
+    }
+  }, [profile_id, routine, isStarted]);
+
+  const handleNextWalkthrough = () => {
+    if (showWalkthrough === 'active_step1') {
+      setShowWalkthrough('active_step2');
+    } else {
+      handleCloseWalkthrough();
+    }
+  };
+
+  const handleCloseWalkthrough = () => {
+    if (showWalkthrough === 'empty') {
+      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
+    } else if (showWalkthrough === 'ready') {
+      localStorage.setItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`, 'true');
+    } else if (showWalkthrough === 'active_step1' || showWalkthrough === 'active_step2') {
+      localStorage.setItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`, 'true');
+    }
+    setShowWalkthrough(null);
+  };
 
   const handleSaveDetails = async (data) => {
     try {
@@ -159,6 +187,7 @@ export default function RoutineModal({
       setShowActiveSessionModal(true);
       return;
     }
+    if (showWalkthrough === 'ready') handleCloseWalkthrough();
     startSession();
   };
 
@@ -175,12 +204,6 @@ export default function RoutineModal({
     } catch (error) {
       console.error("Error al borrar ejercicios de la rutina:", error);
     }
-  };
-
-  const handleStartWorkout = () => {
-    if (isStarted) return;
-    if (showWalkthrough === 'ready') handleCloseWalkthrough();
-    startSession();
   };
 
   const menuRef = useRef(null);
@@ -308,7 +331,7 @@ export default function RoutineModal({
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className={`p-1.5 transition-colors rounded-full ${isMenuOpen ? "bg-white/10 text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
                 >
-                  <FiMoreVertical className="w-6 h-6" />
+                  <ThreeDotsIcon className="w-6 h-6" />
                 </button>
 
                 {isMenuOpen && (
@@ -358,11 +381,11 @@ export default function RoutineModal({
                       disabled={isStarted}
                       className={`w-full flex items-center justify-center gap-2 p-4 text-white rounded-2xl font-black text-[16px] shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 shadow-karga-orange/20 active:scale-[0.98]'}`}
                     >
-                      <FaPlay className="w-4 h-4 ml-1" />
+                      <FiPlay className="w-5 h-5 ml-1" />
                       Empezar entrenamiento
                     </button>
                     {!isAddingExercises && showWalkthrough === 'ready' && (
-                      <WalkthroughTooltip 
+                      <WalkthroughTooltip
                         title="¡Todo listo!"
                         description="Cuando estés listo, toca este botón para iniciar tu sesión y empezar a registrar tus marcas."
                         buttonText="¡Entendido!"
@@ -383,7 +406,7 @@ export default function RoutineModal({
                       Agregar ejercicios
                     </button>
                     {!isAddingExercises && showWalkthrough === 'empty' && (
-                      <WalkthroughTooltip 
+                      <WalkthroughTooltip
                         title="Tu rutina está vacía."
                         description="Toca aquí para buscar tus ejercicios favoritos y armar tu plan de entrenamiento."
                         buttonText="¡Entendido!"
@@ -391,22 +414,6 @@ export default function RoutineModal({
                       />
                     )}
                   </div>
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={handleStartWorkout}
-                    className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-2xl font-black text-[16px] shadow-lg shadow-karga-orange/20 transition-transform active:scale-[0.98]"
-                  >
-                    <FiPlay className="w-5 h-5 ml-1" />
-                    Empezar entrenamiento
-                  </button>
-
-                  <button
-                    onClick={() => setIsAddingExercises(true)}
-                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
-                  >
-                    <PlusIcon className="w-5 h-5 text-zinc-400" />
-                    Agregar ejercicios
-                  </button>
                 </div>
               )}
 
@@ -438,31 +445,6 @@ export default function RoutineModal({
                       {exercisesToRender.map((exercise, index) => {
                         return (
                           <div key={exercise.id} className="flex flex-col">
-                            <div
-                              onClick={() => {
-                                if (isEditMode)
-                                  toggleDeleteSelection(exercise.id);
-                                else handleExerciseClick(exercise);
-                              }}
-                              className={`flex items-center justify-between p-4 rounded-2xl transition-colors cursor-pointer ${
-                                isEditMode &&
-                                selectedExercisesForDelete.includes(exercise.id)
-                                  ? "bg-red-500/10 border border-red-500/50"
-                                  : "bg-input-bg border border-transparent hover:bg-white/5"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                {isEditMode && (
-                                  <div
-                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
-                                      selectedExercisesForDelete.includes(
-                                        exercise.id,
-                                      )
-                                        ? "bg-red-500 border-red-500"
-                                        : "border-zinc-500"
-                                    }`}
-                                  >
-                                    {selectedExercisesForDelete.includes(
                           <div
                             onClick={() => {
                               if (isEditMode)
@@ -482,103 +464,44 @@ export default function RoutineModal({
                                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
                                     selectedExercisesForDelete.includes(
                                       exercise.id,
-                                    ) && (
-                                      <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />
-                                    )}
-                                  </div>
-                                )}
-                                <div className="flex flex-col pr-4">
-                                  <span className="text-[15px] font-bold text-white tracking-tight">
-                                    {exercise.name}
-                                  </span>
-                                  <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">
-                                    {Array.isArray(exercise.muscle)
-                                      ? exercise.muscle.join(" - ")
-                                      : exercise.muscle}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {!isEditMode && (
-                                <div className="flex items-center gap-2 relative">
-                                  <div
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setActiveSuperSetExerciseId(null);
-                                      setExpandedExerciseId(prev => prev === exercise.id ? null : exercise.id);
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                                  >
-                                    <PlusIcon className="w-5 h-5 text-white" />
-                                  </div>
-                                  <div
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setExpandedExerciseId(null);
-                                      setActiveSuperSetExerciseId(prev => prev === exercise.id ? null : exercise.id);
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                                  >
-                                    <TbChecklist className="w-5 h-5 text-white" />
-                                  </div>
-
-                                  {index === 0 && showWalkthrough === 'active_step1' && (
-                                    <div className="absolute right-10 top-10 w-64 z-50">
-                                      <WalkthroughTooltip 
-                                        title="Registro rápido"
-                                        description="Toca aquí para empezar a cargar tus series de a una en vivo, o de forma diferida."
-                                        buttonText="Siguiente"
-                                        onNext={handleNextWalkthrough}
-                                        align="right"
+                                    )
+                                      ? "bg-red-500 border-red-500"
+                                      : "border-zinc-500"
+                                  }`}
+                                >
+                                  {selectedExercisesForDelete.includes(
+                                    exercise.id,
+                                  ) && (
+                                    <svg
+                                      className="w-3 h-3 text-white"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                      strokeWidth={3}
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M5 13l4 4L19 7"
                                       />
-                                    </div>
-                                  )}
-                                  {index === 0 && showWalkthrough === 'active_step2' && (
-                                    <div className="absolute right-0 top-10 w-64 z-50">
-                                      <WalkthroughTooltip 
-                                        title="Series al detalle"
-                                        description="Y aquí si prefieres establecer las series de antemano e ir completándolas en vivo."
-                                        buttonText="¡Entendido!"
-                                        onNext={handleNextWalkthrough}
-                                        align="right"
-                                      />
-                                    </div>
+                                    </svg>
                                   )}
                                 </div>
                               )}
+                              <div className="flex flex-col pr-4">
+                                <span className="text-[15px] font-bold text-white tracking-tight">
+                                  {exercise.name}
+                                </span>
+                                <span className="text-[11px] text-zinc-500 font-semibold capitalize mt-0.5">
+                                  {Array.isArray(exercise.muscle)
+                                    ? exercise.muscle.join(" - ")
+                                    : exercise.muscle}
+                                </span>
+                              </div>
                             </div>
-                            
-                            {/* V1 Inline Expander */}
-                            {expandedExerciseId === exercise.id && !isEditMode && (
-                              <InlineExerciseExpander 
-                                exercise={exercise} 
-                                onSaveDone={() => setExpandedExerciseId(null)} 
-                              />
-                            )}
-                            
-                            {/* V2 SuperSet Expander */}
-                            {activeSuperSetExerciseId === exercise.id && !isEditMode && (
-                              <SuperSetExpander 
-                                exercise={exercise} 
-                                onSaveDone={() => setActiveSuperSetExerciseId(null)} 
-                              />
 
                             {!isEditMode && (
-                              <div className="flex items-center gap-2">
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsSetModalOpen(false);
-                                    setSelectedExerciseToLog(null);
-                                    setExpandedExerciseId(null);
-                                    setActiveSuperSetExerciseId((prev) =>
-                                      prev === exercise.id ? null : exercise.id,
-                                    );
-                                  }}
-                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                                >
-                                  <TbChecklist className="w-5 h-5 text-white" />
-                                </div>
+                              <div className="flex items-center gap-2 relative">
                                 <div
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -593,6 +516,43 @@ export default function RoutineModal({
                                 >
                                   <PlusIcon className="w-5 h-5 text-white" />
                                 </div>
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsSetModalOpen(false);
+                                    setSelectedExerciseToLog(null);
+                                    setExpandedExerciseId(null);
+                                    setActiveSuperSetExerciseId((prev) =>
+                                      prev === exercise.id ? null : exercise.id,
+                                    );
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                >
+                                  <TbChecklist className="w-5 h-5 text-white" />
+                                </div>
+
+                                {index === 0 && showWalkthrough === 'active_step1' && (
+                                  <div className="absolute right-10 top-10 w-64 z-50">
+                                    <WalkthroughTooltip
+                                      title="Registro rápido"
+                                      description="Toca aquí para empezar a cargar tus series de a una en vivo, o de forma diferida."
+                                      buttonText="Siguiente"
+                                      onNext={handleNextWalkthrough}
+                                      align="right"
+                                    />
+                                  </div>
+                                )}
+                                {index === 0 && showWalkthrough === 'active_step2' && (
+                                  <div className="absolute right-0 top-10 w-64 z-50">
+                                    <WalkthroughTooltip
+                                      title="Series al detalle"
+                                      description="Y aquí si prefieres establecer las series de antemano e ir completándolas en vivo."
+                                      buttonText="¡Entendido!"
+                                      onNext={handleNextWalkthrough}
+                                      align="right"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
@@ -634,7 +594,6 @@ export default function RoutineModal({
                     isLoading={isLoading}
                     isError={isError}
                     onToggleExercise={handleToggleExercise}
-                    onExerciseClick={handleExerciseClick}
                   />
                 </div>
 
@@ -661,7 +620,20 @@ export default function RoutineModal({
                     onClick={() => setShowConfirmDialog(true)}
                     className="h-14 px-6 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center transition-all active:scale-95 gap-2"
                   >
-                    <FiTrash2 className="w-5 h-5" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                      />
+                    </svg>
                     Eliminar {selectedExercisesForDelete.length} ejercicio
                     {selectedExercisesForDelete.length !== 1 ? "s" : ""}
                   </button>

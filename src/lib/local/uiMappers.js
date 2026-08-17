@@ -12,6 +12,7 @@ export function toUiExercise(exercise) {
     image: exercise.image ?? null,
     muscle: exercise.muscle ?? [],
     is_populary: exercise.isPopulary ?? false,
+    tracking_type: exercise.trackingType || exercise.tracking_type || 'weight_reps',
   };
 }
 
@@ -23,6 +24,7 @@ export function toUiSet(set, exercise = null) {
     profile_id: set.profileId,
     weight: set.weight,
     rep: set.rep,
+    duration: set.duration ?? 0,
     created_at: set.createdAt,
     synced: set.synced,
     deleted: set.deleted,

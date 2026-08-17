@@ -29,7 +29,7 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   if (!exercise) return null;
 
-  const trackingType = exercise.tracking_type || 'weight_reps';
+  const trackingType = exercise?.tracking_type || exercise?.trackingType || 'weight_reps';
   const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
   const showReps = trackingType === 'weight_reps';
   const showTime = trackingType === 'time' || trackingType === 'weight_time';

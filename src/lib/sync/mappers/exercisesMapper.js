@@ -7,6 +7,7 @@ export function exerciseFromSupabase(row) {
     image: row.image ?? null,
     muscle: row.muscle ?? [],
     isPopulary: row.is_populary ?? false,
+    trackingType: row.tracking_type || 'weight_reps',
   };
 }
 
@@ -21,5 +22,6 @@ export function exerciseToSupabase(exercise) {
     image: exercise.image ?? null,
     muscle: exercise.muscle ?? [],
     is_populary: exercise.isPopulary ?? false,
+    tracking_type: exercise.trackingType || exercise.tracking_type || 'weight_reps',
   };
 }
