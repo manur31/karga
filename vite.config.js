@@ -11,7 +11,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
+      includeAssets: [
+        "icons/icon-192.png",
+        "icons/icon-512.png",
+        "rest-timer-sw.js",
+      ],
+      workbox: {
+        importScripts: ["rest-timer-sw.js"],
+      },
       manifest: {
         name: "Karga",
         short_name: "Karga",

@@ -8,16 +8,12 @@ import { FiChevronDown } from 'react-icons/fi';
  *
  * Props:
  *   dayActivity    { sets: [], sessions: [] } | null
- *   exerciseMap    { [exercise_id]: exerciseName }  — optional, for name resolution
+ *   exercises      exercise catalog for name resolution
+ *   isLoading      optional loading flag from Dexie query
  */
-export default function ActivityList({ dayActivity, exercises }) {
+export default function ActivityList({ dayActivity, exercises, isLoading = false }) {
   const groups = groupSetsByExercise(dayActivity, exercises)
-  const [isLoading, setIsLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(true)
-
-  setTimeout(() => {
-    setIsLoading(false)
-  }, 800);
 
   return (
     <div className="mt-6">
@@ -26,14 +22,14 @@ export default function ActivityList({ dayActivity, exercises }) {
           onClick={() => setIsOpen(!isOpen)}
           className="w-full flex items-center justify-between text-white font-bold text-[17px] px-5 py-4 bg-white/5 hover:bg-white/10 rounded-2xl outline-none active:scale-[0.98] transition-all"
         >
-          Ejercicios Realizados
+          Ejercicios realizados
           <FiChevronDown className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
       <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-y-auto max-h-80">
-          { isLoading ? (
+          {isLoading ? (
             <LoadingState/>
           ) : (
             groups.length === 0 ? (
@@ -44,6 +40,7 @@ export default function ActivityList({ dayActivity, exercises }) {
                   <SessionCard
                     key={group.exercise_id}
                     exerciseName={group.exerciseName}
+                    trackingType={group.tracking_type}
                     sets={group.sets}
                     sessionTime={group.sessionTime}
                   />

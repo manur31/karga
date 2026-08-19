@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useAuth } from "../../hooks/queries/useAuth";
 import {
   useExercises,
   useFavoriteExercises,
@@ -12,6 +11,14 @@ import ExerciseHistoryModal from "./ExerciseHistoryModal";
 import CustomExerciseModal from "./CustomExerciseModal";
 import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
+import SuperSetExpander from "./SuperSetExpander";
+import { InlineExerciseExpander } from "./routine-modal/InlineExerciseExpander";
+import { WalkthroughTooltip } from "./routine-modal/WalkthroughTooltip";
+import ExerciseListSelector from "./ExerciseListSelector";
+import { useSessionStore } from "../../stores/sessionStore";
+import { FiPlay } from "react-icons/fi";
+import { TbChecklist } from "react-icons/tb";
+import { getCachedProfile } from "../../storage/profile-storage";
 
 const ThreeDotsIcon = ({ className }) => (
   <svg
@@ -36,8 +43,10 @@ export default function RoutineModal({
   onAddExercises,
   onDeleteRoutine,
 }) {
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
+  const rest_time = profile.rest_time ?? 60;
+  const { start: startSession, isStarted } = useSessionStore();
 
   const {
     data: popularExercises,
@@ -89,6 +98,9 @@ export default function RoutineModal({
 
   const [selectedExerciseToLog, setSelectedExerciseToLog] = useState(null);
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
+  const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
+  const [expandedExerciseId, setExpandedExerciseId] = useState(null);
+  const [showWalkthrough, setShowWalkthrough] = useState(null);
 
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] =
     useState(null);
@@ -99,12 +111,50 @@ export default function RoutineModal({
     [],
   );
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showActiveSessionModal, setShowActiveSessionModal] = useState(false);
   const [showDeleteRoutineConfirmDialog, setShowDeleteRoutineConfirmDialog] =
     useState(false);
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const { mutateAsync: editRoutine } = useEditRoutines(profile_id);
   const { mutateAsync: deleteExercisesRoutine } =
     useDeleteExercisesRoutine(profile_id);
+
+  useEffect(() => {
+    if (!profile_id || !routine) return;
+
+    const exerciseCount = routine.routines_exercises?.length || 0;
+
+    if (exerciseCount === 0) {
+      if (!localStorage.getItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`)) {
+        setShowWalkthrough('empty');
+      }
+    } else if (!isStarted) {
+      if (!localStorage.getItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`)) {
+        setShowWalkthrough('ready');
+      }
+    } else if (!localStorage.getItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`)) {
+      setShowWalkthrough('active_step1');
+    }
+  }, [profile_id, routine, isStarted]);
+
+  const handleNextWalkthrough = () => {
+    if (showWalkthrough === 'active_step1') {
+      setShowWalkthrough('active_step2');
+    } else {
+      handleCloseWalkthrough();
+    }
+  };
+
+  const handleCloseWalkthrough = () => {
+    if (showWalkthrough === 'empty') {
+      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
+    } else if (showWalkthrough === 'ready') {
+      localStorage.setItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`, 'true');
+    } else if (showWalkthrough === 'active_step1' || showWalkthrough === 'active_step2') {
+      localStorage.setItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`, 'true');
+    }
+    setShowWalkthrough(null);
+  };
 
   const handleSaveDetails = async (data) => {
     try {
@@ -130,6 +180,15 @@ export default function RoutineModal({
         ? prev.filter((id) => id !== exerciseId)
         : [...prev, exerciseId],
     );
+  };
+
+  const handleStartWorkout = () => {
+    if (isStarted) {
+      setShowActiveSessionModal(true);
+      return;
+    }
+    if (showWalkthrough === 'ready') handleCloseWalkthrough();
+    startSession();
   };
 
   const handleDeleteSelected = async () => {
@@ -214,6 +273,7 @@ export default function RoutineModal({
     } else {
       setSelectedExerciseForHistory(exercise);
       setIsHistoryModalOpen(true);
+      
     }
   };
 
@@ -314,13 +374,47 @@ export default function RoutineModal({
               )}
 
               {!isEditMode && (
-                <button
-                  onClick={() => setIsAddingExercises(true)}
-                  className="w-full flex items-center justify-center gap-2 p-4 bg-linear-to-r from-karga-orange to-red-600 text-white rounded-full font-bold shadow-lg transition-all active:scale-[0.98]"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  Agregar ejercicios
-                </button>
+                <div className="flex flex-col gap-3 relative">
+                  <div className="relative">
+                    <button
+                      onClick={handleStartWorkout}
+                      disabled={isStarted}
+                      className={`w-full flex items-center justify-center gap-2 p-4 text-white rounded-2xl font-black text-[16px] shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 shadow-karga-orange/20 active:scale-[0.98]'}`}
+                    >
+                      <FiPlay className="w-5 h-5 ml-1" />
+                      Empezar entrenamiento
+                    </button>
+                    {!isAddingExercises && showWalkthrough === 'ready' && (
+                      <WalkthroughTooltip
+                        title="¡Todo listo!"
+                        description="Cuando estés listo, toca este botón para iniciar tu sesión y empezar a registrar tus marcas."
+                        buttonText="¡Entendido!"
+                        onNext={handleNextWalkthrough}
+                      />
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setIsAddingExercises(true);
+                        if (showWalkthrough === 'empty') handleCloseWalkthrough();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
+                    >
+                      <PlusIcon className="w-5 h-5 text-zinc-400" />
+                      Agregar ejercicios
+                    </button>
+                    {!isAddingExercises && showWalkthrough === 'empty' && (
+                      <WalkthroughTooltip
+                        title="Tu rutina está vacía."
+                        description="Toca aquí para buscar tus ejercicios favoritos y armar tu plan de entrenamiento."
+                        buttonText="¡Entendido!"
+                        onNext={handleNextWalkthrough}
+                      />
+                    )}
+                  </div>
+                </div>
               )}
 
               <div className="flex flex-col gap-3">
@@ -331,7 +425,11 @@ export default function RoutineModal({
                 {(() => {
                   const exercisesToRender =
                     routine.routines_exercises
-                      ?.map((re) => re.exercises)
+                      ?.map((re) =>
+                        re.exercises
+                          ? { ...re.exercises, rest_time: re.rest_time }
+                          : null,
+                      )
                       .filter(Boolean) || [];
 
                   if (exercisesToRender.length === 0) {
@@ -344,10 +442,10 @@ export default function RoutineModal({
 
                   return (
                     <div className="flex flex-col gap-3">
-                      {exercisesToRender.map((exercise) => {
+                      {exercisesToRender.map((exercise, index) => {
                         return (
+                          <div key={exercise.id} className="flex flex-col">
                           <div
-                            key={exercise.id}
                             onClick={() => {
                               if (isEditMode)
                                 toggleDeleteSelection(exercise.id);
@@ -403,18 +501,78 @@ export default function RoutineModal({
                             </div>
 
                             {!isEditMode && (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedExerciseToLog(exercise);
-                                  setIsSetModalOpen(true);
-                                }}
-                                className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
-                              >
-                                <PlusIcon className="w-5 h-5 text-white" />
+                              <div className="flex items-center gap-2 relative">
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsSetModalOpen(false);
+                                    setSelectedExerciseToLog(null);
+                                    setActiveSuperSetExerciseId(null);
+                                    setExpandedExerciseId((prev) =>
+                                      prev === exercise.id ? null : exercise.id,
+                                    );
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                >
+                                  <PlusIcon className="w-5 h-5 text-white" />
+                                </div>
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsSetModalOpen(false);
+                                    setSelectedExerciseToLog(null);
+                                    setExpandedExerciseId(null);
+                                    setActiveSuperSetExerciseId((prev) =>
+                                      prev === exercise.id ? null : exercise.id,
+                                    );
+                                  }}
+                                  className="w-8 h-8 rounded-full bg-dark-bg hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer pointer-events-auto"
+                                >
+                                  <TbChecklist className="w-5 h-5 text-white" />
+                                </div>
+
+                                {index === 0 && showWalkthrough === 'active_step1' && (
+                                  <div className="absolute right-10 top-10 w-64 z-50">
+                                    <WalkthroughTooltip
+                                      title="Registro rápido"
+                                      description="Toca aquí para empezar a cargar tus series de a una en vivo, o de forma diferida."
+                                      buttonText="Siguiente"
+                                      onNext={handleNextWalkthrough}
+                                      align="right"
+                                    />
+                                  </div>
+                                )}
+                                {index === 0 && showWalkthrough === 'active_step2' && (
+                                  <div className="absolute right-0 top-10 w-64 z-50">
+                                    <WalkthroughTooltip
+                                      title="Series al detalle"
+                                      description="Y aquí si prefieres establecer las series de antemano e ir completándolas en vivo."
+                                      buttonText="¡Entendido!"
+                                      onNext={handleNextWalkthrough}
+                                      align="right"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
+
+                          {expandedExerciseId === exercise.id && !isEditMode && (
+                            <InlineExerciseExpander
+                              exercise={exercise}
+                              rest_time={exercise.rest_time ?? rest_time}
+                              onSaveDone={() => setExpandedExerciseId(null)}
+                            />
+                          )}
+
+                          {activeSuperSetExerciseId === exercise.id && !isEditMode && (
+                            <SuperSetExpander
+                              exercise={exercise}
+                              rest_time={exercise.rest_time ?? rest_time}
+                              onSaveDone={() => setActiveSuperSetExerciseId(null)}
+                            />
+                          )}
+                        </div>
                         );
                       })}
                     </div>
@@ -429,80 +587,14 @@ export default function RoutineModal({
                 className={`absolute inset-0 bg-dark-bg z-20 flex flex-col ${isAddingClosing ? "animate-slide-out-custom" : "animate-slide-in-custom"}`}
               >
                 <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-3 scrollbar-none [&::-webkit-scrollbar]:none">
-                  <div className="flex justify-between items-end mb-1 pl-1">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                      Ejercicios disponibles
-                    </label>
-                    <span className="text-xs text-karga-orange font-bold">
-                      {selectedExercises.length} seleccionados
-                    </span>
-                  </div>
-
-                  {isLoading && allExercises.length === 0 ? (
-                    <div className="p-8 flex justify-center">
-                      <div className="w-8 h-8 border-4 border-karga-orange border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : isError ? (
-                    <div className="text-red-400 text-sm text-center p-4 bg-red-500/10 rounded-2xl border border-red-500/10 font-medium">
-                      Error al cargar los ejercicios.
-                    </div>
-                  ) : (
-                    allExercises &&
-                    allExercises.map((exercise) => {
-                      const alreadyInRoutine = routine.routines_exercises?.some(
-                        (re) => re.id_exercises === exercise.id,
-                      );
-                      const isSelected = selectedExercises.includes(
-                        exercise.id,
-                      );
-
-                      return (
-                        <div
-                          key={exercise.id}
-                          onClick={() => {
-                            if (alreadyInRoutine) return;
-                            handleExerciseClick(exercise);
-                          }}
-                          className={`flex items-center justify-between p-4 rounded-2xl transition-all border ${
-                            alreadyInRoutine
-                              ? "opacity-40 cursor-not-allowed bg-black/20 border-transparent"
-                              : isSelected
-                                ? "bg-karga-gray border-green-500/50 shadow-lg shadow-green-500/5 cursor-pointer"
-                                : "bg-karga-gray border-transparent hover:bg-white/2 cursor-pointer"
-                          }`}
-                        >
-                          <div className="flex flex-col flex-1 pr-4">
-                            <span className="text-[15px] text-zinc-100 font-bold tracking-tight">
-                              {exercise.name}
-                            </span>
-                            <span className="text-[11px] text-zinc-500 font-semibold mt-0.5 capitalize">
-                              {alreadyInRoutine
-                                ? "Ya está en la rutina"
-                                : Array.isArray(exercise.muscle)
-                                  ? exercise.muscle.join(" - ")
-                                  : exercise.muscle}
-                            </span>
-                          </div>
-
-                          <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-200 shrink-0 ${
-                              alreadyInRoutine
-                                ? "border-transparent"
-                                : isSelected
-                                  ? "border-green-500 bg-green-500/10 scale-105"
-                                  : "border-zinc-600 bg-transparent"
-                            }`}
-                          >
-                            {alreadyInRoutine ? (
-                              <CheckIcon className="w-4 h-4 text-zinc-500" />
-                            ) : isSelected ? (
-                              <CheckIcon className="w-4 h-4 text-green-500" />
-                            ) : null}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                  <ExerciseListSelector
+                    exercises={allExercises}
+                    selectedExercises={selectedExercises}
+                    routineExercises={routine.routines_exercises || []}
+                    isLoading={isLoading}
+                    isError={isError}
+                    onToggleExercise={handleToggleExercise}
+                  />
                 </div>
 
                 {/* BOTÓN CREAR EJERCICIO PERSONALIZADO */}
@@ -563,9 +655,10 @@ export default function RoutineModal({
       {isSetModalOpen && selectedExerciseToLog && (
         <SetModal
           exercise={selectedExerciseToLog}
+          rest_time={rest_time}
           onClose={() => setIsSetModalOpen(false)}
         />
-      )}
+      )} 
 
       {/* CUSTOM EXERCISE MODAL */}
       {isCustomExerciseModalOpen && (
@@ -573,6 +666,14 @@ export default function RoutineModal({
           onClose={() => setIsCustomExerciseModalOpen(false)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={showActiveSessionModal}
+        title="Sesión activa"
+        description="Ya tienes una sesión activa. Termina o descarta la sesión actual antes de empezar una nueva."
+        confirmText="Cerrar"
+        onClose={() => setShowActiveSessionModal(false)}
+      />
 
       {/* ConfirmModal para borrar ejercicios */}
       <ConfirmModal

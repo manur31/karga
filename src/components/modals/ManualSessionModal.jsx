@@ -2,32 +2,32 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiX, FiPlus, FiClock, FiCalendar, FiFileText } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { useAuth } from '../../hooks/queries/useAuth';
-import { useSessionStore } from '../../stores/sessionStore';
-import { useSetsStore } from '../../stores/setsStore';
-import { useSyncSessions, useSyncSets } from '../../hooks/useSync';
+import { getCachedProfile } from '../../storage/profile-storage';
+import { useCreateSession } from '../../hooks/mutations/useSesionsMutation';
+import { useCreateSet } from '../../hooks/mutations/useSetsMutations';
+import { runSyncNow } from '../../lib/sync/syncScheduler';
 import ExerciseSelectorModal from './ExerciseSelectorModal';
 import SetModal from './SetModal';
 import { useWeightUnit } from '../../hooks/useWeightUnit';
 
 export default function ManualSessionModal({ onClose }) {
   const [isClosing, setIsClosing] = useState(false);
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
 
   const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
-  const [startTime, setStartTime] = useState(() => format(new Date(Date.now() - 3600000), 'HH:mm')); // 1 hour ago
-  const [endTime, setEndTime] = useState(() => format(new Date(), 'HH:mm')); // now
+  const [startTime, setStartTime] = useState(() => format(new Date(Date.now() - 3600000), 'HH:mm'));
+  const [endTime, setEndTime] = useState(() => format(new Date(), 'HH:mm'));
 
-  const [sessionSets, setSessionSets] = useState([]); // Array of { tempId, exercise, rep, weight }
+  const [sessionSets, setSessionSets] = useState([]);
   const [note, setNote] = useState('');
   const [isExerciseSelectorOpen, setIsExerciseSelectorOpen] = useState(false);
-  const [activeExerciseForSet, setActiveExerciseForSet] = useState(null); // The exercise we are adding sets for
-  
-  const { displayWeight, unit } = useWeightUnit();
+  const [activeExerciseForSet, setActiveExerciseForSet] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const { sync: syncSessions } = useSyncSessions(profile_id);
-  const { sync: syncSets } = useSyncSets(profile_id);
+  const { displayWeight, unit } = useWeightUnit();
+  const { mutateAsync: createSession } = useCreateSession(profile_id);
+  const { mutateAsync: createSet } = useCreateSet(profile_id);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -37,7 +37,6 @@ export default function ManualSessionModal({ onClose }) {
   };
 
   const handleAddExercise = (exercise) => {
-    // Just open the set modal directly for the newly selected exercise
     setActiveExerciseForSet(exercise);
   };
 
@@ -56,53 +55,56 @@ export default function ManualSessionModal({ onClose }) {
     setSessionSets(prev => prev.filter(s => s.tempId !== tempId));
   };
 
-  const handleSaveSession = () => {
-    if (!profile_id) return;
+  const handleSaveSession = async () => {
+    if (!profile_id || isSaving) return;
+    setIsSaving(true);
 
-    // Build the date objects
-    const startedAt = new Date(`${date}T${startTime}`);
-    let finishedAt = new Date(`${date}T${endTime}`);
-    
-    // If end time is before start time, it probably crossed midnight, add 1 day
-    if (finishedAt < startedAt) {
-      finishedAt = new Date(finishedAt.getTime() + 86400000);
-    }
+    try {
+      const startedAt = new Date(`${date}T${startTime}`);
+      let finishedAt = new Date(`${date}T${endTime}`);
 
-    // Insert Session
-    useSessionStore.getState().addSession({
-      startedAt,
-      finishedAt,
-      created_at: finishedAt,
-      profile_id,
-      note
-    });
+      if (finishedAt < startedAt) {
+        finishedAt = new Date(finishedAt.getTime() + 86400000);
+      }
 
-    // Insert Sets
-    const totalSets = sessionSets.length;
-    const durationMs = finishedAt.getTime() - startedAt.getTime();
-    
-    sessionSets.forEach((set, index) => {
-      // Interpolate timestamps across the session duration so they are naturally spaced
-      const timeOffset = totalSets > 1 ? (durationMs / (totalSets + 1)) * (index + 1) : durationMs / 2;
-      const setDate = new Date(startedAt.getTime() + timeOffset);
-      
-      useSetsStore.getState().addSet({
-        profile_id: set.profile_id,
-        exercise_id: set.exercise_id,
-        rep: set.rep,
-        weight: set.weight,
-        created_at: setDate.toISOString()
+      await createSession({
+        startedAt,
+        finishedAt,
+        created_at: finishedAt.toISOString(),
+        profile_id,
+        note
       });
-    });
 
-    // Sync
-    syncSessions(profile_id);
-    syncSets(profile_id);
+      const totalSets = sessionSets.length;
+      const durationMs = finishedAt.getTime() - startedAt.getTime();
 
-    handleClose();
+      for (let index = 0; index < sessionSets.length; index++) {
+        const set = sessionSets[index];
+        const timeOffset = totalSets > 1
+          ? (durationMs / (totalSets + 1)) * (index + 1)
+          : durationMs / 2;
+        const setDate = new Date(startedAt.getTime() + timeOffset);
+
+        await createSet({
+          profile_id: set.profile_id || profile_id,
+          exercise_id: set.exercise_id,
+          rep: set.rep,
+          weight: set.weight,
+          created_at: setDate.toISOString()
+        });
+      }
+
+      if (navigator.onLine) {
+        await runSyncNow();
+      }
+
+      handleClose();
+    } catch (err) {
+      console.error('Error saving manual session:', err);
+      setIsSaving(false);
+    }
   };
 
-  // Group sets by exercise
   const exercisesWithSets = [];
   sessionSets.forEach(set => {
     let exGroup = exercisesWithSets.find(g => g.exercise.id === set.exercise.id);
@@ -247,9 +249,10 @@ export default function ManualSessionModal({ onClose }) {
         <div className="p-5 border-t border-white/5 bg-black/20 shrink-0">
           <button 
             onClick={handleSaveSession}
-            className="w-full py-4 bg-karga-orange hover:bg-orange-600 text-white rounded-2xl font-black transition-colors shadow-lg shadow-karga-orange/20"
+            disabled={isSaving}
+            className="w-full py-4 bg-karga-orange hover:bg-orange-600 text-white rounded-2xl font-black transition-colors shadow-lg shadow-karga-orange/20 disabled:opacity-60"
           >
-            Guardar Sesión
+            {isSaving ? 'Guardando...' : 'Guardar Sesión'}
           </button>
         </div>
 
@@ -265,6 +268,7 @@ export default function ManualSessionModal({ onClose }) {
       {activeExerciseForSet && (
         <SetModal 
           exercise={activeExerciseForSet} 
+          profile_id={profile_id}
           onClose={() => setActiveExerciseForSet(null)} 
           onSaveOverride={handleSaveSetOverride}
         />

@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form"
 import Input from '../Input/Input'
 import { ArrowLeft, PlusIcon, CheckIcon } from '../icons/index';
-import { useAuth } from "../../hooks/queries/useAuth";
+import { getCachedProfile } from '../../storage/profile-storage';
 import { useExercises } from "../../hooks/queries/useExercises";
 import { useCreateRoutines } from "../../hooks/mutations/useRoutinesMutation";
 import { useState } from "react";
@@ -9,8 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { routineSchema } from "../../lib/schemas/routineSchema";
 
 function NewWorkoutModal({ onClose }) {
-    const { data: user } = useAuth();
-    const profile_id = user?.profile_id;
+    const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
 
     const { data: exercises, isLoading, isSuccess } = useExercises(profile_id);
     const { mutate: createRoutines } = useCreateRoutines(profile_id);

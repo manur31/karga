@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAuth } from '../../hooks/queries/useAuth';
+import { getCachedProfile } from '../../storage/profile-storage';
 import { useFavoriteExercises } from '../../hooks/queries/useExercises';
 import { useDeleteExercise } from '../../hooks/mutations/useExercisesMutations';
 import { ArrowLeft, PlusIcon } from '../icons';
-import { FiEdit2 } from 'react-icons/fi';
+import { FiEdit2, FiMinus } from 'react-icons/fi';
 import CustomExerciseModal from './CustomExerciseModal';
 
 export default function MyExercisesModal({ onClose }) {
@@ -13,8 +13,8 @@ export default function MyExercisesModal({ onClose }) {
   const [exerciseToEdit, setExerciseToEdit] = useState(null);
   const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState(false);
 
-  const { data: user } = useAuth();
-  const profile_id = user?.profile_id;
+  const profile = getCachedProfile() || {};
+  const profile_id = profile.profile_id;
 
   const { data: userExercises, isLoading } = useFavoriteExercises(profile_id);
   const { mutateAsync: deleteExercise, isPending: isDeleting } = useDeleteExercise(profile_id);
@@ -105,9 +105,7 @@ export default function MyExercisesModal({ onClose }) {
                           onClick={() => setExerciseToDelete(ex)}
                           className="w-8 h-8 flex items-center justify-center bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                          </svg>
+                          <FiMinus className="w-5 h-5" strokeWidth={3} />
                         </button>
                       )}
                     </div>
