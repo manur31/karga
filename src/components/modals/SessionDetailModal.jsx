@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { FiX, FiClock, FiFileText, FiTrash2, FiEdit2 } from 'react-icons/fi';
-import { useSets } from '../../hooks/queries/useSets';
-import { useWeightUnit } from '../../hooks/useWeightUnit';
-import ConfirmModal from './ConfirmModal';
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { FiX, FiClock, FiFileText, FiTrash2, FiEdit2 } from "react-icons/fi";
+import { useSets } from "../../hooks/queries/useSets";
+import { useWeightUnit } from "../../hooks/useWeightUnit";
+import ConfirmModal from "./ConfirmModal";
 import {
   useDeleteSession,
   useUpdateSessionWithSets,
-} from '../../hooks/mutations/useSesionsMutation';
-import { getCachedProfile } from '../../storage/profile-storage';
-import { EditSessions } from './EditSessions';
+} from "../../hooks/mutations/useSesionsMutation";
+import { getCachedProfile } from "../../storage/profile-storage";
+import { EditSessions } from "./EditSessions";
 
 function formatSetDuration(seconds) {
   const s = Number(seconds || 0);
   const m = Math.floor(s / 60);
   const sec = s % 60;
-  return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
 }
 
 export default function SessionDetailModal({ session, onClose }) {
@@ -62,7 +62,7 @@ export default function SessionDetailModal({ session, onClose }) {
       setShowConfirmDelete(false);
       handleClose();
     } catch (error) {
-      console.error('Error al eliminar sesión:', error);
+      console.error("Error al eliminar sesión:", error);
     }
   };
 
@@ -78,44 +78,44 @@ export default function SessionDetailModal({ session, onClose }) {
     }) || [];
 
   const calculateDuration = (init, end) => {
-    if (!end) return 'En curso';
+    if (!end) return "En curso";
     const startDate = new Date(init);
     const endDate = new Date(end);
     const diffInSeconds = Math.floor((endDate - startDate) / 1000);
-    if (diffInSeconds < 0) return '00:00:00';
+    if (diffInSeconds < 0) return "00:00:00";
     const h = Math.floor(diffInSeconds / 3600);
     const m = Math.floor((diffInSeconds % 3600) / 60);
     const s = diffInSeconds % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  const rawDate = new Date(session.startedAt).toLocaleDateString('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  const rawDate = new Date(session.startedAt).toLocaleDateString("es-ES", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
   const formattedDate = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
 
   const formattedInitTime = new Date(session.startedAt).toLocaleTimeString(
-    'es-ES',
-    { hour: '2-digit', minute: '2-digit' },
+    "es-ES",
+    { hour: "2-digit", minute: "2-digit" },
   );
 
   const formattedEndTime = session.finishedAt
-    ? new Date(session.finishedAt).toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit',
+    ? new Date(session.finishedAt).toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
       })
-    : 'En curso';
+    : "En curso";
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-100 p-4 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      className={`fixed inset-0 bg-black/80 flex items-center justify-center z-100 p-4 ${isClosing ? "animate-fade-out" : "animate-fade-in"}`}
       onClick={handleClose}
     >
       <div
-        className={`bg-[#2A2424] w-full max-w-md max-h-[90vh] rounded-3xl flex flex-col shadow-2xl overflow-hidden ${isClosing ? 'animate-slide-out-down' : 'animate-slide-in-up'}`}
+        className={`bg-[#2A2424] w-full max-w-md max-h-[90vh] rounded-3xl flex flex-col shadow-2xl overflow-hidden ${isClosing ? "animate-slide-out-down" : "animate-slide-in-up"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-white/5 bg-black/20">
@@ -210,11 +210,11 @@ export default function SessionDetailModal({ session, onClose }) {
                   >
                     <div className="flex flex-col">
                       <span className="text-white font-semibold">
-                        {set.exercises?.name || 'Ejercicio Desconocido'}
+                        {set.exercises?.name || "Ejercicio Desconocido"}
                       </span>
                       <span className="text-zinc-500 text-xs">
                         {Array.isArray(set.exercises?.muscle)
-                          ? set.exercises.muscle.join(' - ')
+                          ? set.exercises.muscle.join(" - ")
                           : set.exercises?.muscle}
                       </span>
                     </div>
@@ -235,7 +235,9 @@ export default function SessionDetailModal({ session, onClose }) {
                           <span className="text-xs text-zinc-500 uppercase tracking-wider">
                             Reps
                           </span>
-                          <span className="text-white font-medium">{set.rep}</span>
+                          <span className="text-white font-medium">
+                            {set.rep}
+                          </span>
                         </div>
                       )}
                       {(set.duration ?? 0) > 0 && (
@@ -266,6 +268,7 @@ export default function SessionDetailModal({ session, onClose }) {
             await handleEditSessions(data);
             setShowEditSessions(false);
           }}
+          close={() => handleClose()}
         />
       )}
 
