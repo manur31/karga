@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { getCachedProfile } from '../../storage/profile-storage';
-import { useSetsForExercise } from '../../hooks/queries/useSets';
-import { useDeleteSet } from '../../hooks/mutations/useSetsMutations';
-import { useWeightUnit } from '../../hooks/useWeightUnit';
-import { ArrowLeft, PlusIcon } from '../icons';
-import SetModal from './SetModal';
-import EditSetModal from './EditSetModal';
-import ConfirmModal from './ConfirmModal';
-import { FiTrash2, FiClock, FiCheck } from 'react-icons/fi';
+import { useState } from "react";
+import { getCachedProfile } from "../../storage/profile-storage";
+import { useSetsForExercise } from "../../hooks/queries/useSets";
+import { useDeleteSet } from "../../hooks/mutations/useSetsMutations";
+import { useWeightUnit } from "../../hooks/useWeightUnit";
+import { ArrowLeft, PlusIcon } from "../icons";
+import SetModal from "./SetModal";
+import EditSetModal from "./EditSetModal";
+import ConfirmModal from "./ConfirmModal";
+import { FiTrash2, FiClock, FiCheck } from "react-icons/fi";
 
 export default function ExerciseHistoryModal({ exercise, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
   const [selectedSetToEdit, setSelectedSetToEdit] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
- 
-  // Estados para modo de selección/borrado 
+
+  // Estados para modo de selección/borrado
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedSets, setSelectedSets] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -24,15 +24,20 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
   const profile = getCachedProfile() || {};
   const profile_id = profile.profile_id;
-  const { data: sets = [], isLoading } = useSetsForExercise(profile_id, exercise?.id);
+  const { data: sets = [], isLoading } = useSetsForExercise(
+    profile_id,
+    exercise?.id,
+  );
   const { mutateAsync: deleteSet } = useDeleteSet(profile_id);
 
   if (!exercise) return null;
 
-  const trackingType = exercise?.tracking_type || exercise?.trackingType || 'weight_reps';
-  const showWeight = trackingType === 'weight_reps' || trackingType === 'weight_time';
-  const showReps = trackingType === 'weight_reps';
-  const showTime = trackingType === 'time' || trackingType === 'weight_time';
+  const trackingType =
+    exercise?.tracking_type || exercise?.trackingType || "weight_reps";
+  const showWeight =
+    trackingType === "weight_reps" || trackingType === "weight_time";
+  const showReps = trackingType === "weight_reps";
+  const showTime = trackingType === "time" || trackingType === "weight_time";
 
   const handleCloseWithAnimation = () => {
     setIsClosing(true);
@@ -49,25 +54,21 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   };
 
   const toggleSetSelection = (setId) => {
-    setSelectedSets(prev => 
-      prev.includes(setId) 
-        ? prev.filter(id => id !== setId)
-        : [...prev, setId]
+    setSelectedSets((prev) =>
+      prev.includes(setId)
+        ? prev.filter((id) => id !== setId)
+        : [...prev, setId],
     );
   };
 
   const handleDeleteSelected = async () => {
     if (!profile_id || selectedSets.length === 0) return;
     try {
-      await Promise.all(selectedSets.map(setId => {
-        const isLocal = filteredSetsFromStore.some(s => s.id === setId || s.set_id === setId);
-        if (isLocal) {
-          removeSet(setId);
-          return Promise.resolve();
-        } else {
+      await Promise.all(
+        selectedSets.map((setId) => {
           return deleteSet(setId);
-        }
-      }));
+        }),
+      );
       setIsSelectMode(false);
       setSelectedSets([]);
       setShowConfirmDialog(false);
@@ -79,36 +80,44 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
   // Agrupar sets por fecha
   const groupedSets = allSets?.reduce((groups, set) => {
     const date = new Date(set.created_at);
-    
-    const dateStr = date.toLocaleDateString('es-ES', { 
-      weekday: 'short', 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
-    }).toUpperCase();
-    
+
+    const dateStr = date
+      .toLocaleDateString("es-ES", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+      .toUpperCase();
+
     if (!groups[dateStr]) groups[dateStr] = [];
     groups[dateStr].push(set);
     return groups;
   }, {});
 
   // Ordenar los días de más reciente a más antiguo
-  const sortedDates = groupedSets ? Object.keys(groupedSets).sort((a, b) => {
-    const dateA = new Date(groupedSets[a][0].created_at);
-    const dateB = new Date(groupedSets[b][0].created_at);
-    return dateB - dateA;
-  }) : [];
+  const sortedDates = groupedSets
+    ? Object.keys(groupedSets).sort((a, b) => {
+        const dateA = new Date(groupedSets[a][0].created_at);
+        const dateB = new Date(groupedSets[b][0].created_at);
+        return dateB - dateA;
+      })
+    : [];
 
   return (
     <>
       <div className="fixed top-0 bottom-19 left-0 w-full sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 z-45 flex flex-col overflow-hidden pointer-events-none">
-        <div className={`w-full h-full flex flex-col relative bg-dark-bg pointer-events-auto ${
-          isClosing ? 'animate-slide-out-custom' : 'animate-slide-in-custom'
-        }`}>
-          
+        <div
+          className={`w-full h-full flex flex-col relative bg-dark-bg pointer-events-auto ${
+            isClosing ? "animate-slide-out-custom" : "animate-slide-in-custom"
+          }`}
+        >
           {/* HEADER */}
           <div className="flex items-center justify-between p-5 bg-input-bg shrink-0 z-20">
-            <button onClick={handleCloseWithAnimation} className="p-1.5 text-zinc-400 hover:text-white transition-colors">
+            <button
+              onClick={handleCloseWithAnimation}
+              className="p-1.5 text-zinc-400 hover:text-white transition-colors"
+            >
               <ArrowLeft className="w-6 h-6" />
             </button>
             <div className="flex flex-col items-center flex-1 mx-4 min-w-0">
@@ -116,17 +125,16 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
                 {exercise.name}
               </span>
             </div>
-            <button 
+            <button
               onClick={toggleSelectMode}
               className="text-karga-orange font-bold text-sm px-2 py-1.5 active:scale-95 transition-all w-16 text-right"
             >
-              {isSelectMode ? 'Cancelar' : 'Editar'}
+              {isSelectMode ? "Cancelar" : "Editar"}
             </button>
           </div>
 
           {/* CONTENIDO SCROLLABLE */}
           <div className="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-6 scrollbar-none [&::-webkit-scrollbar]:none z-10 relative">
-            
             {isLoading ? (
               <div className="flex justify-center py-12">
                 <div className="w-8 h-8 border-4 border-karga-orange border-t-transparent rounded-full animate-spin" />
@@ -134,11 +142,17 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
             ) : !sortedDates.length ? (
               <div className="flex flex-col items-center justify-center py-20 text-center px-4">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                  <FiClock className="w-8 h-8 text-zinc-600" strokeWidth={1.5} />
+                  <FiClock
+                    className="w-8 h-8 text-zinc-600"
+                    strokeWidth={1.5}
+                  />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">Sin historial</h3>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  Sin historial
+                </h3>
                 <p className="text-sm text-zinc-500 font-medium mb-6">
-                  Aún no has registrado ningún set para este ejercicio. Toca el botón para comenzar.
+                  Aún no has registrado ningún set para este ejercicio. Toca el
+                  botón para comenzar.
                 </p>
                 <button
                   onClick={() => setIsSetModalOpen(true)}
@@ -151,7 +165,9 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
             ) : (
               <div className="flex flex-col gap-8">
                 <div className="flex flex-col gap-5">
-                  <h2 className="text-lg font-bold text-zinc-400 tracking-tight -mb-2">Historial de sets</h2>
+                  <h2 className="text-lg font-bold text-zinc-400 tracking-tight -mb-2">
+                    Historial de sets
+                  </h2>
                   {!isSelectMode && (
                     <button
                       onClick={() => setIsSetModalOpen(true)}
@@ -162,81 +178,109 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
                     </button>
                   )}
                 </div>
-                {sortedDates.map(dateStr => (
+                {sortedDates.map((dateStr) => (
                   <div key={dateStr} className="flex flex-col gap-3">
                     <h3 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest pl-1">
                       {dateStr}
                     </h3>
-                    
+
                     <div className="flex flex-col gap-2">
-                      {groupedSets[dateStr].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map(set => {
-                        const timeStr = new Date(set.created_at).toLocaleTimeString('es-ES', { 
-                          hour: 'numeric', 
-                          minute: '2-digit',
-                          hour12: true 
-                        }).toLowerCase();
+                      {groupedSets[dateStr]
+                        .sort(
+                          (a, b) =>
+                            new Date(b.created_at) - new Date(a.created_at),
+                        )
+                        .map((set) => {
+                          const timeStr = new Date(set.created_at)
+                            .toLocaleTimeString("es-ES", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })
+                            .toLowerCase();
 
-                        const setId = set.set_id || set.id;
-                        const isSelected = selectedSets.includes(setId);
+                          const setId = set.set_id || set.id;
+                          const isSelected = selectedSets.includes(setId);
 
-                        return (
-                          <div 
-                            key={setId} 
-                            onClick={() => {
-                              if (isSelectMode) {
-                                toggleSetSelection(setId);
-                              } else {
-                                setSelectedSetToEdit(set);
-                                setIsEditModalOpen(true);
-                              }
-                            }}
-                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] ${
-                              isSelected 
-                                ? 'bg-red-500/10 border-red-500/50' 
-                                : 'bg-input-bg border-white/5 hover:bg-white/5'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {isSelectMode && (
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
-                                  isSelected ? 'bg-red-500 border-red-500' : 'border-zinc-500'
-                                }`}>
-                                  {isSelected && (
-                                    <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />
-                                  )}
-                                </div>
-                              )}
-                              <span className={`text-sm font-bold ${isSelected ? 'text-red-400' : 'text-zinc-400'}`}>
-                                {timeStr}
-                              </span>
+                          return (
+                            <div
+                              key={setId}
+                              onClick={() => {
+                                if (isSelectMode) {
+                                  toggleSetSelection(setId);
+                                } else {
+                                  setSelectedSetToEdit(set);
+                                  setIsEditModalOpen(true);
+                                }
+                              }}
+                              className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] ${
+                                isSelected
+                                  ? "bg-red-500/10 border-red-500/50"
+                                  : "bg-input-bg border-white/5 hover:bg-white/5"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {isSelectMode && (
+                                  <div
+                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                                      isSelected
+                                        ? "bg-red-500 border-red-500"
+                                        : "border-zinc-500"
+                                    }`}
+                                  >
+                                    {isSelected && (
+                                      <FiCheck
+                                        className="w-3 h-3 text-white"
+                                        strokeWidth={3}
+                                      />
+                                    )}
+                                  </div>
+                                )}
+                                <span
+                                  className={`text-sm font-bold ${isSelected ? "text-red-400" : "text-zinc-400"}`}
+                                >
+                                  {timeStr}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-4">
+                                {showReps && (
+                                  <span className="text-base font-black text-white">
+                                    {set.rep || 0}{" "}
+                                    <span className="text-xs text-zinc-500 font-bold ml-0.5">
+                                      rep{(set.rep || 0) !== 1 ? "s" : ""}
+                                    </span>
+                                  </span>
+                                )}
+
+                                {showTime && (
+                                  <span className="text-base font-black text-white">
+                                    {Math.floor((set.duration || 0) / 60)
+                                      .toString()
+                                      .padStart(2, "0")}
+                                    :
+                                    {((set.duration || 0) % 60)
+                                      .toString()
+                                      .padStart(2, "0")}
+                                  </span>
+                                )}
+
+                                {showWeight && (showReps || showTime) && (
+                                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                                )}
+
+                                {showWeight && (
+                                  <span className="text-base font-black text-karga-orange">
+                                    {displayWeight(set.weight)}{" "}
+                                    <span className="text-xs text-karga-orange/60 font-bold ml-0.5">
+                                      {unit}
+                                    </span>
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            
-                            <div className="flex items-center gap-4">
-                              {showReps && (
-                                <span className="text-base font-black text-white">
-                                  {set.rep || 0} <span className="text-xs text-zinc-500 font-bold ml-0.5">rep{(set.rep || 0) !== 1 ? 's' : ''}</span>
-                                </span>
-                              )}
-                              
-                              {showTime && (
-                                <span className="text-base font-black text-white">
-                                  {Math.floor((set.duration || 0) / 60).toString().padStart(2, '0')}:{((set.duration || 0) % 60).toString().padStart(2, '0')}
-                                </span>
-                              )}
-
-                              {(showWeight && (showReps || showTime)) && (
-                                <div className="w-1 h-1 rounded-full bg-white/20" />
-                              )}
-
-                              {showWeight && (
-                                <span className="text-base font-black text-karga-orange">
-                                  {displayWeight(set.weight)} <span className="text-xs text-karga-orange/60 font-bold ml-0.5">{unit}</span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
                     </div>
                   </div>
                 ))}
@@ -252,7 +296,8 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
                 className="h-14 px-6 bg-red-500 hover:bg-red-400 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center transition-all active:scale-95 gap-2"
               >
                 <FiTrash2 className="w-5 h-5" />
-                Eliminar {selectedSets.length} set{selectedSets.length !== 1 ? 's' : ''}
+                Eliminar {selectedSets.length} set
+                {selectedSets.length !== 1 ? "s" : ""}
               </button>
             </div>
           )}
@@ -260,12 +305,12 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
       </div>
 
       {/* Modal de Confirmación */}
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={showConfirmDialog}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={handleDeleteSelected}
         title="¿Eliminar sets?"
-        description={`Estás a punto de eliminar ${selectedSets.length} set${selectedSets.length !== 1 ? 's' : ''} de tu historial de forma permanente. Esta acción no se puede deshacer.`}
+        description={`Estás a punto de eliminar ${selectedSets.length} set${selectedSets.length !== 1 ? "s" : ""} de tu historial de forma permanente. Esta acción no se puede deshacer.`}
         confirmText="Eliminar"
         cancelText="Cancelar"
         danger={true}
@@ -273,22 +318,22 @@ export default function ExerciseHistoryModal({ exercise, onClose }) {
 
       {/* SetModal */}
       <div className="">
-      {isSetModalOpen && (
-        <SetModal 
-          exercise={exercise}
-          rest_time={exercise?.rest_time}
-          profile_id={profile_id}
-          onClose={() => setIsSetModalOpen(false)} 
-        />
-      )}
+        {isSetModalOpen && (
+          <SetModal
+            exercise={exercise}
+            rest_time={exercise?.rest_time}
+            profile_id={profile_id}
+            onClose={() => setIsSetModalOpen(false)}
+          />
+        )}
       </div>
 
       {/* EditSetModal */}
       {isEditModalOpen && selectedSetToEdit && (
-        <EditSetModal 
+        <EditSetModal
           setToEdit={selectedSetToEdit}
           exercise={exercise}
-          onClose={() => setIsEditModalOpen(false)} 
+          onClose={() => setIsEditModalOpen(false)}
         />
       )}
     </>
