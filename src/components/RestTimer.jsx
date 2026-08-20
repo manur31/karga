@@ -1,34 +1,38 @@
-import formatSeconds from '../lib/formatSeconds';
-import { useRestStore } from '../stores/restStore';
-import { FiX } from 'react-icons/fi';
-import { useEffect } from 'react';
+import formatSeconds from "../lib/formatSeconds";
+import { useRestStore } from "../stores/restStore";
+import { FiX } from "react-icons/fi";
+import { useEffect } from "react";
 
 function RestTimer() {
-    const { restTime, deleteRest, isRunning } = useRestStore();
+  const { restTime, deleteRest, isRunning } = useRestStore();
 
-    useEffect(() => {
-      const { isRunning: running, endsAt, continueRest } = useRestStore.getState();
-      if (running || endsAt) {
-        continueRest();
+  useEffect(() => {
+    const {
+      isRunning: running,
+      endsAt,
+      continueRest,
+    } = useRestStore.getState();
+    if (running || endsAt) {
+      continueRest();
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        useRestStore.getState().continueRest();
       }
+    };
 
-      const onVisibility = () => {
-        if (document.visibilityState === 'visible') {
-          useRestStore.getState().continueRest();
-        }
-      };
-
-      document.addEventListener('visibilitychange', onVisibility);
-      return () => document.removeEventListener('visibilitychange', onVisibility);
-    }, []);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
   if (restTime === 0 && !isRunning) return null;
 
   const isWarning = restTime <= 10 && restTime > 0;
   const isFinished = restTime <= 0;
-  
+
   const absTime = Math.abs(restTime);
-  const timeString = `${isFinished && restTime !== 0 ? '-' : ''}${formatSeconds(absTime)}`;
+  const timeString = `${isFinished && restTime !== 0 ? "-" : ""}${formatSeconds(absTime)}`;
 
   let textColor = "text-white";
   let dotColor = "bg-green-500";
@@ -46,16 +50,24 @@ function RestTimer() {
 
   return (
     <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-slide-in-down pointer-events-none">
-      <div className={`flex items-center gap-4 px-5 py-2.5 rounded-full shadow-2xl border pointer-events-auto transition-colors duration-300 ${containerClasses}`}>
+      <div
+        className={`flex items-center gap-4 px-5 py-2.5 rounded-full shadow-2xl border pointer-events-auto transition-colors duration-300 ${containerClasses}`}
+      >
         <div className="flex items-center gap-2.5">
-          <div className={`w-2 h-2 rounded-full ${dotColor} ${!isFinished && 'animate-pulse'}`} />
-          <span className="text-xs font-bold text-zinc-400 tracking-wide uppercase">Descanso</span>
-          <span className={`tabular-nums font-black text-lg tracking-tight ${textColor}`}>
+          <div
+            className={`w-2 h-2 rounded-full ${dotColor} ${!isFinished && "animate-pulse"}`}
+          />
+          <span className="text-xs font-bold text-zinc-400 tracking-wide uppercase">
+            Descanso
+          </span>
+          <span
+            className={`tabular-nums font-black text-lg tracking-tight ${textColor}`}
+          >
             {timeString}
           </span>
         </div>
         <div className="w-px h-4 bg-white/10 mx-1" />
-        <button 
+        <button
           onClick={deleteRest}
           className="flex items-center justify-center p-1 -mr-2 text-zinc-400 hover:text-white rounded-full transition-colors active:scale-95"
         >
@@ -63,7 +75,7 @@ function RestTimer() {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default RestTimer
+export default RestTimer;
