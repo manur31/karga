@@ -14,38 +14,90 @@ import { format } from "date-fns";
 
 import ExerciseSelectorModal from "./ExerciseSelectorModal";
 import SetModal from "./SetModal";
-import { useAuth } from "../../hooks/queries/useAuth";
-import { useExercises, useFavoriteExercises } from "../../hooks/queries/useExercises";
-import { useWeightUnit } from "../../hooks/useWeightUnit";
-
-const AdjustableInput = ({ value, onChange, placeholder, step = 1, isTime = false }) => {
+const AdjustableInput = ({
+  value,
+  onChange,
+  placeholder,
+  step = 1,
+  isTime = false,
+}) => {
   if (isTime) {
     const minutes = Math.floor((value || 0) / 60);
     const seconds = (value || 0) % 60;
-    
+
     return (
       <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 w-full border border-white/5 focus-within:border-karga-orange transition-colors">
-        <button type="button" onClick={() => onChange(Math.max(0, (value || 0) - 15))} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiMinus className="w-3 h-3"/></button>
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, (value || 0) - 15))}
+          className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"
+        >
+          <FiMinus className="w-3 h-3" />
+        </button>
         <div className="flex items-center justify-center w-full font-bold text-sm">
-           <input type="number" className="w-6 text-right bg-transparent outline-none text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={minutes} onChange={(e) => onChange(parseInt(e.target.value || 0) * 60 + seconds)} />
-           <span className="text-zinc-500 pb-0.5">:</span>
-           <input type="number" className="w-6 text-left bg-transparent outline-none text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={seconds.toString().padStart(2, '0')} onChange={(e) => onChange(minutes * 60 + parseInt(e.target.value || 0))} />
+          <input
+            type="number"
+            className="w-6 text-right bg-transparent outline-none text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            value={minutes}
+            onChange={(e) =>
+              onChange(parseInt(e.target.value || 0) * 60 + seconds)
+            }
+          />
+          <span className="text-zinc-500 pb-0.5">:</span>
+          <input
+            type="number"
+            className="w-6 text-left bg-transparent outline-none text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            value={seconds.toString().padStart(2, "0")}
+            onChange={(e) =>
+              onChange(minutes * 60 + parseInt(e.target.value || 0))
+            }
+          />
         </div>
-        <button type="button" onClick={() => onChange((value || 0) + 15)} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiPlus className="w-3 h-3"/></button>
+        <button
+          type="button"
+          onClick={() => onChange((value || 0) + 15)}
+          className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"
+        >
+          <FiPlus className="w-3 h-3" />
+        </button>
       </div>
     );
   }
 
   return (
     <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 w-full border border-white/5 focus-within:border-karga-orange transition-colors">
-      <button type="button" onClick={() => onChange(Math.max(0, Number(value || 0) - step))} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiMinus className="w-3 h-3"/></button>
-      <input type="number" className="w-full text-center bg-transparent outline-none text-sm font-bold text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
-      <button type="button" onClick={() => onChange(Number(value || 0) + step)} className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"><FiPlus className="w-3 h-3"/></button>
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, Number(value || 0) - step))}
+        className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"
+      >
+        <FiMinus className="w-3 h-3" />
+      </button>
+      <input
+        type="number"
+        className="w-full text-center bg-transparent outline-none text-sm font-bold text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      <button
+        type="button"
+        onClick={() => onChange(Number(value || 0) + step)}
+        className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-md text-white/70 active:scale-95 transition-all"
+      >
+        <FiPlus className="w-3 h-3" />
+      </button>
     </div>
-  )
-}
+  );
+};
 
-export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
+export const EditSessions = ({
+  session,
+  sets = [],
+  onClose,
+  onSave,
+  close,
+}) => {
   const [isClosing, setIsClosing] = useState(false);
   const [deletedSetIds, setDeletedSetIds] = useState([]);
   const [isExerciseSelectorOpen, setIsExerciseSelectorOpen] = useState(false);
@@ -218,7 +270,7 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
         set.rep !== "" && set.rep !== null && set.rep !== undefined;
       const hasWeight =
         set.weight !== "" && set.weight !== null && set.weight !== undefined;
-
+      close();
       return hasExercise && hasRep && hasWeight;
     });
 
@@ -465,7 +517,7 @@ export const EditSessions = ({ session, sets = [], onClose, onSave }) => {
 
       {isExerciseSelectorOpen && (
         <div
-          className="fixed inset-0 -z-200"
+          className="fixed inset-0 z-200"
           onClick={(e) => e.stopPropagation()}
         >
           <ExerciseSelectorModal
