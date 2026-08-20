@@ -187,7 +187,7 @@ export default function Sets() {
       {/* BOTÓN NUEVA RUTINA Y MIS EJERCICIOS */}
       <div className="flex flex-col gap-3 mb-6">
         {routines && routines.length > 0 ? (
-          <div ref={startWorkoutBtnRef}>
+          <div>
             <Button
               variant="primary"
               onClick={handleStartWorkoutClick}
@@ -208,7 +208,7 @@ export default function Sets() {
             </Button>
           </div>
         ) : (
-          <div ref={createRoutineBtnRef}>
+          <div>
             <Button
               variant="primary"
               onClick={handleCreateWorkout}
