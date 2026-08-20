@@ -6,6 +6,7 @@ import useCurrentTime from "../hooks/useCurrentTime";
 import formatMs from "../lib/formatMs";
 import { useLocation, useNavigate } from "react-router";
 import ConfirmModal from "./modals/ConfirmModal";
+import DiscardSessionModal from "./modals/DiscardSessionModal";
 import ManualSessionModal from "./modals/ManualSessionModal";
 import SessionNoteModal from "./modals/SessionNoteModal";
 import {
@@ -23,6 +24,7 @@ function SessionTimer({ profile_id }) {
     totalPausedMs,
     note,
     setNote,
+    sessionSetIds,
   } = useSessionStore();
 
   const navigate = useNavigate();
@@ -33,14 +35,11 @@ function SessionTimer({ profile_id }) {
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [showConfirmDiscard, setShowConfirmDiscard] = useState(false);
-  const [showKeepSetsModal, setShowKeepSetsModal] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
 
   const menuRef = useRef(null);
-  // Prevents ConfirmModal's post-confirm onClose from double-running discard
-  const keepSetsDecidedRef = useRef(false);
 
   const elapsedMs = isPaused
     ? pausedAt - startedAt - totalPausedMs
@@ -81,19 +80,17 @@ function SessionTimer({ profile_id }) {
 
   const handleRequestDiscard = () => {
     closeMenu();
-    setShowConfirmDiscard(false);
-    setShowKeepSetsModal(true);
+    setShowDiscardModal(true);
   };
 
-  const handleDiscardKeepSets = useCallback(async (keepSets) => {
-    keepSetsDecidedRef.current = true;
-    setShowKeepSetsModal(false);
+  const handleDiscardKeepSets = async (keepSets) => {
+    setShowDiscardModal(false);
     try {
       await discardSession({ keepSets });
     } catch (err) {
       console.error("Error discarding session:", err);
     }
-  }, [discardSession]);
+  };
 
   const handleFinish = async () => {
     setShowMenu(false);
@@ -197,10 +194,7 @@ function SessionTimer({ profile_id }) {
                   </button>
                   <div className="h-px bg-white/5 w-full" />
                   <button
-                    onClick={() => {
-                      closeMenu();
-                      setShowConfirmDiscard(true);
-                    }}
+                    onClick={handleRequestDiscard}
                     className="text-red-500 text-sm font-bold text-left hover:text-red-400 transition-colors"
                   >
                     Descartar sesión
@@ -212,33 +206,12 @@ function SessionTimer({ profile_id }) {
         </div>
       </div>
 
-      <ConfirmModal
-        isOpen={showConfirmDiscard}
-        title="¿Descartar sesión?"
-        description="Se descartará esta sesión del historial. A continuación podrás elegir si conservar los sets registrados."
-        confirmText="Continuar"
-        cancelText="Cancelar"
-        danger={true}
-        onConfirm={handleRequestDiscard}
-        onClose={() => setShowConfirmDiscard(false)}
-      />
-
-      <ConfirmModal
-        isOpen={showKeepSetsModal}
-        title="¿Conservar los sets registrados?"
-        description="Si eliges No, se eliminarán todos los sets de esta sesión. Si eliges Sí, los sets se mantienen y se sincronizarán."
-        confirmText="Sí, conservar"
-        cancelText="No, eliminar"
-        danger={false}
-        onConfirm={() => handleDiscardKeepSets(true)}
-        onClose={() => {
-          // cancel / backdrop → delete sets; ignore the onClose that follows confirm
-          if (keepSetsDecidedRef.current) {
-            keepSetsDecidedRef.current = false;
-            return;
-          }
-          handleDiscardKeepSets(false);
-        }}
+      <DiscardSessionModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        hasSets={sessionSetIds && sessionSetIds.length > 0}
+        onConfirmDiscardAll={() => handleDiscardKeepSets(false)}
+        onConfirmKeepSets={() => handleDiscardKeepSets(true)}
       />
 
       {showManualModal && (

@@ -14,7 +14,9 @@ import EditRoutineModal from "./EditRoutineModal";
 import SuperSetExpander from "./SuperSetExpander";
 import { InlineExerciseExpander } from "./routine-modal/InlineExerciseExpander";
 import { WalkthroughTooltip } from "./routine-modal/WalkthroughTooltip";
+import WalkthroughSpotlight from "./routine-modal/WalkthroughSpotlight";
 import ExerciseListSelector from "./ExerciseListSelector";
+import { useAuth } from "../../hooks/queries/useAuth";
 import { useSessionStore } from "../../stores/sessionStore";
 import { FiPlay } from "react-icons/fi";
 import { TbChecklist } from "react-icons/tb";
@@ -102,6 +104,12 @@ export default function RoutineModal({
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
   const [showWalkthrough, setShowWalkthrough] = useState(null);
 
+  const startWorkoutBtnRef = useRef(null);
+  const addExercisesBtnRef = useRef(null);
+  const activeStep1Ref = useRef(null);
+  const activeStep2Ref = useRef(null);
+
+  const { data: user } = useAuth();
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] =
     useState(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -123,6 +131,16 @@ export default function RoutineModal({
     if (!profile_id || !routine) return;
 
     const exerciseCount = routine.routines_exercises?.length || 0;
+
+    // Progressive Marking: If the user has already accomplished a later step,
+    // silently mark the earlier onboarding steps as seen so they don't reappear later.
+    if (exerciseCount > 0) {
+      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
+    }
+    if (isStarted) {
+      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
+      localStorage.setItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`, 'true');
+    }
 
     if (exerciseCount === 0) {
       if (!localStorage.getItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`)) {
@@ -375,45 +393,53 @@ export default function RoutineModal({
 
               {!isEditMode && (
                 <div className="flex flex-col gap-3 relative">
-                  <div className="relative">
-                    <button
-                      onClick={handleStartWorkout}
-                      disabled={isStarted}
-                      className={`w-full flex items-center justify-center gap-2 p-4 text-white rounded-2xl font-black text-[16px] shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 shadow-karga-orange/20 active:scale-[0.98]'}`}
-                    >
-                      <FiPlay className="w-5 h-5 ml-1" />
-                      Empezar entrenamiento
-                    </button>
-                    {!isAddingExercises && showWalkthrough === 'ready' && (
-                      <WalkthroughTooltip
-                        title="¡Todo listo!"
-                        description="Cuando estés listo, toca este botón para iniciar tu sesión y empezar a registrar tus marcas."
-                        buttonText="¡Entendido!"
-                        onNext={handleNextWalkthrough}
-                      />
-                    )}
-                  </div>
+                  <button
+                    ref={startWorkoutBtnRef}
+                    onClick={handleStartWorkout}
+                    disabled={isStarted}
+                    className={`w-full flex items-center justify-center gap-2 p-4 text-white rounded-2xl font-black text-[16px] shadow-lg transition-transform ${isStarted ? 'bg-zinc-800 opacity-50 cursor-not-allowed shadow-none' : 'bg-linear-to-r from-karga-orange to-red-600 shadow-karga-orange/20 active:scale-[0.98]'}`}
+                  >
+                    <FiPlay className="w-5 h-5 ml-1" />
+                    Empezar entrenamiento
+                  </button>
+                  {!isAddingExercises && showWalkthrough === 'ready' && (
+                    <WalkthroughSpotlight targetRef={startWorkoutBtnRef} onTargetClick={handleNextWalkthrough}>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-64 z-50">
+                        <WalkthroughTooltip
+                          title="¡Todo listo!"
+                          description="Cuando estés listo, toca este botón para iniciar tu sesión y empezar a registrar tus marcas."
+                          buttonText="¡Entendido!"
+                          onNext={handleNextWalkthrough}
+                          align="center"
+                        />
+                      </div>
+                    </WalkthroughSpotlight>
+                  )}
 
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        setIsAddingExercises(true);
-                        if (showWalkthrough === 'empty') handleCloseWalkthrough();
-                      }}
-                      className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
-                    >
-                      <PlusIcon className="w-5 h-5 text-zinc-400" />
-                      Agregar ejercicios
-                    </button>
-                    {!isAddingExercises && showWalkthrough === 'empty' && (
-                      <WalkthroughTooltip
-                        title="Tu rutina está vacía."
-                        description="Toca aquí para buscar tus ejercicios favoritos y armar tu plan de entrenamiento."
-                        buttonText="¡Entendido!"
-                        onNext={handleNextWalkthrough}
-                      />
-                    )}
-                  </div>
+                  <button
+                    ref={addExercisesBtnRef}
+                    onClick={() => {
+                      setIsAddingExercises(true);
+                      if (showWalkthrough === 'empty') handleCloseWalkthrough();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
+                  >
+                    <PlusIcon className="w-5 h-5 text-zinc-400" />
+                    Agregar ejercicios
+                  </button>
+                  {!isAddingExercises && showWalkthrough === 'empty' && (
+                    <WalkthroughSpotlight targetRef={addExercisesBtnRef} onTargetClick={handleNextWalkthrough}>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-64 z-50">
+                        <WalkthroughTooltip
+                          title="Tu rutina está vacía."
+                          description="Toca aquí para buscar tus ejercicios favoritos y armar tu plan de entrenamiento."
+                          buttonText="¡Entendido!"
+                          onNext={handleNextWalkthrough}
+                          align="center"
+                        />
+                      </div>
+                    </WalkthroughSpotlight>
+                  )}
                 </div>
               )}
 
@@ -503,6 +529,7 @@ export default function RoutineModal({
                             {!isEditMode && (
                               <div className="flex items-center gap-2 relative">
                                 <div
+                                  ref={index === 0 ? activeStep1Ref : null}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setIsSetModalOpen(false);
@@ -517,6 +544,7 @@ export default function RoutineModal({
                                   <PlusIcon className="w-5 h-5 text-white" />
                                 </div>
                                 <div
+                                  ref={index === 0 ? activeStep2Ref : null}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setIsSetModalOpen(false);
@@ -532,26 +560,30 @@ export default function RoutineModal({
                                 </div>
 
                                 {index === 0 && showWalkthrough === 'active_step1' && (
-                                  <div className="absolute right-10 top-10 w-64 z-50">
-                                    <WalkthroughTooltip
-                                      title="Registro rápido"
-                                      description="Toca aquí para empezar a cargar tus series de a una en vivo, o de forma diferida."
-                                      buttonText="Siguiente"
-                                      onNext={handleNextWalkthrough}
-                                      align="right"
-                                    />
-                                  </div>
+                                  <WalkthroughSpotlight targetRef={activeStep1Ref} onTargetClick={handleNextWalkthrough}>
+                                    <div className="absolute right-0 top-full mt-2 w-64 z-50">
+                                      <WalkthroughTooltip
+                                        title="Series al detalle"
+                                        description="Toca aquí si prefieres establecer las series de antemano e ir completándolas en vivo."
+                                        buttonText="Siguiente"
+                                        onNext={handleNextWalkthrough}
+                                        align="right"
+                                      />
+                                    </div>
+                                  </WalkthroughSpotlight>
                                 )}
                                 {index === 0 && showWalkthrough === 'active_step2' && (
-                                  <div className="absolute right-0 top-10 w-64 z-50">
-                                    <WalkthroughTooltip
-                                      title="Series al detalle"
-                                      description="Y aquí si prefieres establecer las series de antemano e ir completándolas en vivo."
-                                      buttonText="¡Entendido!"
-                                      onNext={handleNextWalkthrough}
-                                      align="right"
-                                    />
-                                  </div>
+                                  <WalkthroughSpotlight targetRef={activeStep2Ref} onTargetClick={handleNextWalkthrough}>
+                                    <div className="absolute right-0 top-full mt-2 w-64 z-50">
+                                      <WalkthroughTooltip
+                                        title="Registro rápido"
+                                        description="Y aquí para empezar a cargar tus series de a una en vivo, o de forma diferida."
+                                        buttonText="¡Entendido!"
+                                        onNext={handleNextWalkthrough}
+                                        align="right"
+                                      />
+                                    </div>
+                                  </WalkthroughSpotlight>
                                 )}
                               </div>
                             )}

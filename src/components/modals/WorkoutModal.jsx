@@ -140,14 +140,6 @@ export default function WorkoutModal({ onClose, onSave }) {
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-end mb-1 pl-1">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                Ejercicios disponibles
-              </label>
-              <span className="text-xs text-karga-orange font-bold">
-                {selectedExercises.length} agregados
-              </span>
-            </div>
 
             <ExerciseListSelector
               exercises={exercises}
