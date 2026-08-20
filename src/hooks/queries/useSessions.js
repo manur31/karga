@@ -20,7 +20,8 @@ export const useSessions = (profile_id) => {
   };
 };
 
-export const useWeekActivity = (profile_id) => {
+// agregar day seleccionada
+export const useWeekActivity = (profile_id, day) => {
   const data = useLiveQuery(async () => {
     if (!profile_id) return [];
 

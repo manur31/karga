@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import Card from "../Card/Card";
+import { set } from "date-fns";
 
-export const WeekActivity = ({ weekSessions, user }) => {
+export const WeekActivity = ({ user, weekActivity }) => {
   const weeklyActivity = useMemo(() => {
     const goalDays = user?.time_for_week || 0;
 
-    if (!weekSessions || goalDays === 0) {
+    if (!weekActivity || goalDays === 0) {
       return {
         trainedDays: 0,
         goalDays,
@@ -13,7 +14,7 @@ export const WeekActivity = ({ weekSessions, user }) => {
     }
 
     const uniqueDays = new Set(
-      weekSessions.map((session) => {
+      weekActivity.map((session) => {
         return new Date(session.startedAt).toISOString().split("T")[0];
       }),
     );
@@ -22,11 +23,11 @@ export const WeekActivity = ({ weekSessions, user }) => {
       trainedDays: uniqueDays.size,
       goalDays,
     };
-  }, [weekSessions, user?.time_for_week]);
+  }, [user?.time_for_week, weekActivity]);
   return (
     <div className="flex flex-col mt-5 center mx-4">
       <Card variant="default" className="p-4 flex flex-col gap-3">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center"> 
           <div className="flex flex-col">
             <span className="text-sm font-bold text-white tracking-wide">
               Días entrenados
