@@ -1,12 +1,12 @@
-import { Outlet } from 'react-router';
-import TabBar from '../components/TabBar/TabBar';
-import SessionTimer from '../components/SessionTimer';
-import RestTimer from '../components/RestTimer';
-import { getCachedProfile } from '../storage/profile-storage';
-import usePWA from '../hooks/usePWA';
-import useInstallBanner from '../hooks/useInstallBanner';
-import InstallPWAModal from '../components/InstallPWAModal';
-import { useBootstrapSync } from '../hooks/useSync';
+import { Outlet } from "react-router";
+import TabBar from "../components/TabBar/TabBar";
+import SessionTimer from "../components/SessionTimer";
+import RestTimer from "../components/RestTimer";
+import { getCachedProfile } from "../storage/profile-storage";
+import usePWA from "../hooks/usePWA";
+import useInstallBanner from "../hooks/useInstallBanner";
+import InstallPWAModal from "../components/InstallPWAModal";
+import { useBootstrapSync } from "../hooks/useSync";
 
 export default function MainLayout() {
   const profile = getCachedProfile() || {};
