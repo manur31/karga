@@ -34,7 +34,7 @@ export const useSetsForExercise = (profile_id, exercise_id) => {
       setsRepository.getAll(),
       db.exercises.get(exercise_id),
     ]);
-
+ 
     return sets
       .filter(
         (s) => s.profileId === profile_id && s.exerciseId === exercise_id,

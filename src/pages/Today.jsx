@@ -15,11 +15,12 @@ import {
   useFavoriteExercises,
 } from "../hooks/queries/useExercises";
 import { useSets } from "../hooks/queries/useSets";
-import { useSessions } from "../hooks/queries/useSessions";
+import { useSessions, useWeekActivity } from "../hooks/queries/useSessions";
 import SessionCard from "../components/calendar/SessionCard";
 import { format } from "date-fns";
 import { FiChevronDown } from "react-icons/fi";
 import { getCachedProfile } from "../storage/profile-storage";
+import { WeekActivity } from "../components/sets/WeekActivity";
 
 function toDateKey(item) {
   const raw =
@@ -48,7 +49,9 @@ export default function HistoryScreen() {
     closeMonthModal,
   } = useCalendarStore();
 
-  const profile_id = getCachedProfile()?.profile_id;
+  const profile = getCachedProfile();
+  const profile_id = profile?.profile_id;
+  const weekActivity = useWeekActivity(profile_id)?.data || [];
 
   const { data: popularExercises } = useExercises(profile_id);
   const { data: userExercises } = useFavoriteExercises(profile_id);
@@ -144,6 +147,8 @@ export default function HistoryScreen() {
 
       <div className="flex-1 overflow-y-auto pb-8">
         <DailySummary metrics={metrics} />
+
+        <WeekActivity user={profile} weekActivity={weekActivity} />
 
         <div className="mt-8">
           <div className="mx-4">

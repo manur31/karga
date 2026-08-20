@@ -45,7 +45,7 @@ export default function RoutineModal({
 }) {
   const profile = getCachedProfile() || {};
   const profile_id = profile.profile_id;
-  const rest_time = profile.rest_time ?? 60;
+  const rest_time = profile.rest_time;
   const { start: startSession, isStarted } = useSessionStore();
 
   const {
@@ -560,7 +560,7 @@ export default function RoutineModal({
                           {expandedExerciseId === exercise.id && !isEditMode && (
                             <InlineExerciseExpander
                               exercise={exercise}
-                              rest_time={exercise.rest_time ?? rest_time}
+                              rest_time={rest_time}
                               onSaveDone={() => setExpandedExerciseId(null)}
                             />
                           )}
@@ -568,7 +568,7 @@ export default function RoutineModal({
                           {activeSuperSetExerciseId === exercise.id && !isEditMode && (
                             <SuperSetExpander
                               exercise={exercise}
-                              rest_time={exercise.rest_time ?? rest_time}
+                              rest_time={rest_time}
                               onSaveDone={() => setActiveSuperSetExerciseId(null)}
                             />
                           )}
