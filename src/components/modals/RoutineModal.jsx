@@ -13,8 +13,6 @@ import ConfirmModal from "./ConfirmModal";
 import EditRoutineModal from "./EditRoutineModal";
 import SuperSetExpander from "./SuperSetExpander";
 import { InlineExerciseExpander } from "./routine-modal/InlineExerciseExpander";
-import { WalkthroughTooltip } from "./routine-modal/WalkthroughTooltip";
-import WalkthroughSpotlight from "./routine-modal/WalkthroughSpotlight";
 import ExerciseListSelector from "./ExerciseListSelector";
 import { useAuth } from "../../hooks/queries/useAuth";
 import { useSessionStore } from "../../stores/sessionStore";
@@ -102,7 +100,6 @@ export default function RoutineModal({
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
   const [activeSuperSetExerciseId, setActiveSuperSetExerciseId] = useState(null);
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
-  const [showWalkthrough, setShowWalkthrough] = useState(null);
 
   const startWorkoutBtnRef = useRef(null);
   const addExercisesBtnRef = useRef(null);
@@ -126,53 +123,6 @@ export default function RoutineModal({
   const { mutateAsync: editRoutine } = useEditRoutines(profile_id);
   const { mutateAsync: deleteExercisesRoutine } =
     useDeleteExercisesRoutine(profile_id);
-
-  useEffect(() => {
-    if (!profile_id || !routine) return;
-
-    const exerciseCount = routine.routines_exercises?.length || 0;
-
-    // Progressive Marking: If the user has already accomplished a later step,
-    // silently mark the earlier onboarding steps as seen so they don't reappear later.
-    if (exerciseCount > 0) {
-      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
-    }
-    if (isStarted) {
-      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
-      localStorage.setItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`, 'true');
-    }
-
-    if (exerciseCount === 0) {
-      if (!localStorage.getItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`)) {
-        setShowWalkthrough('empty');
-      }
-    } else if (!isStarted) {
-      if (!localStorage.getItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`)) {
-        setShowWalkthrough('ready');
-      }
-    } else if (!localStorage.getItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`)) {
-      setShowWalkthrough('active_step1');
-    }
-  }, [profile_id, routine, isStarted]);
-
-  const handleNextWalkthrough = () => {
-    if (showWalkthrough === 'active_step1') {
-      setShowWalkthrough('active_step2');
-    } else {
-      handleCloseWalkthrough();
-    }
-  };
-
-  const handleCloseWalkthrough = () => {
-    if (showWalkthrough === 'empty') {
-      localStorage.setItem(`hasSeenEmptyRoutineWalkthrough_${profile_id}`, 'true');
-    } else if (showWalkthrough === 'ready') {
-      localStorage.setItem(`hasSeenStartWorkoutWalkthrough_${profile_id}`, 'true');
-    } else if (showWalkthrough === 'active_step1' || showWalkthrough === 'active_step2') {
-      localStorage.setItem(`hasSeenActiveExerciseWalkthrough_${profile_id}`, 'true');
-    }
-    setShowWalkthrough(null);
-  };
 
   const handleSaveDetails = async (data) => {
     try {
@@ -205,7 +155,6 @@ export default function RoutineModal({
       setShowActiveSessionModal(true);
       return;
     }
-    if (showWalkthrough === 'ready') handleCloseWalkthrough();
     startSession();
   };
 
@@ -402,44 +351,19 @@ export default function RoutineModal({
                     <FiPlay className="w-5 h-5 ml-1" />
                     Empezar entrenamiento
                   </button>
-                  {!isAddingExercises && showWalkthrough === 'ready' && (
-                    <WalkthroughSpotlight targetRef={startWorkoutBtnRef} onTargetClick={handleNextWalkthrough}>
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-64 z-50">
-                        <WalkthroughTooltip
-                          title="¡Todo listo!"
-                          description="Cuando estés listo, toca este botón para iniciar tu sesión y empezar a registrar tus marcas."
-                          buttonText="¡Entendido!"
-                          onNext={handleNextWalkthrough}
-                          align="center"
-                        />
-                      </div>
-                    </WalkthroughSpotlight>
-                  )}
+
 
                   <button
                     ref={addExercisesBtnRef}
                     onClick={() => {
                       setIsAddingExercises(true);
-                      if (showWalkthrough === 'empty') handleCloseWalkthrough();
                     }}
                     className="w-full flex items-center justify-center gap-2 p-4 bg-[#2A2424] hover:bg-[#332C2C] border border-white/5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]"
                   >
                     <PlusIcon className="w-5 h-5 text-zinc-400" />
                     Agregar ejercicios
                   </button>
-                  {!isAddingExercises && showWalkthrough === 'empty' && (
-                    <WalkthroughSpotlight targetRef={addExercisesBtnRef} onTargetClick={handleNextWalkthrough}>
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-64 z-50">
-                        <WalkthroughTooltip
-                          title="Tu rutina está vacía."
-                          description="Toca aquí para buscar tus ejercicios favoritos y armar tu plan de entrenamiento."
-                          buttonText="¡Entendido!"
-                          onNext={handleNextWalkthrough}
-                          align="center"
-                        />
-                      </div>
-                    </WalkthroughSpotlight>
-                  )}
+
                 </div>
               )}
 
@@ -559,32 +483,7 @@ export default function RoutineModal({
                                   <TbChecklist className="w-5 h-5 text-white" />
                                 </div>
 
-                                {index === 0 && showWalkthrough === 'active_step1' && (
-                                  <WalkthroughSpotlight targetRef={activeStep1Ref} onTargetClick={handleNextWalkthrough}>
-                                    <div className="absolute right-0 top-full mt-2 w-64 z-50">
-                                      <WalkthroughTooltip
-                                        title="Series al detalle"
-                                        description="Toca aquí si prefieres establecer las series de antemano e ir completándolas en vivo."
-                                        buttonText="Siguiente"
-                                        onNext={handleNextWalkthrough}
-                                        align="right"
-                                      />
-                                    </div>
-                                  </WalkthroughSpotlight>
-                                )}
-                                {index === 0 && showWalkthrough === 'active_step2' && (
-                                  <WalkthroughSpotlight targetRef={activeStep2Ref} onTargetClick={handleNextWalkthrough}>
-                                    <div className="absolute right-0 top-full mt-2 w-64 z-50">
-                                      <WalkthroughTooltip
-                                        title="Registro rápido"
-                                        description="Y aquí para empezar a cargar tus series de a una en vivo, o de forma diferida."
-                                        buttonText="¡Entendido!"
-                                        onNext={handleNextWalkthrough}
-                                        align="right"
-                                      />
-                                    </div>
-                                  </WalkthroughSpotlight>
-                                )}
+
                               </div>
                             )}
                           </div>

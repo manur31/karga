@@ -10,7 +10,6 @@ import ProfileModal from "../components/modals/ProfileModal";
 import EditRoutineModal from "../components/modals/EditRoutineModal";
 import ConfirmModal from "../components/modals/ConfirmModal";
 import StartWorkoutModal from "../components/modals/StartWorkoutModal";
-import WalkthroughSpotlight from "../components/modals/routine-modal/WalkthroughSpotlight";
 import {
   useCreateRoutines,
   useInsertExercisesRoutine,
@@ -29,15 +28,11 @@ export default function Sets() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isStartWorkoutModalOpen, setIsStartWorkoutModalOpen] = useState(false);
   const [showActiveSessionModal, setShowActiveSessionModal] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [routineToEdit, setRoutineToEdit] = useState(null);
   const [routineToDeleteId, setRoutineToDeleteId] = useState(null);
   const { start: startSession, isStarted } = useSessionStore();
   const [errorMessage, setErrorMessage] = useState("");
   const errorTimerRef = useRef(null);
-
-  const createRoutineBtnRef = useRef(null);
-  const startWorkoutBtnRef = useRef(null);
 
   const profile_id = getCachedProfile()?.profile_id;
 
@@ -54,53 +49,6 @@ export default function Sets() {
     errorTimerRef.current = setTimeout(() => {
       setErrorMessage("");
     }, 3000);
-  };
-
-  useEffect(() => {
-    if (profile_id && routines) {
-      // Progressive Marking: If the user has already created a routine,
-      // silently mark the 'create routine' onboarding step as seen.
-      if (routines.length > 0) {
-        localStorage.setItem(`hasSeenCreateRoutineWalkthrough_${profile_id}`, "true");
-      }
-      
-      // If the user has started a workout (which implies they have >0 routines),
-      // they don't need the 'start workout' onboarding.
-      if (isStarted) {
-        localStorage.setItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`, "true");
-      }
-
-      if (routines.length === 0) {
-        const id = setTimeout(() => {
-          if (!localStorage.getItem(`hasSeenCreateRoutineWalkthrough_${profile_id}`)) {
-            setShowOnboarding('create');
-          }
-        }, 500);
-        return () => clearTimeout(id);
-      } else if (routines.length === 1) {
-        const id = setTimeout(() => {
-          if (!localStorage.getItem(`hasSeenWorkoutStartWalkthrough_${profile_id}`)) {
-            setShowOnboarding('start');
-          }
-        }, 500);
-        return () => clearTimeout(id);
-      }
-    }
-  }, [profile_id, routines, isStarted]);
-
-  const handleCloseOnboarding = () => {
-    if (showOnboarding === 'create') {
-      localStorage.setItem(
-        `hasSeenCreateRoutineWalkthrough_${profile_id}`,
-        "true",
-      );
-    } else if (showOnboarding === 'start') {
-      localStorage.setItem(
-        `hasSeenWorkoutStartWalkthrough_${profile_id}`,
-        "true",
-      );
-    }
-    setShowOnboarding(null);
   };
 
   const { mutateAsync: createRoutines } = useCreateRoutines(profile_id);
@@ -411,59 +359,6 @@ export default function Sets() {
       />
 
       <ErrorModal message={errorMessage} />
-      
-      {showOnboarding && (
-        <WalkthroughSpotlight 
-          targetRef={showOnboarding === 'create' ? createRoutineBtnRef : startWorkoutBtnRef} 
-          onTargetClick={handleCloseOnboarding}
-          padding={8}
-        >
-          <div className="w-[90vw] max-w-95 bg-[#2A2424] rounded-3xl p-5 border border-karga-orange/30 shadow-2xl flex flex-col gap-4 absolute top-full left-1/2 -translate-x-1/2 mt-4 animate-fade-in z-[100]">
-            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-10 border-l-transparent border-r-10 border-r-transparent border-b-10 border-b-[#2A2424]" />
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-karga-orange/10 flex items-center justify-center shrink-0 text-karga-orange mt-0.5">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <h4 className="text-white font-bold text-xl tracking-wide">
-                  {showOnboarding === 'create' ? "¡Empieza por aquí!" : "¡Tu primera rutina está lista!"}
-                </h4>
-
-                <p className="text-zinc-400 text-sm leading-relaxed font-medium">
-                  {showOnboarding === 'create'
-                    ? "Toca este botón para crear tu primera rutina personalizada y agregarle los ejercicios que más te gusten."
-                    : (
-                      <>
-                        Ahora que ya tienes tu primera rutina, podrás empezar tus entrenamientos rápidamente tocando este botón.
-                      </>
-                    )}
-                </p>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleCloseOnboarding}
-              className="w-full py-2 px-4 bg-karga-orange hover:bg-orange-600 text-white rounded-xl font-bold text-lg transition-colors mt-2"
-            >
-              ¡Entendido!
-            </button>
-          </div>
-        </WalkthroughSpotlight>
-      )}
     </div>
   );
 }
