@@ -1,10 +1,10 @@
 import { useMemo } from "react";
+import { format } from "date-fns";
 import Card from "../Card/Card";
-import { set } from "date-fns";
 
-export const WeekActivity = ({ user, weekActivity }) => {
+export const WeekActivity = ({ profile, weekActivity }) => {
   const weeklyActivity = useMemo(() => {
-    const goalDays = user?.time_for_week || 0;
+    const goalDays = profile?.time_for_week || 0;
 
     if (!weekActivity || goalDays === 0) {
       return {
@@ -14,16 +14,17 @@ export const WeekActivity = ({ user, weekActivity }) => {
     }
 
     const uniqueDays = new Set(
-      weekActivity.map((session) => {
-        return new Date(session.startedAt).toISOString().split("T")[0];
-      }),
+      weekActivity.map((session) =>
+        format(new Date(session.startedAt), "yyyy-MM-dd"),
+      ),
     );
 
     return {
-      trainedDays: uniqueDays.size,
+      trainedDays: Math.min(uniqueDays.size, goalDays),
       goalDays,
     };
-  }, [user?.time_for_week, weekActivity]);
+  }, [profile?.time_for_week, weekActivity]);
+
   return (
     <div className="flex flex-col mt-5 center mx-4">
       <Card variant="default" className="p-4 flex flex-col gap-3">

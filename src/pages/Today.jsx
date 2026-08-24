@@ -47,27 +47,35 @@ export default function HistoryScreen() {
     setSelectedDate,
     toggleMonthModal,
     closeMonthModal,
+    setWeekStart,
+    weekStart,
   } = useCalendarStore();
 
   const profile = getCachedProfile();
   const profile_id = profile?.profile_id;
-  const weekActivity = useWeekActivity(profile_id)?.data || [];
 
+  
   const { data: popularExercises } = useExercises(profile_id);
   const { data: userExercises } = useFavoriteExercises(profile_id);
   const { data: sets = [], isLoading: isSetsLoading } = useSets(profile_id);
   const { data: sessions = [], isLoading: isSessionsLoading } =
-    useSessions(profile_id);
-
+  useSessions(profile_id);
+  
   const userExercisesList = userExercises?.map((exercise) => ({
     ...exercise.exercises,
   }));
-
+  
   const exercises = [...(popularExercises || []), ...(userExercisesList || [])];
-
+  
   const [monthRef, setMonthRef] = useState(() => new Date());
-
+  
   const [isSessionsOpen, setIsSessionsOpen] = useState(false);
+  
+  const weekActivity = useWeekActivity(profile_id, weekStart)?.data || [];
+
+  useEffect(() => {
+    setWeekStart(selectedDate);
+  }, [selectedDate]);
 
   useEffect(() => {
     const today = format(new Date(), "yyyy-MM-dd");
@@ -104,6 +112,14 @@ export default function HistoryScreen() {
 
   const selectedSessions = dayActivity.sessions;
 
+  useEffect(() => {
+    if (selectedSessions.length > 0) {
+      setIsSessionsOpen(true);
+    } else {
+      setIsSessionsOpen(false);
+    }
+  }, [selectedSessions]);
+
   function handleSelectDate(dateStr) {
     setSelectedDate(dateStr);
     setMonthRef(new Date(dateStr + "T00:00:00"));
@@ -132,7 +148,7 @@ export default function HistoryScreen() {
         onMonthPress={toggleMonthModal}
         selectedDate={selectedDate}
       />
-
+ 
       <div className="mt-2">
         <WeeklyStrip
           selectedDate={selectedDate}
@@ -148,9 +164,9 @@ export default function HistoryScreen() {
       <div className="flex-1 overflow-y-auto pb-8">
         <DailySummary metrics={metrics} />
 
-        <WeekActivity user={profile} weekActivity={weekActivity} />
+        <WeekActivity profile={profile} weekActivity={weekActivity} />
 
-        <div className="mt-8">
+        <div className="mt-4">
           <div className="mx-4">
             <button
               onClick={() => setIsSessionsOpen(!isSessionsOpen)}
