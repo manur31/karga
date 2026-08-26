@@ -14,7 +14,7 @@ import {
   useExercises,
   useFavoriteExercises,
 } from "../hooks/queries/useExercises";
-import { useSets } from "../hooks/queries/useSets";
+import { useSets, useWeekSets } from "../hooks/queries/useSets";
 import { useSessions, useWeekActivity } from "../hooks/queries/useSessions";
 import SessionCard from "../components/calendar/SessionCard";
 import { format } from "date-fns";
@@ -71,7 +71,8 @@ export default function HistoryScreen() {
   
   const [isSessionsOpen, setIsSessionsOpen] = useState(false);
   
-  const weekActivity = useWeekActivity(profile_id, weekStart)?.data || [];
+  const weekSessions = useWeekActivity(profile_id, weekStart)?.data || [];
+  const weekSets = useWeekSets(profile_id, weekStart)?.data || [];
 
   useEffect(() => {
     setWeekStart(selectedDate);
@@ -164,7 +165,12 @@ export default function HistoryScreen() {
       <div className="flex-1 overflow-y-auto pb-8">
         <DailySummary metrics={metrics} />
 
-        <WeekActivity profile={profile} weekActivity={weekActivity} />
+        <WeekActivity
+          profile={profile}
+          weekSessions={weekSessions}
+          weekSets={weekSets}
+          mode="sessions_and_sets"
+        />
 
         <div className="mt-4">
           <div className="mx-4">

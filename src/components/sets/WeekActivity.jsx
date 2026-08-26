@@ -2,28 +2,42 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import Card from "../Card/Card";
 
-export const WeekActivity = ({ profile, weekActivity }) => {
+export const WeekActivity = ({
+  profile,
+  weekSessions = [],
+  weekSets = [],
+  mode = "sessions",
+}) => {
   const weeklyActivity = useMemo(() => {
     const goalDays = profile?.time_for_week || 0;
 
-    if (!weekActivity || goalDays === 0) {
+    if (goalDays === 0) {
       return {
         trainedDays: 0,
         goalDays,
       };
     }
 
-    const uniqueDays = new Set(
-      weekActivity.map((session) =>
-        format(new Date(session.startedAt), "yyyy-MM-dd"),
-      ),
-    );
+    const uniqueDays = new Set();
+
+    for (const session of weekSessions) {
+      if (!session?.startedAt) continue;
+      uniqueDays.add(format(new Date(session.startedAt), "yyyy-MM-dd"));
+    }
+
+    if (mode === "sessions_and_sets") {
+      for (const set of weekSets) {
+        const raw = set?.created_at || set?.createdAt;
+        if (!raw) continue;
+        uniqueDays.add(format(new Date(raw), "yyyy-MM-dd"));
+      }
+    }
 
     return {
       trainedDays: Math.min(uniqueDays.size, goalDays),
       goalDays,
     };
-  }, [profile?.time_for_week, weekActivity]);
+  }, [profile?.time_for_week, weekSessions, weekSets, mode]);
 
   return (
     <div className="flex flex-col mt-5 center mx-4">
