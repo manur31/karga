@@ -20,13 +20,14 @@ export const useSessions = (profile_id) => {
   };
 };
 
-// agregar day seleccionada
 export const useWeekActivity = (profile_id, day) => {
   const data = useLiveQuery(async () => {
-    if (!profile_id) return [];
+    if (!profile_id || !day) return [];
 
-    const start = startOfWeek(new Date(), { weekStartsOn: 1 }).getTime();
-    const end = endOfWeek(new Date(), { weekStartsOn: 1 }).getTime();
+    const ref =
+      typeof day === "string" ? new Date(day + "T00:00:00") : new Date(day);
+    const start = startOfWeek(ref, { weekStartsOn: 1 }).getTime();
+    const end = endOfWeek(ref, { weekStartsOn: 1 }).getTime();
 
     const sessions = await sessionsRepository.getAll();
     return sessions
@@ -40,7 +41,7 @@ export const useWeekActivity = (profile_id, day) => {
           new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime(),
       )
       .map(toUiSession);
-  }, [profile_id]);
+  }, [profile_id, day]);
 
   return {
     data: data ?? [],

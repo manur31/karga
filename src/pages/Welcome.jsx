@@ -4,13 +4,16 @@ import bgGym from '../assets/istockphoto-1069260156-612x612.jpg';
 import { Mancuerna } from '../components/icons';
 import ArrowRight from '../components/icons/ArrowRight.jsx';
 import { useAuth } from '../hooks/queries/useAuth.js';
+import LoadingScreen from '../components/Loading.jsx';
 
 export default function Welcome() {
   const navigate = useNavigate();
 
   const { data: profile, isLoading } = useAuth();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (<div>
+    <LoadingScreen/>
+  </div>);
   if (profile) return <Navigate to={"/rutinas"} />;
 
   return (

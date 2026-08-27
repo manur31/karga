@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { format } from 'date-fns'
+import { format, startOfWeek } from 'date-fns'
 
 /**
  * Ephemeral calendar UI state only.
@@ -9,8 +9,22 @@ import { format } from 'date-fns'
 export const useCalendarStore = create(
   persist(
     (set) => ({
+      weekStart: format(new Date(), 'yyyy-MM-dd'),
       selectedDate: format(new Date(), 'yyyy-MM-dd'),
       isMonthModalOpen: false,
+
+      setWeekStart: (selectedDate) => {
+        const date =
+          typeof selectedDate === "string"
+            ? new Date(selectedDate + "T00:00:00")
+            : new Date(selectedDate);
+        set({
+          weekStart: format(
+            startOfWeek(date, { weekStartsOn: 1 }),
+            "yyyy-MM-dd",
+          ),
+        });
+      },
 
       setSelectedDate: (dateStr) => set({ selectedDate: dateStr }),
 

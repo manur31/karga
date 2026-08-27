@@ -11,6 +11,7 @@ import Sessions from "./pages/Sessions";
 import Body from "./pages/Body";
 import Today from "./pages/Today";
 import ForgotPassword from "./pages/ForgotPassword";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<PublicLayout />}>
+            <Route path="*" element={<NotFound />} />
             <Route path={"/"} element={<Welcome />} />
             <Route path={"/welcome"} element={<Welcome />} />
             <Route path={"/login"} element={<Login />} />
