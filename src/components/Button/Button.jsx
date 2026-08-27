@@ -16,7 +16,7 @@ export default function Button({
   const sizes = {
     sm: "px-2 py-1 text-[10px] rounded-lg",      
     md: "px-6 py-4 text-base rounded-2xl",    
-    lg: "w-full py-5 text-lg rounded-2xl",   
+    lg: "w-full py-4 px-6 text-lg rounded-2xl",   
   };
 
   return (

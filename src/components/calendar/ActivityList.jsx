@@ -16,7 +16,7 @@ export default function ActivityList({ dayActivity, exercises, isLoading = false
   const [isOpen, setIsOpen] = useState(true)
 
   return (
-    <div className="mt-6">
+    <div className="mt-4">
       <div className="mx-4">
         <button 
           onClick={() => setIsOpen(!isOpen)}

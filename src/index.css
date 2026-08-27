@@ -24,6 +24,7 @@ body,
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
     scroll-behavior: smooth;
+    background-color: var(--color-dark-bg); 
 }
 
 /* Chrome, Safari, Edge, Opera */
@@ -33,6 +34,7 @@ body,
 
 body {
     font-family: "Plus Jakarta Sans", sans-serif;
+    background-color: var(--color-dark-bg);
 }
 
 .glowy-placeholder::placeholder {

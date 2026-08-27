@@ -30,7 +30,7 @@ export default function SessionCard({ session }) {
   const duration = getDuration(rawStarted, session.finishedAt);
 
   return (
-    <div className="flex items-center gap-3 bg-karga-gray rounded-2xl px-4 py-3.5 mx-4 my-2">
+    <div className="flex items-center gap-3 bg-karga-gray rounded-2xl px-4 py-3.5 mx-4 mb-2">
       {/* Icon */}
       <div className="bg-karga-orange rounded-full p-2 shrink-0">
         <MdFitnessCenter size={18} className="text-white" />
